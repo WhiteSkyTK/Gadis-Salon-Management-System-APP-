@@ -9,4 +9,11 @@
     <color name="background_color">#FFFFFF</color>
     <color name="input_field_background">#F5F5F5</color>
 
+
+    <color name="dark_purple_primary">#BB86FC</color>
+
+    <color name="dark_text_primary">#E1E1E1</color>
+    <color name="dark_text_secondary">#B0B0B0</color>
+    <color name="dark_background_color">#121212</color>
+    <color name="dark_input_field_background">#2C2C2C</color>
 </resources>
