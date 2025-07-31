@@ -9,21 +9,19 @@
         android:id="@+id/homeFragment"
         android:name="com.rst.gadissalonmanagementsystemapp.ui.home.HomeFragment"
         android:label="fragment_home"
-        tools:layout="@layout/fragment_home"
+        tools:layout="@layout/fragment_home"/>
     <action
         android:id="@+id/action_homeFragment_to_productDetailFragment"
         app:destination="@id/productDetailFragment" />
-    />
 
     <fragment
         android:id="@+id/shopFragment"
         android:name="com.rst.gadissalonmanagementsystemapp.ui.shop.ShopFragment"
         android:label="fragment_shop"
-        tools:layout="@layout/fragment_shop"
+        tools:layout="@layout/fragment_shop"/>
     <action
         android:id="@+id/action_shopFragment_to_productDetailFragment"
         app:destination="@id/productDetailFragment" />
-    />
 
     <fragment
         android:id="@+id/bookingFragment"
@@ -45,11 +43,13 @@
 
     <fragment
         android:id="@+id/favoritesFragment"
-        android:name="com.rst.gadissalonmanagementsystemapp.ui.FavoritesFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.favorites.FavoritesFragment"
         android:label="FavoritesFragment"
-        tools:layout="@layout/fragment_favorites"/> <fragment
-    android:id="@+id/cartFragment"
-    android:name="com.rst.gadissalonmanagementsystemapp.ui.CartFragment"
-    android:label="CartFragment"
-    tools:layout="@layout/fragment_cart" />
+        tools:layout="@layout/fragment_favorites"/>
+
+    <fragment
+        android:id="@+id/cartFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.cart.CartFragment"
+        android:label="CartFragment"
+        tools:layout="@layout/fragment_cart" />
 </navigation>
