@@ -1,5 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="purple_primary">#9B51E0</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <color name="text_primary">#222222</color>
+    <color name="text_secondary">#757575</color>
+    <color name="background_color">#FFFFFF</color>
+    <color name="input_field_background">#F5F5F5</color>
+
+
+    <color name="dark_purple_primary">#BB86FC</color>
+
+    <color name="dark_text_primary">#E1E1E1</color>
+    <color name="dark_text_secondary">#B0B0B0</color>
+    <color name="dark_background_color">#121212</color>
+    <color name="dark_input_field_background">#2C2C2C</color>
 </resources>
