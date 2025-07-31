@@ -16,4 +16,6 @@
     <color name="dark_text_secondary">#B0B0B0</color>
     <color name="dark_background_color">#121212</color>
     <color name="dark_input_field_background">#2C2C2C</color>
+
+    <color name="background_grey">#F8F8F8</color>
 </resources>
