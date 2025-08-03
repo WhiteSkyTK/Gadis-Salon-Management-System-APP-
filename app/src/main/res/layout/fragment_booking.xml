@@ -4,18 +4,50 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/background_grey"
     tools:context=".ui.booking.BookingFragment">
 
-    <TextView
-        android:id="@+id/text_empty"
-        android:layout_width="wrap_content"
+    <!-- Top Bar with Title -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/top_bar_booking"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Nothing To See Here"
-        android:textColor="@color/text_secondary"
-        android:textSize="20sp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="4dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/title_booking"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:padding="16dp"
+            android:text="My Bookings"
+            android:textColor="@color/text_primary"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- List of Bookings -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/booking_recycler_view"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="16dp"
+        android:clipToPadding="false"
+        android:paddingBottom="16dp"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/top_bar_booking"
+        tools:itemCount="3"
+        tools:listitem="@layout/item_booking" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
