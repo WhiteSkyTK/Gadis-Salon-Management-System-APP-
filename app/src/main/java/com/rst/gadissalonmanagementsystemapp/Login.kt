@@ -41,8 +41,7 @@ class Login : AppCompatActivity() {
 
         // Navigate to Forgot Password screen
         binding.forgotPasswordText.setOnClickListener {
-            // You will need to create this ForgotPasswordActivity later
-            // startActivity(Intent(this, ForgotPasswordActivity::class.java))
+            startActivity(Intent(this, ForgotPasswordActivity::class.java))
         }
 
         // Handle the login button click

@@ -12,6 +12,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.GadisSalonManagementSystemAPP">
         <activity
+            android:name=".ForgotPasswordActivity"
+            android:exported="false" />
+        <activity
             android:name=".WorkerMainActivity"
             android:exported="false" />
         <activity
@@ -28,6 +31,7 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
