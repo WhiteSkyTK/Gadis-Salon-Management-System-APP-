@@ -52,4 +52,10 @@
         android:name="com.rst.gadissalonmanagementsystemapp.ui.cart.CartFragment"
         android:label="CartFragment"
         tools:layout="@layout/fragment_cart" />
+
+    <fragment
+        android:id="@+id/notificationsFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.notifications.NotificationsFragment"
+        android:label="NotificationsFragment"
+        tools:layout="@layout/fragment_notifications" />
 </navigation>
