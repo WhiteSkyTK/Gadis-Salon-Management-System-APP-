@@ -13,7 +13,7 @@ import androidx.core.view.WindowInsetsCompat
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class Login : AppCompatActivity() {
+class LoginActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLoginBinding
 
@@ -34,9 +34,9 @@ class Login : AppCompatActivity() {
     }
 
     private fun setupClickListeners() {
-        // Navigate to Register screen
+        // Navigate to RegisterActivity screen
         binding.registerPromptText.setOnClickListener {
-            startActivity(Intent(this, Register::class.java))
+            startActivity(Intent(this, RegisterActivity::class.java))
         }
 
         // Navigate to Forgot Password screen

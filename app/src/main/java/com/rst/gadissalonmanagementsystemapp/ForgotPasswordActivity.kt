@@ -39,9 +39,9 @@ class ForgotPasswordActivity : AppCompatActivity() {
             validateAndSend()
         }
 
-        // Handle the "Back to Login" text click
+        // Handle the "Back to LoginActivity" text click
         binding.backToLoginText.setOnClickListener {
-            finish() // Simply closes this activity and returns to the previous one (Login)
+            finish() // Simply closes this activity and returns to the previous one (LoginActivity)
         }
     }
 

@@ -34,8 +34,8 @@ class Loading : AppCompatActivity() {
                 // Set the flag to false for future launches
                 prefs.edit().putBoolean(IS_FIRST_TIME_KEY, false).apply()
 
-                // Go to Login screen
-                startActivity(Intent(this, Login::class.java))
+                // Go to LoginActivity screen
+                startActivity(Intent(this, LoginActivity::class.java))
             } else {
                 // Not the first time, check if user is logged in by checking their role
                 val userRole = prefs.getString(USER_ROLE_KEY, null)
@@ -46,7 +46,7 @@ class Loading : AppCompatActivity() {
                     "CUSTOMER" -> startActivity(Intent(this, CustomerMainActivity::class.java))
                     else -> {
                         // No role saved, so user is not logged in
-                        startActivity(Intent(this, Login::class.java))
+                        startActivity(Intent(this, LoginActivity::class.java))
                     }
                 }
             }
