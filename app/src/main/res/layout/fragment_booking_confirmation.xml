@@ -85,6 +85,15 @@
                 android:text="Available Times"
                 android:textSize="18sp"
                 android:textStyle="bold" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/time_slot_recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+                app:spanCount="4"
+                tools:listitem="@layout/item_time_slot"/>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -96,8 +105,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp">
-                <RadioButton android:text="Pay with Cash (at Salon)" android:checked="true"/>
-                <RadioButton android:text="Pay with Card (Unavailable)" android:enabled="false"/>
+                <RadioButton
+                    android:text="Pay with Cash (at Salon)"
+                    android:checked="true"/>
+
+                <RadioButton
+                    android:text="Pay with Card (Unavailable)"
+                    android:enabled="false"/>
             </RadioGroup>
 
         </LinearLayout>

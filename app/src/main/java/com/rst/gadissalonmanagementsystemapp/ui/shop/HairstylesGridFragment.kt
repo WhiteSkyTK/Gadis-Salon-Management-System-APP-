@@ -6,7 +6,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
-import com.rst.gadissalonmanagementsystemapp.HomeItemAdapter
+import com.rst.gadissalonmanagementsystemapp.AppData
+import com.rst.gadissalonmanagementsystemapp.HairstyleItemAdapter
 import com.rst.gadissalonmanagementsystemapp.Product
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentItemGridBinding
 
@@ -23,18 +24,9 @@ class HairstylesGridFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val dummyHairstyles = listOf(
-            Product("Butterfly Locs", "R450", Product.TYPE_HAIRSTYLE),
-            Product("Dreadlocks", "R400", Product.TYPE_HAIRSTYLE),
-            Product("Cornrows", "R250", Product.TYPE_HAIRSTYLE),
-            Product("Box Braids", "R500", Product.TYPE_HAIRSTYLE),
-            Product("Faux Locs", "R600", Product.TYPE_HAIRSTYLE),
-            Product("Twists", "R350", Product.TYPE_HAIRSTYLE)
-        )
-
         // CORRECTED: We now provide the click logic for hairstyles
-        val adapter = HomeItemAdapter(dummyHairstyles) { clickedHairstyle ->
-            // This now navigates to the HairstyleDetailFragment
+        val adapter = HairstyleItemAdapter(AppData.allHairstyles) { clickedHairstyle ->
+            // The 'clickedHairstyle' is now a Hairstyle object, which matches the action's requirement.
             val action = ShopFragmentDirections.actionShopFragmentToHairstyleDetailFragment(clickedHairstyle)
             findNavController().navigate(action)
         }

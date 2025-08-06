@@ -21,9 +21,9 @@ class ProductsGridFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        val adapter = HomeItemAdapter(AppData.allProducts) { product ->
-            findNavController().navigate(ShopFragmentDirections.actionShopFragmentToProductDetailFragment(product))
+        val adapter = HomeItemAdapter(AppData.allProducts) { clickedProduct ->
+            val action = ShopFragmentDirections.actionShopFragmentToProductDetailFragment(clickedProduct)
+            findNavController().navigate(action)
         }
         binding.gridRecyclerView.adapter = adapter
     }

@@ -10,6 +10,8 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.rst.gadissalonmanagementsystemapp.AppData
 import com.rst.gadissalonmanagementsystemapp.FavoritesAdapter
+import com.rst.gadissalonmanagementsystemapp.Hairstyle
+import com.rst.gadissalonmanagementsystemapp.Product
 import com.rst.gadissalonmanagementsystemapp.R
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentFavoritesBinding
 
@@ -25,26 +27,16 @@ class FavoritesFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        // Set the layout manager for the RecyclerView
         binding.favoritesRecyclerView.layoutManager = LinearLayoutManager(context)
 
-        // Observe the LiveData from AppData
         AppData.currentUserFavorites.observe(viewLifecycleOwner) { favoritesList ->
             val adapter = FavoritesAdapter(
                 items = favoritesList,
-                onUnfavoriteClick = { product ->
-                    AppData.toggleFavorite(product)
-                },
-                onAddToCartClick = { product ->
-                    AppData.addToCart(product)
-                    Toast.makeText(context, "${product.name} added to cart", Toast.LENGTH_SHORT).show()
-                },
-                // Add the new click logic for booking
-                onBookClick = { hairstyle ->
-                    // For now, let's just show a message and navigate to the main booking page
-                    Toast.makeText(context, "Booking for ${hairstyle.name}", Toast.LENGTH_SHORT).show()
-                    findNavController().navigate(R.id.bookingFragment)
+                onUnfavoriteClick = { item ->
+                    when(item) {
+                        is Product -> AppData.toggleFavorite(item)
+                        is Hairstyle -> AppData.toggleFavorite(item)
+                    }
                 }
             )
             binding.favoritesRecyclerView.adapter = adapter

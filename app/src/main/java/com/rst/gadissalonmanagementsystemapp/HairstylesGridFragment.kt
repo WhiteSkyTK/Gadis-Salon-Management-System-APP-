@@ -22,7 +22,7 @@ class HairstylesGridFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val adapter = HomeItemAdapter(AppData.allHairstyles) { hairstyle ->
+        val adapter = HairstyleItemAdapter(AppData.allHairstyles) { hairstyle ->
             findNavController().navigate(ShopFragmentDirections.actionShopFragmentToHairstyleDetailFragment(hairstyle))
         }
         binding.gridRecyclerView.adapter = adapter

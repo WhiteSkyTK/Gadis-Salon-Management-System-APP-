@@ -7,8 +7,12 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.navArgs
+import com.rst.gadissalonmanagementsystemapp.AppData
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentHairstyleDetailBinding
 import com.rst.gadissalonmanagementsystemapp.MainViewModel
+import com.rst.gadissalonmanagementsystemapp.Product
+import java.text.NumberFormat
+import java.util.Locale
 
 class HairstyleDetailFragment : Fragment() {
 
@@ -28,14 +32,23 @@ class HairstyleDetailFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // Get the hairstyle object from the arguments
-        val hairstyle = args.product // We are reusing the 'Product' data class
+        val hairstyle = args.hairstyle // We are reusing the 'Product' data class
 
-        // Use the data to populate the views
+        // Now we need to pass a temporary Product to the ViewModel for the favorite logic to work
+        val tempProductForFavorite = Product(hairstyle.id, hairstyle.name, "", listOf())
+        mainViewModel.setCurrentProduct(tempProductForFavorite)
+
+        // Use the new Hairstyle data to populate the views
         binding.hairstyleImage.setImageResource(hairstyle.imageResId)
         binding.hairstyleNameDetail.text = hairstyle.name
-        binding.hairstylePrice.text = hairstyle.detail
+        binding.hairstyleDescription.text = hairstyle.description
+        val format = NumberFormat.getCurrencyInstance(Locale("en", "ZA"))
+        binding.hairstylePrice.text = format.format(hairstyle.price)
+        binding.hairstyleDuration.text = "Duration: ${hairstyle.durationHours} hours"
 
-        mainViewModel.setCurrentProduct(hairstyle)
+        // Find the stylist's name from AppData
+        val stylist = AppData.allStylists.find { it.id == hairstyle.availableStylistIds.firstOrNull() }
+        binding.stylistName.text = "Stylist: ${stylist?.name ?: "Any"}"
     }
 
     override fun onDestroyView() {

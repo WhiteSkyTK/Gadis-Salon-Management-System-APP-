@@ -78,7 +78,13 @@
         android:id="@+id/bookingConfirmationFragment"
         android:name="com.rst.gadissalonmanagementsystemapp.ui.booking.BookingConfirmationFragment"
         android:label="BookingConfirmationFragment"
-        tools:layout="@layout/fragment_booking_confirmation" />
+        tools:layout="@layout/fragment_booking_confirmation">
+
+        <argument
+            android:name="hairstyle"
+            app:argType="com.rst.gadissalonmanagementsystemapp.Hairstyle" />
+
+    </fragment>
 
     <fragment
         android:id="@+id/hairstyleDetailFragment"
@@ -86,13 +92,13 @@
         android:label="HairstyleDetailFragment"
         tools:layout="@layout/fragment_hairstyle_detail">
 
+        <argument
+            android:name="hairstyle"
+            app:argType="com.rst.gadissalonmanagementsystemapp.Hairstyle" />
+
         <action
             android:id="@+id/action_hairstyleDetailFragment_to_bookingConfirmationFragment"
             app:destination="@id/bookingConfirmationFragment" />
-
-        <argument
-            android:name="product"
-            app:argType="com.rst.gadissalonmanagementsystemapp.Product" />
 
     </fragment>
 
@@ -100,7 +106,13 @@
         android:id="@+id/favoritesFragment"
         android:name="com.rst.gadissalonmanagementsystemapp.ui.favorites.FavoritesFragment"
         android:label="FavoritesFragment"
-        tools:layout="@layout/fragment_favorites"/>
+        tools:layout="@layout/fragment_favorites">
+
+        <action
+            android:id="@+id/action_favoritesFragment_to_bookingConfirmationFragment"
+            app:destination="@id/bookingConfirmationFragment" />
+
+    </fragment>
 
     <fragment
         android:id="@+id/cartFragment"

@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.rst.gadissalonmanagementsystemapp.AppData
+import com.rst.gadissalonmanagementsystemapp.HairstyleItemAdapter
 import com.rst.gadissalonmanagementsystemapp.HomeItemAdapter
 import com.rst.gadissalonmanagementsystemapp.Product
 import com.rst.gadissalonmanagementsystemapp.R
@@ -42,8 +43,12 @@ class HomeFragment : Fragment() {
         }
         binding.recyclerViewProducts.adapter = productAdapter
 
-        val hairstyleAdapter = HomeItemAdapter(AppData.allHairstyles) { hairstyle ->
-            findNavController().navigate(HomeFragmentDirections.actionHomeFragmentToHairstyleDetailFragment(hairstyle))
+        val hairstyleAdapter = HairstyleItemAdapter(AppData.allHairstyles) { hairstyle ->
+            findNavController().navigate(
+                HomeFragmentDirections.actionHomeFragmentToHairstyleDetailFragment(
+                    hairstyle
+                )
+            )
         }
         binding.recyclerViewHairstyles.adapter = hairstyleAdapter
     }
