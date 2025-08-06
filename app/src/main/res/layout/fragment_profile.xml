@@ -120,17 +120,32 @@
                     android:paddingBottom="8dp">
 
                     <!-- Contact Support -->
-                    <TextView style="@style/ProfileOption" android:drawableStart="@drawable/ic_contact_support" android:text="Contact &amp; Support"/>
+                    <TextView
+                        android:id="@+id/contact_support_option"
+                        style="@style/ProfileOption"
+                        android:drawableStart="@drawable/ic_contact_support"
+                        android:text="Contact &amp; Support"/>
                     <View style="@style/Divider"/>
                     <!-- Settings -->
-                    <TextView style="@style/ProfileOption" android:drawableStart="@drawable/ic_settings" android:text="Settings"/>
+                    <TextView
+                        android:id="@+id/settings_option"
+                        style="@style/ProfileOption"
+                        android:drawableStart="@drawable/ic_settings"
+                        android:text="Settings"/>
                     <View style="@style/Divider"/>
                     <!-- Location -->
-                    <TextView style="@style/ProfileOption" android:drawableStart="@drawable/ic_location" android:text="Location"/>
+                    <TextView
+                        android:id="@+id/location_option"
+                        style="@style/ProfileOption"
+                        android:drawableStart="@drawable/ic_location"
+                        android:text="Location"/>
                     <View style="@style/Divider"/>
                     <!-- About Us -->
-                    <TextView style="@style/ProfileOption" android:drawableStart="@drawable/ic_info" android:text="About Us"/>
-
+                    <TextView
+                        android:id="@+id/about_us_option"
+                        style="@style/ProfileOption"
+                        android:drawableStart="@drawable/ic_info"
+                        android:text="About Us"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

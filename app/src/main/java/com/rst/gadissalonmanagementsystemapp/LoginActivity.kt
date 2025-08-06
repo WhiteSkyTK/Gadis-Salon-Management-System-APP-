@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Patterns
 import android.view.View
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -20,12 +21,6 @@ class LoginActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(R.layout.activity_login)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.login)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
 
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -75,27 +70,26 @@ class LoginActivity : AppCompatActivity() {
         }
 
         // If all validation passes, perform the login
-        performLogin(email)
+        performLogin(email, password)
     }
 
-    private fun performLogin(email: String) {
-        // Show loading state
+    private fun performLogin(email: String, password: String) {
         binding.loadingIndicator.visibility = View.VISIBLE
         binding.loginButton.isEnabled = false
 
-        // Use a coroutine to simulate a network delay
         lifecycleScope.launch {
-            delay(2000) // Fake 2-second delay
+            delay(1000) // Simulate check
 
-            // --- Dummy Role Logic ---
-            // In a real app, you would get the role from your backend API
-            val role = when {
-                email.startsWith("admin@", true) -> "ADMIN"
-                email.startsWith("worker@", true) -> "WORKER"
-                else -> "CUSTOMER"
+            val role = AppData.loginUser(email, password)
+
+            if (role != null) {
+                onLoginSuccess(role)
+            } else {
+                // Login failed
+                binding.loadingIndicator.visibility = View.GONE
+                binding.loginButton.isEnabled = true
+                Toast.makeText(this@LoginActivity, "Invalid email or password", Toast.LENGTH_SHORT).show()
             }
-
-            onLoginSuccess(role)
         }
     }
 

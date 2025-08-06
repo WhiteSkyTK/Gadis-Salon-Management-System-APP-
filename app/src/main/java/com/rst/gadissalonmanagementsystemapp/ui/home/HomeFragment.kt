@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.rst.gadissalonmanagementsystemapp.AppData
 import com.rst.gadissalonmanagementsystemapp.HomeItemAdapter
 import com.rst.gadissalonmanagementsystemapp.Product
 import com.rst.gadissalonmanagementsystemapp.R
@@ -36,27 +37,14 @@ class HomeFragment : Fragment() {
             findNavController().navigate(R.id.shopFragment)
         }
 
-        // --- Setup Dummy Data for RecyclerViews ---
-        val dummyProducts = listOf(
-            Product("Eco Style Gel", "R50"),
-            Product("Shampoo", "R80"),
-            Product("Conditioner", "R85")
-        )
-        // Create an instance of our new adapter
-        val productAdapter = HomeItemAdapter(dummyProducts)
-        binding.recyclerViewProducts.layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
-        // Set the adapter on the RecyclerView
+        val productAdapter = HomeItemAdapter(AppData.allProducts) { product ->
+            findNavController().navigate(HomeFragmentDirections.actionHomeFragmentToProductDetailFragment(product))
+        }
         binding.recyclerViewProducts.adapter = productAdapter
 
-        val dummyHairstyles = listOf(
-            Product("Butterfly Locs", "R450"),
-            Product("Dreadlocks", "R400"),
-            Product("Cornrows", "R250")
-        )
-        // Create another instance of our reusable adapter
-        val hairstyleAdapter = HomeItemAdapter(dummyHairstyles)
-        binding.recyclerViewHairstyles.layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
-        // Set the adapter on the RecyclerView
+        val hairstyleAdapter = HomeItemAdapter(AppData.allHairstyles) { hairstyle ->
+            findNavController().navigate(HomeFragmentDirections.actionHomeFragmentToHairstyleDetailFragment(hairstyle))
+        }
         binding.recyclerViewHairstyles.adapter = hairstyleAdapter
     }
 

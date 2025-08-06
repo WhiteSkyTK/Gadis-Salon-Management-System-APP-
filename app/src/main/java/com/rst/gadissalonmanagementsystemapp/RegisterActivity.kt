@@ -21,12 +21,6 @@ class RegisterActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(R.layout.activity_register)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.register)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
 
         binding = ActivityRegisterBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -86,24 +80,28 @@ class RegisterActivity : AppCompatActivity() {
         }
 
         // If all checks pass, perform registration
-        performRegistration()
+        performRegistration(name, email, phone, password)
     }
 
-    private fun performRegistration() {
+    private fun performRegistration(name: String, email: String, phone: String, password: String) {
         binding.loadingIndicator.visibility = View.VISIBLE
         binding.signupButton.isEnabled = false
 
         lifecycleScope.launch {
-            delay(2000) // Simulate network call
+            delay(1000) // Simulate check
+
+            val success = AppData.registerUser(name, email, phone, password)
 
             binding.loadingIndicator.visibility = View.GONE
             binding.signupButton.isEnabled = true
 
-            // Show success message
-            Toast.makeText(this@RegisterActivity, "Registration successful! Please log in.", Toast.LENGTH_LONG).show()
-
-            // Go back to the login screen
-            finish()
+            if (success) {
+                Toast.makeText(this@RegisterActivity, "Registration successful! Please log in.", Toast.LENGTH_LONG).show()
+                finish() // Go back to the login screen
+            } else {
+                // Show an error on the email field
+                binding.emailLayout.error = "This email is already registered"
+            }
         }
     }
-}
+    }

@@ -36,7 +36,7 @@
             android:textColor="@color/text_primary"
             android:textSize="18sp"
             android:textStyle="bold"
-            app:layout_constraintEnd_toStartOf="@id/icon_cart"
+            app:layout_constraintEnd_toStartOf="@id/add_to_cart_button"
             app:layout_constraintStart_toEndOf="@id/item_image"
             app:layout_constraintTop_toTopOf="@id/item_image" />
 
@@ -62,14 +62,43 @@
             app:layout_constraintBottom_toBottomOf="@id/item_price"
             app:layout_constraintStart_toEndOf="@id/item_price" />
 
-        <ImageView
-            android:id="@+id/icon_cart"
+        <FrameLayout
+            android:id="@+id/frame_buttons"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageButton
+                android:id="@+id/add_to_cart_button"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="8dp"
+                android:src="@drawable/ic_shopping_cart"
+                android:visibility="gone"
+                tools:visibility="visible"
+                android:background="?attr/selectableItemBackgroundBorderless"/>
+
+            <ImageButton
+                android:id="@+id/book_now_button"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="8dp"
+                android:src="@drawable/ic_booking"
+                android:visibility="gone"
+                tools:visibility="gone"
+                android:background="?attr/selectableItemBackgroundBorderless"/>
+
+        </FrameLayout>
+
+        <ImageButton
+            android:id="@+id/unfavorite_button"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:padding="8dp"
-            android:src="@drawable/ic_shopping_cart"
+            android:src="@drawable/ic_favorite_filled"
+            android:background="?attr/selectableItemBackgroundBorderless"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"/>
-
+            app:layout_constraintTop_toBottomOf="@id/frame_buttons"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

@@ -5,7 +5,10 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.rst.gadissalonmanagementsystemapp.databinding.ItemProductBinding // Import the binding class for your item layout
 
-class HomeItemAdapter(private val items: List<Product>) : RecyclerView.Adapter<HomeItemAdapter.HomeItemViewHolder>() {
+class HomeItemAdapter(
+    private val items: List<Product>,
+    private val onItemClick: (Product) -> Unit
+) : RecyclerView.Adapter<HomeItemAdapter.HomeItemViewHolder>() {
 
     // This ViewHolder holds the views for a single item.
     // It uses ViewBinding to safely access the views in item_product.xml.
@@ -14,6 +17,10 @@ class HomeItemAdapter(private val items: List<Product>) : RecyclerView.Adapter<H
             binding.productImage.setImageResource(product.imageResId)
             binding.productName.text = product.name
             binding.productDetail.text = product.detail
+            // Set the click listener on the whole item view
+            itemView.setOnClickListener {
+                onItemClick(product)
+            }
         }
     }
 

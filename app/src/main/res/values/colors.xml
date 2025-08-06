@@ -18,4 +18,8 @@
     <color name="dark_input_field_background">#2C2C2C</color>
 
     <color name="background_grey">#F8F8F8</color>
+
+    <color name="status_green">#1E8E3E</color>
+    <color name="status_red">#D93025</color>
+    <color name="status_grey">#5F6368</color>
 </resources>
