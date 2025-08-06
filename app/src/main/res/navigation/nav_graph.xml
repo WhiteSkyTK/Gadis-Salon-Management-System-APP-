@@ -30,6 +30,7 @@
         <action
             android:id="@+id/action_shopFragment_to_productDetailFragment"
             app:destination="@id/productDetailFragment" />
+
         <action
             android:id="@+id/action_shopFragment_to_hairstyleDetailFragment"
             app:destination="@id/hairstyleDetailFragment" />
@@ -71,6 +72,10 @@
         <argument
             android:name="product"
             app:argType="com.rst.gadissalonmanagementsystemapp.Product" />
+
+        <action
+            android:id="@+id/action_productDetailFragment_to_purchaseConfirmationFragment"
+            app:destination="@id/purchaseConfirmationFragment" />
 
     </fragment>
 
@@ -131,6 +136,11 @@
             app:destination="@id/purchaseSuccessFragment"
             app:popUpTo="@id/cartFragment"
             app:popUpToInclusive="true" />
+
+        <action
+            android:id="@+id/action_cartFragment_to_purchaseConfirmationFragment"
+            app:destination="@id/purchaseConfirmationFragment" />
+
     </fragment>
 
     <fragment
@@ -184,4 +194,19 @@
             app:destination="@id/notificationsFragment"
             app:popUpTo="@id/homeFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/purchaseConfirmationFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.purchase.PurchaseConfirmationFragment"
+        android:label="PurchaseConfirmationFragment"
+        tools:layout="@layout/fragment_purchase_confirmation">
+
+        <argument
+            android:name="product"
+            app:argType="com.rst.gadissalonmanagementsystemapp.Product"
+            app:nullable="true"
+            android:defaultValue="@null" />
+
+    </fragment>
+
 </navigation>

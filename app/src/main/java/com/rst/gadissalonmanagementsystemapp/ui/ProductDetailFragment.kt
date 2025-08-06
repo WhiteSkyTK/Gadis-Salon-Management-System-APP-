@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.chip.Chip
 import com.rst.gadissalonmanagementsystemapp.AppData
@@ -50,6 +51,20 @@ class ProductDetailFragment : Fragment() {
         binding.addToCartButton.setOnClickListener {
             AppData.addToCart(product)
             Toast.makeText(context, "${product.name} added to cart", Toast.LENGTH_SHORT).show()
+        }
+
+        binding.buyNowButton.setOnClickListener {
+            // Find the ID of the currently checked chip in the group
+            val checkedChipId = binding.sizeChipGroup.checkedChipId
+            if (checkedChipId == View.NO_ID) {
+                // If no size is selected, show an error
+                Toast.makeText(context, "Please select a size", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            // Navigate to the confirmation screen, passing the selected product
+            val action = ProductDetailFragmentDirections.actionProductDetailFragmentToPurchaseConfirmationFragment(product)
+            findNavController().navigate(action)
         }
     }
 

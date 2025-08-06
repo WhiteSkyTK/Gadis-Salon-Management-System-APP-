@@ -42,7 +42,7 @@ class CartFragment : Fragment() {
             // In a real app, you would process the payment here
             Toast.makeText(context, "Purchase Complete!", Toast.LENGTH_LONG).show()
             // Navigate to the new success screen
-            findNavController().navigate(R.id.action_cartFragment_to_purchaseSuccessFragment)
+            findNavController().navigate(R.id.action_cartFragment_to_purchaseConfirmationFragment)
         }
     }
 
