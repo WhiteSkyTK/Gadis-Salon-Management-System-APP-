@@ -6,7 +6,7 @@
     android:fitsSystemWindows="true"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F8F8F8"
+    android:background="@color/white"
     tools:context=".Loading">
 
     <ImageView
@@ -33,7 +33,7 @@
         android:paddingEnd="20dp"
         android:paddingBottom="8dp"
         android:text="Gadis Salon"
-        android:textColor="@color/text_primary"
+        android:textColor="@color/black"
         android:textSize="28sp"
         android:textStyle="bold"
         app:layout_constraintTop_toBottomOf="@+id/app_icon"

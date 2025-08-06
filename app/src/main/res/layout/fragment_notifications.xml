@@ -5,7 +5,7 @@
     android:id="@+id/notifications_recycler_view"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_grey"
+    android:background="@color/backgroundGrey"
     android:clipToPadding="false"
     android:padding="8dp"
     app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"

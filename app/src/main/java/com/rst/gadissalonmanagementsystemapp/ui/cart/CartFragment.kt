@@ -26,7 +26,7 @@ class CartFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        AppData.cartItems.observe(viewLifecycleOwner) { cartItems ->
+        AppData.currentUserCart.observe(viewLifecycleOwner) { cartItems ->
             binding.cartRecyclerView.adapter = CartAdapter(cartItems)
 
             // Recalculate and display the total price whenever the cart changes

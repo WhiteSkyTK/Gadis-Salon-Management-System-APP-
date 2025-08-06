@@ -5,7 +5,7 @@
     android:id="@+id/hairstyleDetailFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_grey"
+    android:background="@color/backgroundGrey"
     tools:context=".ui.hairstyle.HairstyleDetailFragment">
 
     <androidx.core.widget.NestedScrollView
@@ -40,7 +40,7 @@
                 android:layout_marginTop="24dp"
                 android:layout_marginStart="16dp"
                 android:text="Butterfly Locs"
-                android:textColor="@color/text_primary"
+                android:textColor="@color/textColorPrimary"
                 android:textSize="28sp"
                 android:textStyle="bold"/>
 
@@ -50,7 +50,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:text="Elegant and protective style"
-                android:textColor="@color/text_secondary"
+                android:textColor="@color/textColorSecondary"
                 android:textSize="16sp"/>
 
             <LinearLayout
@@ -66,7 +66,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="R450"
-                    android:textColor="@color/purple_primary"
+                    android:textColor="@color/colorPrimary"
                     android:textSize="24sp"
                     android:textStyle="bold"/>
                 <TextView
@@ -74,7 +74,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="R550"
-                    android:textColor="@color/text_secondary"
+                    android:textColor="@color/textColorSecondary"
                     android:textSize="18sp"
                     tools:paint_flags="strike_thru_text"/>
             </LinearLayout>
@@ -85,7 +85,7 @@
                 android:layout_marginTop="24dp"
                 android:layout_marginStart="16dp"
                 android:text="Details"
-                android:textColor="@color/text_primary"
+                android:textColor="@color/textColorPrimary"
                 android:textSize="20sp"
                 android:textStyle="bold"/>
 
@@ -147,7 +147,7 @@
             android:layout_width="match_parent"
             android:layout_height="60dp"
             android:text="Book Now"
-            android:backgroundTint="@color/purple_primary"/>
+            android:backgroundTint="@color/colorPrimary"/>
 
     </LinearLayout>
 

@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/admin"
-    android:background="@color/background_grey"
+    android:background="@color/backgroundGrey"
     android:fitsSystemWindows="true"
     tools:context=".AdminMainActivity">
 
@@ -29,7 +29,7 @@
             android:layout_gravity="center"
             android:padding="16dp"
             android:text="Admin Panel"
-            android:textColor="@color/text_primary"
+            android:textColor="@color/textColorPrimary"
             android:textSize="22sp"
             android:textStyle="bold" />
     </com.google.android.material.card.MaterialCardView>

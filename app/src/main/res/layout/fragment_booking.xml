@@ -5,7 +5,7 @@
     android:id="@+id/booking_fragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_grey"
+    android:background="@color/backgroundGrey"
     tools:context=".ui.booking.BookingFragment">
 
     <!-- Top Bar with Title -->
@@ -29,7 +29,7 @@
             android:layout_gravity="center"
             android:padding="16dp"
             android:text="My Bookings"
-            android:textColor="@color/text_primary"
+            android:textColor="@color/textColorPrimary"
             android:textSize="22sp"
             android:textStyle="bold" />
 

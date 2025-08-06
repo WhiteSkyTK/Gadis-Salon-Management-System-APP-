@@ -25,7 +25,7 @@ class BookingAdapter(private val bookings: List<Booking>) : RecyclerView.Adapter
             val statusColorRes = when (booking.status.lowercase()) {
                 "completed" -> R.color.status_green
                 "cancelled" -> R.color.status_red
-                "confirmed" -> R.color.purple_primary
+                "confirmed" -> R.color.colorPrimary
                 else -> R.color.status_grey
             }
 

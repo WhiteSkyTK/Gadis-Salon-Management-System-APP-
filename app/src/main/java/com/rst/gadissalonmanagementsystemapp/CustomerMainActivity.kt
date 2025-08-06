@@ -56,15 +56,28 @@ class CustomerMainActivity : AppCompatActivity() {
         }
         // --- END OF ADDED BLOCK ---
 
-
         // --- THE SINGLE, UNIFIED LISTENER FOR ALL NAVIGATION CHANGES ---
         navController.addOnDestinationChangedListener { _, destination, _ ->
             // Part 1: Handle Top Bar Appearance
             when (destination.id) {
-                R.id.favoritesFragment, R.id.cartFragment, R.id.productDetailFragment,
-                R.id.hairstyleDetailFragment, R.id.notificationsFragment -> {
+                // Product/Hairstyle Detail Screens
+                R.id.productDetailFragment,
+                R.id.hairstyleDetailFragment -> {
                     showDetailTopBar()
                 }
+
+                // Profile Sub-screens
+                R.id.settingsFragment,
+                R.id.aboutUsFragment,
+                R.id.contactFragment,
+                R.id.locationFragment,
+                R.id.favoritesFragment,
+                R.id.cartFragment,
+                R.id.notificationsFragment -> {
+                    showProfileDetailTopBar()
+                }
+
+                // Main Screens
                 else -> {
                     showHomeTopBar()
                 }
@@ -142,6 +155,23 @@ class CustomerMainActivity : AppCompatActivity() {
         binding.iconNotifications.visibility = View.GONE
         binding.iconFavoriteMain.visibility = View.VISIBLE
 
+        val params = binding.salonNameCard.layoutParams as ConstraintLayout.LayoutParams
+        params.horizontalBias = 0.5f
+        binding.salonNameCard.layoutParams = params
+    }
+
+    private fun showProfileDetailTopBar() {
+        binding.backButtonCard.visibility = View.VISIBLE
+        binding.bottomNavBar.visibility = View.GONE
+
+        // Show the original group of home icons
+        binding.iconFavorites.visibility = View.VISIBLE
+        binding.iconCart.visibility = View.VISIBLE
+        binding.iconNotifications.visibility = View.VISIBLE
+        // Hide the single favorite icon used on product pages
+        binding.iconFavoriteMain.visibility = View.GONE
+
+        // Center the logo
         val params = binding.salonNameCard.layoutParams as ConstraintLayout.LayoutParams
         params.horizontalBias = 0.5f
         binding.salonNameCard.layoutParams = params

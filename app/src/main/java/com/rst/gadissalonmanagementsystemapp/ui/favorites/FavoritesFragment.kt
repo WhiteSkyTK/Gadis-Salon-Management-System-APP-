@@ -30,7 +30,7 @@ class FavoritesFragment : Fragment() {
         binding.favoritesRecyclerView.layoutManager = LinearLayoutManager(context)
 
         // Observe the LiveData from AppData
-        AppData.favoriteItems.observe(viewLifecycleOwner) { favoritesList ->
+        AppData.currentUserFavorites.observe(viewLifecycleOwner) { favoritesList ->
             val adapter = FavoritesAdapter(
                 items = favoritesList,
                 onUnfavoriteClick = { product ->

@@ -5,6 +5,7 @@ data class User(
     val email: String,
     val phone: String,
     val password: String,
+    var profileImageUri: String? = null,
     val role: String = "CUSTOMER",
     val favorites: MutableList<Product> = mutableListOf(),
     val cart: MutableList<CartItem> = mutableListOf()

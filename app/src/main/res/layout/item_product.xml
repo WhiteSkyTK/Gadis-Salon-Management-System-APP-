@@ -24,7 +24,7 @@
             android:layout_height="120dp"
             android:scaleType="centerCrop"
             android:src="@drawable/ic_placeholder_image"
-            android:background="@color/input_field_background"
+            android:background="@color/inputFieldBackgroundColor"
             android:contentDescription="product_image" />
 
         <TextView
@@ -33,7 +33,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:textSize="16sp"
-            android:textColor="@color/text_primary"
+            android:textColor="@color/textColorPrimary"
             android:textStyle="bold"
             tools:text="Eco Style Gel" />
 
@@ -41,7 +41,7 @@
             android:id="@+id/product_detail"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/text_secondary"
+            android:textColor="@color/textColorSecondary"
             android:textSize="14sp"
             tools:text="R50" />
 

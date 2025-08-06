@@ -25,6 +25,14 @@ object AppData {
         Product("Twists", "R350", Product.TYPE_HAIRSTYLE)
     )
 
+    // --- USER MANAGEMENT ---
+    private val registeredUsers = mutableListOf<User>()
+    private var currentUser: User? = null
+
+    fun getCurrentUser(): User? {
+        return currentUser
+    }
+
     // --- New LiveData that reflects the CURRENT user's data ---
     private val _currentUserFavorites = MutableLiveData<List<Product>>()
     val currentUserFavorites: LiveData<List<Product>> = _currentUserFavorites
@@ -42,33 +50,6 @@ object AppData {
         registeredUsers.add(newUser)
         return true // Registration successful
     }
-
-    fun loginUser(email: String, password: String): String? {
-        val foundUser = registeredUsers.find { it.email.equals(email, ignoreCase = true) && it.password == password }
-        return if (foundUser != null) {
-            currentUser = foundUser
-            // Notify LiveData observers
-            _currentUserFavorites.value = currentUser?.favorites
-            _currentUserCart.value = currentUser?.cart
-            currentUser?.role // Login successful, return role
-        } else {
-            null // Login failed
-        }
-    }
-
-    fun logoutUser() {
-        currentUser = null
-        _currentUserFavorites.value = emptyList()
-        _currentUserCart.value = emptyList()
-    }
-
-    // --- USER DATA (Favorites and Cart) ---
-    // We use LiveData so the UI can automatically update when the data changes.
-    private val _favoriteItems = MutableLiveData<List<Product>>(emptyList())
-    val favoriteItems: LiveData<List<Product>> = _favoriteItems
-
-    private val _cartItems = MutableLiveData<List<CartItem>>(emptyList())
-    val cartItems: LiveData<List<CartItem>> = _cartItems
 
     fun toggleFavorite(product: Product) {
         currentUser?.let { user ->
@@ -98,5 +79,23 @@ object AppData {
         }
     }
 
+    fun logoutUser() {
+        currentUser = null
+        _currentUserFavorites.value = emptyList()
+        _currentUserCart.value = emptyList()
+    }
+
+    fun loginUser(email: String, password: String): String? {
+        val foundUser = registeredUsers.find { it.email.equals(email, ignoreCase = true) && it.password == password }
+        return if (foundUser != null) {
+            currentUser = foundUser
+            // Notify LiveData observers
+            _currentUserFavorites.value = currentUser?.favorites
+            _currentUserCart.value = currentUser?.cart
+            currentUser?.role // Login successful, return role
+        } else {
+            null // Login failed
+        }
+    }
     // Add functions to remove from cart, change quantity etc. here
 }
