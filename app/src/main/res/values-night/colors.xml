@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#BB86FC</color>
+    <color name="textColorPrimary">#E1E1E1</color>
+    <color name="textColorSecondary">#B0B0B0</color>
+    <color name="backgroundColor">#121212</color>
+    <color name="backgroundGrey">#1F1F1F</color>
+    <color name="inputFieldBackgroundColor">#2C2C2C</color>
+    <color name="cardBackgroundColor">#1E1E1E</color>
+
+    <color name="white">#FFFFFFFF</color>
+    <color name="black">#FF000000</color>
+    <color name="status_green">#81C784</color>
+    <color name="status_red">#E57373</color>
+    <color name="status_grey">#9E9E9E</color>
+</resources>
