@@ -54,15 +54,36 @@
                 android:text="Select a Stylist"
                 android:textSize="18sp"
                 android:textStyle="bold" />
+
             <com.google.android.material.chip.ChipGroup
                 android:id="@+id/stylist_chip_group"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 app:singleSelection="true">
-                <com.google.android.material.chip.Chip style="@style/Widget.Material3.Chip.Filter" android:text="Any Available" android:checkable="true" android:checked="true"/>
-                <com.google.android.material.chip.Chip style="@style/Widget.Material3.Chip.Filter" android:text="Sarah" android:checkable="true"/>
-                <com.google.android.material.chip.Chip style="@style/Widget.Material3.Chip.Filter" android:text="Rinae" android:checkable="true"/>
+
+                <com.google.android.material.chip.Chip
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:text="Any Available"
+                    android:checkable="true"
+                    android:checked="true"/>
+
+                <com.google.android.material.chip.Chip
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:text="Sarah"
+                    android:checkable="true"/>
+
+                <com.google.android.material.chip.Chip
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:text="Rinae"
+                    android:checkable="true"/>
+
             </com.google.android.material.chip.ChipGroup>
 
             <TextView
@@ -72,6 +93,7 @@
                 android:text="Select Date"
                 android:textSize="18sp"
                 android:textStyle="bold" />
+
             <CalendarView
                 android:id="@+id/calendar_view"
                 android:layout_width="match_parent"
@@ -94,6 +116,7 @@
                 app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
                 app:spanCount="4"
                 tools:listitem="@layout/item_time_slot"/>
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -101,19 +124,29 @@
                 android:text="Payment Method"
                 android:textSize="18sp"
                 android:textStyle="bold" />
+
             <RadioGroup
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp">
+
                 <RadioButton
+                    android:id="@+id/radio_cash"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:text="Pay with Cash (at Salon)"
+                    android:textSize="16sp"
                     android:checked="true"/>
 
                 <RadioButton
+                    android:id="@+id/radio_card"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:text="Pay with Card (Unavailable)"
+                    android:textSize="16sp"
                     android:enabled="false"/>
-            </RadioGroup>
 
+            </RadioGroup>
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 

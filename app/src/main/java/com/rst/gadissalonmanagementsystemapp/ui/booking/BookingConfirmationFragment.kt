@@ -66,8 +66,8 @@ class BookingConfirmationFragment : Fragment() {
         binding.confirmBookingButton.setOnClickListener {
             // In a real app, you would save the booking here
             Toast.makeText(context, "Booking Confirmed!", Toast.LENGTH_LONG).show()
-            // Navigate to the user's main booking list
-            findNavController().navigate(R.id.bookingFragment)
+            // Navigate to the new success screen
+            findNavController().navigate(R.id.action_bookingConfirmationFragment_to_bookingSuccessFragment)
         }
     }
 

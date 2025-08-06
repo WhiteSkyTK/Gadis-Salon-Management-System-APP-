@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.rst.gadissalonmanagementsystemapp.AppData
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentHairstyleDetailBinding
@@ -49,6 +50,14 @@ class HairstyleDetailFragment : Fragment() {
         // Find the stylist's name from AppData
         val stylist = AppData.allStylists.find { it.id == hairstyle.availableStylistIds.firstOrNull() }
         binding.stylistName.text = "Stylist: ${stylist?.name ?: "Any"}"
+
+        binding.bookNowButton.setOnClickListener {
+            // Create the navigation action, passing the current hairstyle object
+            val action = HairstyleDetailFragmentDirections.actionHairstyleDetailFragmentToBookingConfirmationFragment(hairstyle)
+
+            // Navigate to the confirmation screen
+            findNavController().navigate(action)
+        }
     }
 
     override fun onDestroyView() {
