@@ -2,6 +2,7 @@
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/item_favourite"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginStart="16dp"
@@ -19,7 +20,7 @@
             android:id="@+id/item_image"
             android:layout_width="80dp"
             android:layout_height="80dp"
-            android:background="@color/input_field_background"
+            android:background="@color/inputFieldBackgroundColor"
             android:scaleType="centerCrop"
             android:src="@drawable/ic_placeholder_image"
             app:layout_constraintStart_toStartOf="parent"
@@ -32,10 +33,10 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:text="Eco Style Gel"
-            android:textColor="@color/text_primary"
+            android:textColor="@color/textColorPrimary"
             android:textSize="18sp"
             android:textStyle="bold"
-            app:layout_constraintEnd_toStartOf="@id/icon_cart"
+            app:layout_constraintEnd_toStartOf="@id/frame_buttons"
             app:layout_constraintStart_toEndOf="@id/item_image"
             app:layout_constraintTop_toTopOf="@id/item_image" />
 
@@ -44,7 +45,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="R50"
-            android:textColor="@color/purple_primary"
+            android:textColor="@color/colorPrimary"
             android:textSize="16sp"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="@id/item_name"
@@ -56,19 +57,48 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:text="50ML"
-            android:textColor="@color/text_secondary"
+            android:textColor="@color/textColorSecondary"
             android:textSize="14sp"
             app:layout_constraintBottom_toBottomOf="@id/item_price"
             app:layout_constraintStart_toEndOf="@id/item_price" />
 
-        <ImageView
-            android:id="@+id/icon_cart"
+        <FrameLayout
+            android:id="@+id/frame_buttons"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageButton
+                android:id="@+id/add_to_cart_button"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="8dp"
+                android:src="@drawable/ic_shopping_cart"
+                android:visibility="gone"
+                tools:visibility="visible"
+                android:background="?attr/selectableItemBackgroundBorderless"/>
+
+            <ImageButton
+                android:id="@+id/book_now_button"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="8dp"
+                android:src="@drawable/ic_booking"
+                android:visibility="gone"
+                tools:visibility="gone"
+                android:background="?attr/selectableItemBackgroundBorderless"/>
+
+        </FrameLayout>
+
+        <ImageButton
+            android:id="@+id/unfavorite_button"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:padding="8dp"
-            android:src="@drawable/ic_shopping_cart"
+            android:src="@drawable/ic_favorite_filled"
+            android:background="?attr/selectableItemBackgroundBorderless"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"/>
-
+            app:layout_constraintTop_toBottomOf="@id/frame_buttons"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

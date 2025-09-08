@@ -2,9 +2,10 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/profile_fragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_grey"
+    android:background="@color/backgroundGrey"
     tools:context=".ui.profile.ProfileFragment">
 
     <!-- Top Bar with Title -->
@@ -28,7 +29,7 @@
             android:layout_gravity="center"
             android:padding="16dp"
             android:text="My Profile"
-            android:textColor="@color/text_primary"
+            android:textColor="@color/textColorPrimary"
             android:textSize="22sp"
             android:textStyle="bold" />
     </com.google.android.material.card.MaterialCardView>
@@ -68,7 +69,7 @@
                         android:id="@+id/profile_image"
                         android:layout_width="80dp"
                         android:layout_height="80dp"
-                        android:background="@color/input_field_background"
+                        android:background="@color/inputFieldBackgroundColor"
                         android:padding="4dp"
                         android:src="@drawable/ic_profile"
                         app:layout_constraintStart_toStartOf="parent"
@@ -80,7 +81,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="16dp"
-                        android:textColor="@color/text_primary"
+                        android:textColor="@color/textColorPrimary"
                         android:textSize="20sp"
                         android:textStyle="bold"
                         app:layout_constraintEnd_toEndOf="parent"
@@ -92,7 +93,7 @@
                         android:id="@+id/user_phone"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:textColor="@color/text_secondary"
+                        android:textColor="@color/textColorSecondary"
                         android:textSize="16sp"
                         app:layout_constraintBottom_toBottomOf="@id/profile_image"
                         app:layout_constraintEnd_toEndOf="parent"
@@ -119,17 +120,33 @@
                     android:paddingBottom="8dp">
 
                     <!-- Contact Support -->
-                    <TextView style="@style/ProfileOption" android:drawableStart="@drawable/ic_contact_support" android:text="Contact &amp; Support"/>
+                    <TextView
+                        android:id="@+id/contact_support_option"
+                        style="@style/ProfileOption"
+                        android:drawableStart="@drawable/ic_contact_support"
+                        android:text="Contact &amp; Support"/>
                     <View style="@style/Divider"/>
                     <!-- Settings -->
-                    <TextView style="@style/ProfileOption" android:drawableStart="@drawable/ic_settings" android:text="Settings"/>
+                    <TextView
+                        android:id="@+id/settings_option"
+                        style="@style/ProfileOption"
+                        android:drawableStart="@drawable/ic_settings"
+                        android:text="Settings"/>
                     <View style="@style/Divider"/>
                     <!-- Location -->
-                    <TextView style="@style/ProfileOption" android:drawableStart="@drawable/ic_location" android:text="Location"/>
+                    <TextView
+                        android:id="@+id/location_option"
+                        style="@style/ProfileOption"
+                        android:drawableStart="@drawable/ic_location"
+                        android:text="Location"/>
                     <View style="@style/Divider"/>
                     <!-- About Us -->
-                    <TextView style="@style/ProfileOption" android:drawableStart="@drawable/ic_info" android:text="About Us"/>
-
+                    <TextView
+                        android:id="@+id/about_us_option"
+                        style="@style/ProfileOption"
+                        android:drawableStart="@drawable/ic_info"
+                        android:text="About Us"
+                        app:tint="@android:color/black" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -140,7 +157,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="24dp"
-                android:textColor="@color/text_secondary"
+                android:textColor="@color/textColorSecondary"
                 android:textSize="14sp"
                 tools:text="Version 1.0.0" />
 
