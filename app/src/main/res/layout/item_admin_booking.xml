@@ -1,14 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginStart="8dp"
-    android:layout_marginEnd="8dp"
-    android:layout_marginBottom="12dp"
-    app:cardCornerRadius="16dp">
-
+    android:layout_margin="8dp">
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -18,84 +13,68 @@
             android:id="@+id/service_name"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:textColor="@color/textColorPrimary"
-            android:textSize="18sp"
+            android:text="Butterfly Locs"
             android:textStyle="bold"
-            app:layout_constraintEnd_toStartOf="@id/booking_status_admin"
-            app:layout_constraintStart_toStartOf="parent"
+            android:textSize="18sp"
             app:layout_constraintTop_toTopOf="parent"
-            tools:text="Butterfly Locs" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/booking_status_admin"/>
 
         <TextView
             android:id="@+id/customer_name_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:text="Customer: "
             android:layout_marginTop="8dp"
-            android:text="Customer:"
-            android:textColor="@color/textColorSecondary"
-            android:textSize="14sp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/service_name" />
-
+            app:layout_constraintTop_toBottomOf="@id/service_name"
+            app:layout_constraintStart_toStartOf="parent"/>
         <TextView
             android:id="@+id/customer_name_value"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:textColor="@color/textColorPrimary"
-            android:textSize="14sp"
-            app:layout_constraintBaseline_toBaselineOf="@id/customer_name_label"
+            android:text="Sagwadi M."
+            android:textStyle="bold"
             app:layout_constraintStart_toEndOf="@id/customer_name_label"
-            tools:text="Sagwadi Mashimbye" />
+            app:layout_constraintBaseline_toBaselineOf="@id/customer_name_label"/>
 
         <TextView
             android:id="@+id/stylist_name_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="Stylist:"
-            android:textColor="@color/textColorSecondary"
-            android:textSize="14sp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/customer_name_label" />
-
+            android:text="Stylist: "
+            app:layout_constraintTop_toBottomOf="@id/customer_name_label"
+            app:layout_constraintStart_toStartOf="parent"/>
         <TextView
             android:id="@+id/stylist_name_value"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:textColor="@color/textColorPrimary"
-            android:textSize="14sp"
-            app:layout_constraintBaseline_toBaselineOf="@id/stylist_name_label"
+            android:text="Rinae M."
+            android:textStyle="bold"
             app:layout_constraintStart_toEndOf="@id/stylist_name_label"
-            tools:text="Rinae Magadagela" />
+            app:layout_constraintBaseline_toBaselineOf="@id/stylist_name_label"/>
 
         <TextView
             android:id="@+id/booking_date_admin"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:text="06 Aug 2025, 14:00"
             android:layout_marginTop="8dp"
-            android:textColor="@color/textColorSecondary"
-            android:textSize="14sp"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/stylist_name_label"
-            tools:text="04 Aug 2025, 15:30" />
+            app:layout_constraintStart_toStartOf="parent"/>
 
         <TextView
             android:id="@+id/booking_status_admin"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:text="Confirmed"
             android:background="@drawable/status_background"
-            android:paddingStart="10dp"
-            android:paddingTop="4dp"
-            android:paddingEnd="10dp"
-            android:paddingBottom="4dp"
             android:textColor="@color/white"
-            android:textSize="12sp"
-            android:textStyle="bold"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="Confirmed" />
+            app:layout_constraintTop_toTopOf="parent"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

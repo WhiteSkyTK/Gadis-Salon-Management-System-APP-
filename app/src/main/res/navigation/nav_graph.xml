@@ -61,6 +61,9 @@
         <action
             android:id="@+id/action_profileFragment_to_locationFragment"
             app:destination="@id/locationFragment" />
+        <action
+            android:id="@+id/action_profileFragment_to_helpCenterFragment"
+            app:destination="@id/helpCenterFragment" />
     </fragment>
 
     <fragment
@@ -208,5 +211,24 @@
             android:defaultValue="@null" />
 
     </fragment>
+
+    <fragment
+        android:id="@+id/helpCenterFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.profile.HelpCenterFragment"
+        android:label="Help &amp; Support"
+        tools:layout="@layout/fragment_help_center" >
+        <action
+            android:id="@+id/action_helpCenterFragment_to_faqFragment"
+            app:destination="@id/faqFragment" />
+        <action
+            android:id="@+id/action_helpCenterFragment_to_contactFragment"
+            app:destination="@id/contactFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/faqFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.profile.FaqFragment"
+        android:label="FAQ"
+        tools:layout="@layout/fragment_faq" />
 
 </navigation>

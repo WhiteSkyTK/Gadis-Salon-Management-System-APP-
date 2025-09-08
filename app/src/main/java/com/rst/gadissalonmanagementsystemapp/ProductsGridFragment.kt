@@ -21,11 +21,13 @@ class ProductsGridFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val adapter = HomeItemAdapter(AppData.allProducts) { clickedProduct ->
-            val action = ShopFragmentDirections.actionShopFragmentToProductDetailFragment(clickedProduct)
-            findNavController().navigate(action)
+        AppData.allProducts.observe(viewLifecycleOwner) { productList ->
+            val adapter = HomeItemAdapter(productList) { clickedProduct ->
+                val action = ShopFragmentDirections.actionShopFragmentToProductDetailFragment(clickedProduct)
+                findNavController().navigate(action)
+            }
+            binding.gridRecyclerView.adapter = adapter
         }
-        binding.gridRecyclerView.adapter = adapter
     }
 
     override fun onDestroyView() {

@@ -8,7 +8,8 @@ import kotlinx.parcelize.Parcelize
 data class ProductVariant(
     val size: String,
     val price: Double,
-    val priceOld: Double? = null // Optional older price for showing discounts
+    val priceOld: Double? = null,
+    val stock: Int
 ) : Parcelable
 
 @Parcelize

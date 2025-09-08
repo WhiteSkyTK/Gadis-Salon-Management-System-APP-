@@ -9,12 +9,14 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.chip.Chip
+import com.rst.gadissalonmanagementsystemapp.AdminBooking
 import com.rst.gadissalonmanagementsystemapp.AppData
 import com.rst.gadissalonmanagementsystemapp.R
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentBookingConfirmationBinding
 import java.text.NumberFormat
 import java.util.Calendar
 import java.util.Locale
+import java.util.UUID
 
 class BookingConfirmationFragment : Fragment() {
 
@@ -83,7 +85,27 @@ class BookingConfirmationFragment : Fragment() {
 
         // 3. Handle the final confirmation button click (this remains the same)
         binding.confirmBookingButton.setOnClickListener {
-            // In a real app, you'd use the selectedStylistName, selectedDate, and selectedTime
+            val currentUser = AppData.getCurrentUser()
+            if (currentUser == null) {
+                // Handle case where user is not logged in
+                Toast.makeText(context, "Error: User not found", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            // Create a new booking object with all the details
+            val newBooking = AdminBooking(
+                id = UUID.randomUUID().toString(),
+                serviceName = hairstyle.name,
+                customerName = currentUser.name,
+                stylistName = selectedStylistName ?: "Any Available", // Use selected stylist
+                date = "20 Aug, 2025", // In a real app, get this from the CalendarView
+                time = "10:00", // In a real app, get this from the selected time slot
+                status = "Pending"
+            )
+
+            // Add the booking to our central data source
+            AppData.addBooking(newBooking)
+
             Toast.makeText(context, "Booking Confirmed!", Toast.LENGTH_LONG).show()
             findNavController().navigate(R.id.action_bookingConfirmationFragment_to_bookingSuccessFragment)
         }

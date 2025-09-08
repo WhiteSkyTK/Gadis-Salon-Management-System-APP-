@@ -25,6 +25,7 @@ class Loading : AppCompatActivity() {
         // Use a Handler to create a delay
         Handler(Looper.getMainLooper()).postDelayed({
 
+            /*
             // Access SharedPreferences
             val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
             val isFirstTime = prefs.getBoolean(IS_FIRST_TIME_KEY, true)
@@ -50,6 +51,10 @@ class Loading : AppCompatActivity() {
                     }
                 }
             }
+
+             */
+
+            startActivity(Intent(this, AdminMainActivity::class.java))
 
             // Finish the Loading activity so the user can't navigate back to it
             finish()

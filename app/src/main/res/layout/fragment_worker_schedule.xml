@@ -4,13 +4,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    tools:context=".ui.worker.WorkerScheduleFragment">
 
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        app:cardCornerRadius="16dp">
+        android:layout_margin="16dp">
         <CalendarView
             android:id="@+id/calendar_view_worker"
             android:layout_width="match_parent"
@@ -22,7 +22,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginBottom="8dp"
-        android:text="Bookings for selected date"
+        android:text="Appointments for selected date"
         android:textStyle="bold"/>
 
     <androidx.recyclerview.widget.RecyclerView
@@ -34,5 +34,5 @@
         android:paddingStart="8dp"
         android:paddingEnd="8dp"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        tools:listitem="@layout/item_booking" />
+        tools:listitem="@layout/item_worker_schedule" />
 </LinearLayout>

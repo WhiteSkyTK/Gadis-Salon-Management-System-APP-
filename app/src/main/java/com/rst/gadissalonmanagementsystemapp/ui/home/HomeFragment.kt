@@ -38,19 +38,19 @@ class HomeFragment : Fragment() {
             findNavController().navigate(R.id.shopFragment)
         }
 
-        val productAdapter = HomeItemAdapter(AppData.allProducts) { product ->
-            findNavController().navigate(HomeFragmentDirections.actionHomeFragmentToProductDetailFragment(product))
+        AppData.allProducts.observe(viewLifecycleOwner) { productList ->
+            val productAdapter = HomeItemAdapter(productList) { product ->
+                findNavController().navigate(HomeFragmentDirections.actionHomeFragmentToProductDetailFragment(product))
+            }
+            binding.recyclerViewProducts.adapter = productAdapter
         }
-        binding.recyclerViewProducts.adapter = productAdapter
 
-        val hairstyleAdapter = HairstyleItemAdapter(AppData.allHairstyles) { hairstyle ->
-            findNavController().navigate(
-                HomeFragmentDirections.actionHomeFragmentToHairstyleDetailFragment(
-                    hairstyle
-                )
-            )
+        AppData.allHairstyles.observe(viewLifecycleOwner) { hairstyleList ->
+            val hairstyleAdapter = HairstyleItemAdapter(hairstyleList) { hairstyle ->
+                findNavController().navigate(HomeFragmentDirections.actionHomeFragmentToHairstyleDetailFragment(hairstyle))
+            }
+            binding.recyclerViewHairstyles.adapter = hairstyleAdapter
         }
-        binding.recyclerViewHairstyles.adapter = hairstyleAdapter
     }
 
     override fun onDestroyView() {

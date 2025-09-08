@@ -103,6 +103,15 @@ class ProfileFragment : Fragment(),  ProfilePictureBottomSheet.PictureOptionList
         } catch (e: Exception) {
             e.printStackTrace()
         }
+
+        // --- 4. Setup Click Listeners for Options ---
+        binding.contactSupportOption.setOnClickListener {
+            // This now navigates to the new Help Center screen
+            findNavController().navigate(R.id.action_profileFragment_to_helpCenterFragment)
+        }
+        binding.settingsOption.setOnClickListener {
+            findNavController().navigate(R.id.action_profileFragment_to_settingsFragment)
+        }
     }
 
     // --- This function is called from the Bottom Sheet ---

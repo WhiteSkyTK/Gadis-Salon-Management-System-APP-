@@ -22,10 +22,15 @@ class HairstylesGridFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val adapter = HairstyleItemAdapter(AppData.allHairstyles) { hairstyle ->
-            findNavController().navigate(ShopFragmentDirections.actionShopFragmentToHairstyleDetailFragment(hairstyle))
+        // Observe the LiveData from AppData
+        AppData.allHairstyles.observe(viewLifecycleOwner) { hairstyleList ->
+            // This code runs whenever the list of hairstyles changes.
+            // We now pass the actual list (hairstyleList) to the adapter.
+            val adapter = HairstyleItemAdapter(hairstyleList) { hairstyle ->
+                findNavController().navigate(ShopFragmentDirections.actionShopFragmentToHairstyleDetailFragment(hairstyle))
+            }
+            binding.gridRecyclerView.adapter = adapter
         }
-        binding.gridRecyclerView.adapter = adapter
     }
 
     override fun onDestroyView() {

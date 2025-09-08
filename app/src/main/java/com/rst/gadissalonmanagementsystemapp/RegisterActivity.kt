@@ -87,20 +87,24 @@ class RegisterActivity : AppCompatActivity() {
         binding.loadingIndicator.visibility = View.VISIBLE
         binding.signupButton.isEnabled = false
 
+        // Use a coroutine to call our new suspend function
         lifecycleScope.launch {
-            delay(1000) // Simulate check
+            val result = FirebaseManager.registerUser(name, email, phone, password)
 
-            val success = AppData.registerUser(name, email, phone, password)
-
+            // Hide the loading indicator
             binding.loadingIndicator.visibility = View.GONE
             binding.signupButton.isEnabled = true
 
-            if (success) {
+            if (result.isSuccess) {
+                // Registration was successful
                 Toast.makeText(this@RegisterActivity, "Registration successful! Please log in.", Toast.LENGTH_LONG).show()
                 finish() // Go back to the login screen
             } else {
-                // Show an error on the email field
-                binding.emailLayout.error = "This email is already registered"
+                // Registration failed, show the error message
+                val exception = result.exceptionOrNull()
+                val errorMessage = exception?.message ?: "An unknown error occurred."
+                binding.emailLayout.error = errorMessage
+                Toast.makeText(this@RegisterActivity, "Registration Failed: $errorMessage", Toast.LENGTH_LONG).show()
             }
         }
     }
