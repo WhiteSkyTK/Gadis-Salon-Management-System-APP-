@@ -2,17 +2,18 @@
     android:width="40dp"
     android:height="40dp"
     android:viewportWidth="40"
-    android:viewportHeight="40">
+    android:viewportHeight="40"
+    android:tint="?attr/colorControlNormal">
   <path
       android:strokeWidth="1"
       android:pathData="M8.333,21.266C8.333,19.003 8.333,17.872 8.791,16.877C9.248,15.882 10.107,15.146 11.826,13.674L13.492,12.245C16.598,9.583 18.15,8.252 20,8.252C21.85,8.252 23.403,9.583 26.508,12.245L28.175,13.674C29.893,15.146 30.752,15.882 31.209,16.877C31.667,17.872 31.667,19.003 31.667,21.266V28.333C31.667,31.476 31.667,33.047 30.691,34.024C29.714,35 28.143,35 25,35H15C11.858,35 10.286,35 9.31,34.024C8.333,33.047 8.333,31.476 8.333,28.333V21.266Z"
-      android:fillColor="#00000000"
-      android:strokeColor="#222222"/>
+      android:fillColor="@android:color/transparent"
+      android:strokeColor="@android:color/black"/>
   <path
       android:strokeWidth="1"
       android:pathData="M24.167,35V26C24.167,25.448 23.719,25 23.167,25H16.833C16.281,25 15.833,25.448 15.833,26V35"
       android:strokeLineJoin="round"
-      android:fillColor="#00000000"
-      android:strokeColor="#222222"
+      android:fillColor="@android:color/transparent"
+      android:strokeColor="@android:color/black"
       android:strokeLineCap="round"/>
 </vector>

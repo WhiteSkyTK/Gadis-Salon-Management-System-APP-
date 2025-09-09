@@ -2,28 +2,29 @@
     android:width="40dp"
     android:height="40dp"
     android:viewportWidth="40"
-    android:viewportHeight="40">
+    android:viewportHeight="40"
+    android:tint="?attr/colorControlNormal">
   <path
       android:strokeWidth="1"
       android:pathData="M12.5,14.167L12.5,12.233C12.5,9.993 12.5,8.873 12.936,8.017C13.319,7.265 13.931,6.653 14.684,6.269C15.54,5.833 16.66,5.833 18.9,5.833L21.1,5.833C23.34,5.833 24.46,5.833 25.316,6.269C26.069,6.653 26.681,7.265 27.064,8.017C27.5,8.873 27.5,9.993 27.5,12.233L27.5,14.167"
-      android:fillColor="#00000000"
-      android:strokeColor="#222222"
+      android:fillColor="@android:color/transparent"
+      android:strokeColor="@android:color/black"
       android:strokeLineCap="round"/>
   <path
       android:strokeWidth="1"
       android:pathData="M25.833,22.5V19.167"
-      android:fillColor="#00000000"
-      android:strokeColor="#222222"
+      android:fillColor="@android:color/transparent"
+      android:strokeColor="@android:color/black"
       android:strokeLineCap="round"/>
   <path
       android:strokeWidth="1"
       android:pathData="M14.167,22.5V19.167"
-      android:fillColor="#00000000"
-      android:strokeColor="#222222"
+      android:fillColor="@android:color/transparent"
+      android:strokeColor="@android:color/black"
       android:strokeLineCap="round"/>
   <path
       android:strokeWidth="1"
       android:pathData="M9.167,17.767C9.167,16.07 9.167,15.221 9.694,14.694C10.221,14.167 11.069,14.167 12.767,14.167H27.233C28.93,14.167 29.779,14.167 30.306,14.694C30.833,15.221 30.833,16.07 30.833,17.767V28.167C30.833,30.995 30.833,32.409 29.955,33.288C29.076,34.167 27.662,34.167 24.833,34.167H15.167C12.338,34.167 10.924,34.167 10.045,33.288C9.167,32.409 9.167,30.995 9.167,28.167V17.767Z"
-      android:fillColor="#00000000"
-      android:strokeColor="#222222"/>
+      android:fillColor="@android:color/transparent"
+      android:strokeColor="@android:color/black"/>
 </vector>

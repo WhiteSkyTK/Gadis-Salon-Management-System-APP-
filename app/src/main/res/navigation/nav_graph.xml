@@ -9,19 +9,33 @@
         android:id="@+id/homeFragment"
         android:name="com.rst.gadissalonmanagementsystemapp.ui.home.HomeFragment"
         android:label="fragment_home"
-        tools:layout="@layout/fragment_home"/>
-    <action
-        android:id="@+id/action_homeFragment_to_productDetailFragment"
-        app:destination="@id/productDetailFragment" />
+        tools:layout="@layout/fragment_home">
+
+        <action
+            android:id="@+id/action_homeFragment_to_productDetailFragment"
+            app:destination="@id/productDetailFragment" />
+
+        <action
+            android:id="@+id/action_homeFragment_to_hairstyleDetailFragment"
+            app:destination="@id/hairstyleDetailFragment" />
+
+    </fragment>
 
     <fragment
         android:id="@+id/shopFragment"
         android:name="com.rst.gadissalonmanagementsystemapp.ui.shop.ShopFragment"
         android:label="fragment_shop"
-        tools:layout="@layout/fragment_shop"/>
-    <action
-        android:id="@+id/action_shopFragment_to_productDetailFragment"
-        app:destination="@id/productDetailFragment" />
+        tools:layout="@layout/fragment_shop">
+
+        <action
+            android:id="@+id/action_shopFragment_to_productDetailFragment"
+            app:destination="@id/productDetailFragment" />
+
+        <action
+            android:id="@+id/action_shopFragment_to_hairstyleDetailFragment"
+            app:destination="@id/hairstyleDetailFragment" />
+
+    </fragment>
 
     <fragment
         android:id="@+id/bookingFragment"
@@ -33,23 +47,188 @@
         android:id="@+id/profileFragment"
         android:name="com.rst.gadissalonmanagementsystemapp.ui.profile.ProfileFragment"
         android:label="fragment_profile"
-        tools:layout="@layout/fragment_profile" />
+        tools:layout="@layout/fragment_profile">
+
+        <action
+            android:id="@+id/action_profileFragment_to_settingsFragment"
+            app:destination="@id/settingsFragment" />
+        <action
+            android:id="@+id/action_profileFragment_to_aboutUsFragment"
+            app:destination="@id/aboutUsFragment" />
+        <action
+            android:id="@+id/action_profileFragment_to_contactFragment"
+            app:destination="@id/contactFragment" />
+        <action
+            android:id="@+id/action_profileFragment_to_locationFragment"
+            app:destination="@id/locationFragment" />
+        <action
+            android:id="@+id/action_profileFragment_to_helpCenterFragment"
+            app:destination="@id/helpCenterFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/productDetailFragment"
         android:name="com.rst.gadissalonmanagementsystemapp.ui.ProductDetailFragment"
         android:label="ProductDetailFragment"
-        tools:layout="@layout/fragment_product_detail" />
+        tools:layout="@layout/fragment_product_detail">
+
+        <argument
+            android:name="product"
+            app:argType="com.rst.gadissalonmanagementsystemapp.Product" />
+
+        <action
+            android:id="@+id/action_productDetailFragment_to_purchaseConfirmationFragment"
+            app:destination="@id/purchaseConfirmationFragment" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/bookingConfirmationFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.booking.BookingConfirmationFragment"
+        android:label="BookingConfirmationFragment"
+        tools:layout="@layout/fragment_booking_confirmation">
+
+        <argument
+            android:name="hairstyle"
+            app:argType="com.rst.gadissalonmanagementsystemapp.Hairstyle" />
+
+        <action
+            android:id="@+id/action_bookingConfirmationFragment_to_bookingSuccessFragment"
+            app:destination="@id/bookingSuccessFragment"
+            app:popUpTo="@id/bookingConfirmationFragment"
+            app:popUpToInclusive="true" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/hairstyleDetailFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.hairstyle.HairstyleDetailFragment"
+        android:label="HairstyleDetailFragment"
+        tools:layout="@layout/fragment_hairstyle_detail">
+
+        <argument
+            android:name="hairstyle"
+            app:argType="com.rst.gadissalonmanagementsystemapp.Hairstyle" />
+
+        <action
+            android:id="@+id/action_hairstyleDetailFragment_to_bookingConfirmationFragment"
+            app:destination="@id/bookingConfirmationFragment" />
+
+    </fragment>
 
     <fragment
         android:id="@+id/favoritesFragment"
         android:name="com.rst.gadissalonmanagementsystemapp.ui.favorites.FavoritesFragment"
         android:label="FavoritesFragment"
-        tools:layout="@layout/fragment_favorites"/>
+        tools:layout="@layout/fragment_favorites">
+
+        <action
+            android:id="@+id/action_favoritesFragment_to_bookingConfirmationFragment"
+            app:destination="@id/bookingConfirmationFragment" />
+
+    </fragment>
 
     <fragment
         android:id="@+id/cartFragment"
         android:name="com.rst.gadissalonmanagementsystemapp.ui.cart.CartFragment"
         android:label="CartFragment"
-        tools:layout="@layout/fragment_cart" />
+        tools:layout="@layout/fragment_cart">
+
+        <action
+            android:id="@+id/action_cartFragment_to_purchaseSuccessFragment"
+            app:destination="@id/purchaseSuccessFragment"
+            app:popUpTo="@id/cartFragment"
+            app:popUpToInclusive="true" />
+
+        <action
+            android:id="@+id/action_cartFragment_to_purchaseConfirmationFragment"
+            app:destination="@id/purchaseConfirmationFragment" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/notificationsFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.notifications.NotificationsFragment"
+        android:label="NotificationsFragment"
+        tools:layout="@layout/fragment_notifications" />
+
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.profile.SettingsFragment"
+        android:label="SettingsFragment"
+        tools:layout="@layout/fragment_settings" />
+
+    <fragment
+        android:id="@+id/aboutUsFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.profile.AboutUsFragment"
+        android:label="AboutUsFragment"
+        tools:layout="@layout/fragment_about_us" />
+
+    <fragment
+        android:id="@+id/contactFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.profile.ContactFragment"
+        android:label="SettingsFragment"
+        tools:layout="@layout/fragment_settings" />
+
+    <fragment
+        android:id="@+id/locationFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.profile.LocationFragment"
+        android:label="AboutUsFragment"
+        tools:layout="@layout/fragment_about_us" />
+
+    <fragment
+        android:id="@+id/bookingSuccessFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.booking.BookingSuccessFragment"
+        android:label="BookingSuccessFragment"
+        tools:layout="@layout/fragment_booking_success">
+        <action
+            android:id="@+id/action_bookingSuccessFragment_to_bookingFragment"
+            app:destination="@id/bookingFragment"
+            app:popUpTo="@id/homeFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/purchaseSuccessFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.purchase.PurchaseSuccessFragment"
+        android:label="PurchaseSuccessFragment"
+        tools:layout="@layout/fragment_purchase_success">
+        <action
+            android:id="@+id/action_purchaseSuccessFragment_to_notificationsFragment"
+            app:destination="@id/notificationsFragment"
+            app:popUpTo="@id/homeFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/purchaseConfirmationFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.purchase.PurchaseConfirmationFragment"
+        android:label="PurchaseConfirmationFragment"
+        tools:layout="@layout/fragment_purchase_confirmation">
+
+        <argument
+            android:name="product"
+            app:argType="com.rst.gadissalonmanagementsystemapp.Product"
+            app:nullable="true"
+            android:defaultValue="@null" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/helpCenterFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.profile.HelpCenterFragment"
+        android:label="Help &amp; Support"
+        tools:layout="@layout/fragment_help_center" >
+        <action
+            android:id="@+id/action_helpCenterFragment_to_faqFragment"
+            app:destination="@id/faqFragment" />
+        <action
+            android:id="@+id/action_helpCenterFragment_to_contactFragment"
+            app:destination="@id/contactFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/faqFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.profile.FaqFragment"
+        android:label="FAQ"
+        tools:layout="@layout/fragment_faq" />
+
 </navigation>

@@ -2,34 +2,35 @@
     android:width="40dp"
     android:height="40dp"
     android:viewportWidth="40"
-    android:viewportHeight="40">
+    android:viewportHeight="40"
+    android:tint="?attr/colorControlNormal">
   <path
       android:strokeWidth="1"
       android:pathData="M7,10L33,10A2,2 0,0 1,35 12L35,33A2,2 0,0 1,33 35L7,35A2,2 0,0 1,5 33L5,12A2,2 0,0 1,7 10z"
-      android:fillColor="#00000000"
-      android:strokeColor="#222222"/>
+      android:fillColor="@android:color/transparent"
+      android:strokeColor="@android:color/black"/>
   <path
       android:strokeWidth="1"
       android:pathData="M5,18.333L35,18.333"
-      android:fillColor="#00000000"
-      android:strokeColor="#222222"
+      android:fillColor="@android:color/white"
+      android:strokeColor="@android:color/black"
       android:strokeLineCap="round"/>
   <path
       android:strokeWidth="1"
       android:pathData="M15,26.667H25"
-      android:fillColor="#00000000"
-      android:strokeColor="#222222"
+      android:fillColor="@android:color/white"
+      android:strokeColor="@android:color/black"
       android:strokeLineCap="round"/>
   <path
       android:strokeWidth="1"
       android:pathData="M13.333,5L13.333,11.667"
-      android:fillColor="#00000000"
-      android:strokeColor="#222222"
+      android:fillColor="@android:color/white"
+      android:strokeColor="@android:color/black"
       android:strokeLineCap="round"/>
   <path
       android:strokeWidth="1"
       android:pathData="M26.667,5L26.667,11.667"
-      android:fillColor="#00000000"
-      android:strokeColor="#222222"
+      android:fillColor="@android:color/white"
+      android:strokeColor="@android:color/black"
       android:strokeLineCap="round"/>
 </vector>

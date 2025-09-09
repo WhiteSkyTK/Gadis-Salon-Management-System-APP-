@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/admin_nav_graph"
+    app:startDestination="@id/nav_admin_dashboard">
+
+    <fragment
+        android:id="@+id/nav_admin_dashboard"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.admin.AdminDashboardFragment"
+        android:label="AdminDashboardFragment"
+        tools:layout="@layout/fragment_admin_dashboard" >
+
+        <action
+            android:id="@+id/action_adminDashboardFragment_to_adminAddProductFragment"
+            app:destination="@id/adminAddProductFragment" />
+        <action
+            android:id="@+id/action_adminDashboardFragment_to_adminAddUserFragment"
+            app:destination="@id/adminAddUserFragment" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_admin_products"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.admin.AdminProductsFragment"
+        android:label="AdminProductsFragment"
+        tools:layout="@layout/fragment_admin_products">
+        <action
+            android:id="@+id/action_adminProductsFragment_to_adminAddProductFragment"
+            app:destination="@id/adminAddProductFragment" />
+        <action
+            android:id="@+id/action_adminProductsFragment_to_adminAddHairstyleFragment"
+            app:destination="@id/adminAddHairstyleFragment" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_admin_users"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.admin.AdminUsersFragment"
+        android:label="AdminUsersFragment"
+        tools:layout="@layout/fragment_admin_users">
+        <!-- ADD THIS ACTION -->
+        <action
+            android:id="@+id/action_nav_admin_users_to_adminAddUserFragment"
+            app:destination="@id/adminAddUserFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_admin_bookings"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.admin.AdminBookingsFragment"
+        android:label="AdminBookingsFragment"
+        tools:layout="@layout/fragment_admin_bookings" />
+
+    <fragment
+        android:id="@+id/adminAddProductFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.admin.AdminAddProductFragment"
+        android:label="Add New Product"
+        tools:layout="@layout/fragment_admin_add_product" />
+
+    <fragment
+        android:id="@+id/adminAddHairstyleFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.admin.AdminAddHairstyleFragment"
+        android:label="Add New Hairstyle"
+        tools:layout="@layout/fragment_admin_add_hairstyle" />
+
+    <fragment
+        android:id="@+id/adminAddUserFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.admin.AdminAddUserFragment"
+        android:label="Add New User"
+        tools:layout="@layout/fragment_admin_add_user" />
+
+</navigation>

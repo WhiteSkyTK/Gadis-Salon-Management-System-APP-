@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/worker_nav_graph"
+    app:startDestination="@id/nav_worker_bookings">
+
+    <fragment
+        android:id="@+id/nav_worker_bookings"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.worker.WorkerBookingsFragment"
+        android:label="WorkerBookingsFragment"
+        tools:layout="@layout/fragment_worker_bookings" />
+
+    <fragment
+        android:id="@+id/nav_worker_schedule"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.worker.WorkerScheduleFragment"
+        android:label="WorkerScheduleFragment"
+        tools:layout="@layout/fragment_worker_schedule" />
+
+    <fragment
+        android:id="@+id/nav_worker_profile"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.worker.WorkerProfileFragment"
+        android:label="WorkerProfileFragment"
+        tools:layout="@layout/fragment_worker_profile" />
+
+</navigation>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/option_gallery"
+        style="@style/ProfileOption"
+        android:text="Choose from Gallery" />
+
+    <TextView
+        android:id="@+id/option_camera"
+        style="@style/ProfileOption"
+        android:text="Take Photo" />
+
+    <TextView
+        android:id="@+id/option_remove"
+        style="@style/ProfileOption"
+        android:text="Remove Photo"
+        android:textColor="@color/status_red" />
+
+</LinearLayout>
