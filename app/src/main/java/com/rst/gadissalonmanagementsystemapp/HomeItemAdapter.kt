@@ -3,6 +3,7 @@ package com.rst.gadissalonmanagementsystemapp
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import coil.load
 import com.rst.gadissalonmanagementsystemapp.databinding.ItemProductBinding // Import the binding class for your item layout
 import java.text.NumberFormat
 import java.util.Locale
@@ -16,7 +17,10 @@ class HomeItemAdapter(
     // It uses ViewBinding to safely access the views in item_product.xml.
     inner class HomeItemViewHolder(private val binding: ItemProductBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(product: Product) {
-            binding.productImage.setImageResource(product.imageResId)
+            binding.productImage.load(product.imageUrl) {
+                placeholder(R.drawable.ic_placeholder_image) // Optional: show a placeholder while loading
+                error(R.drawable.ic_placeholder_image)       // Optional: show an error image if it fails
+            }
             binding.productName.text = product.name
 
             // FIX: Get the price of the first variant to display in the list

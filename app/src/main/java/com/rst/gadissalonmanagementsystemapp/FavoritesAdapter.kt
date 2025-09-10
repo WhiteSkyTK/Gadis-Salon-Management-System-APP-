@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.RecyclerView
+import coil.load
 import com.rst.gadissalonmanagementsystemapp.*
 import com.rst.gadissalonmanagementsystemapp.databinding.ItemFavoriteBinding
 import com.rst.gadissalonmanagementsystemapp.ui.favorites.FavoritesFragmentDirections
@@ -26,7 +27,9 @@ class FavoritesAdapter(
     // --- ViewHolder for Products ---
     inner class ProductViewHolder(private val binding: ItemFavoriteBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(item: Product) {
-            binding.itemImage.setImageResource(item.imageResId)
+            binding.itemImage.load(item.imageUrl) {
+                placeholder(R.drawable.ic_placeholder_image)
+            }
             binding.itemName.text = item.name
             val price = item.variants.firstOrNull()?.price ?: 0.0
             val format = NumberFormat.getCurrencyInstance(Locale("en", "ZA"))
@@ -49,7 +52,9 @@ class FavoritesAdapter(
     // --- ViewHolder for Hairstyles ---
     inner class HairstyleViewHolder(private val binding: ItemFavoriteBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(item: Hairstyle) {
-            binding.itemImage.setImageResource(item.imageResId)
+            binding.itemImage.load(item.imageUrl) {
+                placeholder(R.drawable.ic_placeholder_image)
+            }
             binding.itemName.text = item.name
             val format = NumberFormat.getCurrencyInstance(Locale("en", "ZA"))
             binding.itemPrice.text = format.format(item.price)

@@ -16,8 +16,8 @@ if (localPropertiesFile.exists()) {
 }
 val mapsApiKey = properties.getProperty("MAPS_API_KEY")
 val keyStorePassword = properties.getProperty("KEYSTORE_PASSWORD")
-val keyAlias = properties.getProperty("KEY_ALIAS")
-val keyPassword = properties.getProperty("KEY_PASSWORD")
+val KeyAlias = properties.getProperty("KEY_ALIAS")
+val KeyPassword = properties.getProperty("KEY_PASSWORD")
 
 android {
     namespace = "com.rst.gadissalonmanagementsystemapp"
@@ -30,8 +30,8 @@ android {
             if (keystoreFile.exists()) {
                 storeFile = keystoreFile
                 storePassword = keyStorePassword
-                keyAlias = keyAlias
-                keyPassword = keyPassword
+                keyAlias = KeyAlias
+                keyPassword = KeyPassword
             }
         }
     }
@@ -44,7 +44,12 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // This makes the key available to AndroidManifest.xml (for the map)
         manifestPlaceholders["mapsApiKey"] = mapsApiKey ?: "YOUR_DEFAULT_KEY"
+
+        // ADD THIS LINE: This makes the key available to your Kotlin code
+        buildConfigField("String", "MAPS_API_KEY", "\"${mapsApiKey}\"")
     }
 
     buildTypes {
@@ -66,17 +71,22 @@ android {
     }
     buildFeatures {
         viewBinding = true
+        buildConfig = true
     }
 }
 
 dependencies {
     // Firebase Bill of Materials (BoM) - This manages all other Firebase library versions
-    implementation(libs.firebase.bom)
+    implementation(platform(libs.firebase.bom))
 
-    // Firebase Libraries - Notice they do NOT have a version number. The BoM handles it.
-    implementation(libs.firebase.auth.ktx)
-    implementation(libs.firebase.firestore.ktx)
-    implementation(libs.firebase.appcheck.playintegrity)
+    // Firebase Libraries (no versions needed)
+    implementation("com.google.firebase:firebase-auth-ktx:23.2.1")
+    implementation("com.google.firebase:firebase-firestore-ktx:25.1.4")
+    implementation("com.google.firebase:firebase-storage-ktx:21.0.2")
+    implementation("com.google.firebase:firebase-appcheck-playintegrity:19.0.0")
+    implementation("com.google.firebase:firebase-messaging-ktx:24.1.2")
+    debugImplementation(libs.firebase.appcheck.debug)
+    implementation(libs.google.firebase.appcheck.playintegrity)
 
     // Google Sign-In
     implementation(libs.play.services.auth)
@@ -91,10 +101,12 @@ dependencies {
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
     implementation(libs.play.services.maps)
-    implementation(libs.google.firebase.appcheck.playintegrity)
 
     // Testing libraries
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
+    implementation(libs.coil)
+    implementation(libs.places)
 }

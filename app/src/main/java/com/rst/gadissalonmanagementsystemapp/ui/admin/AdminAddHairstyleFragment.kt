@@ -1,23 +1,57 @@
 package com.rst.gadissalonmanagementsystemapp.ui.admin
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.chip.Chip
-import com.rst.gadissalonmanagementsystemapp.AppData
+import com.rst.gadissalonmanagementsystemapp.FirebaseManager
 import com.rst.gadissalonmanagementsystemapp.Hairstyle
 import com.rst.gadissalonmanagementsystemapp.R
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentAdminAddHairstyleBinding
+import com.rst.gadissalonmanagementsystemapp.ui.profile.ProfilePictureBottomSheet
+import kotlinx.coroutines.launch
+import java.io.File
 import java.util.UUID
 
-class AdminAddHairstyleFragment : Fragment() {
+class AdminAddHairstyleFragment : Fragment(), ProfilePictureBottomSheet.PictureOptionListener {
 
     private var _binding: FragmentAdminAddHairstyleBinding? = null
     private val binding get() = _binding!!
+    private var selectedImageUri: Uri? = null
+    private var latestTmpUri: Uri? = null
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) { takeImage() } else {
+            Toast.makeText(context, "Camera permission is required.", Toast.LENGTH_LONG).show()
+        }
+    }
+    private val selectImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let {
+            selectedImageUri = it
+            binding.hairstyleImagePreview.setImageURI(it)
+        }
+    }
+    private val takeImageLauncher = registerForActivityResult(ActivityResultContracts.TakePicture()) { isSuccess: Boolean ->
+        if (isSuccess) {
+            latestTmpUri?.let {
+                selectedImageUri = it
+                binding.hairstyleImagePreview.setImageURI(it)
+            }
+        }
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentAdminAddHairstyleBinding.inflate(inflater, container, false)
@@ -27,20 +61,82 @@ class AdminAddHairstyleFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Fetch the stylists from Firebase and create the chips
         populateStylistChips()
+
+        // Updated click listener to show the bottom sheet
+        binding.hairstyleImagePreview.setOnClickListener {
+            ProfilePictureBottomSheet().show(childFragmentManager, "HairstyleImagePicker")
+        }
 
         binding.saveHairstyleButton.setOnClickListener {
             saveHairstyle()
         }
     }
 
+    // --- This function is called when an option is selected in the bottom sheet ---
+    override fun onOptionSelected(option: String) {
+        when (option) {
+            "gallery" -> selectImageLauncher.launch("image/*")
+            "camera" -> checkCameraPermissionAndTakePhoto()
+            "remove" -> {
+                binding.hairstyleImagePreview.setImageResource(R.drawable.ic_add_a_photo)
+                selectedImageUri = null
+            }
+        }
+    }
+
+    private fun checkCameraPermissionAndTakePhoto() {
+        when {
+            ContextCompat.checkSelfPermission(
+                requireContext(), Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                takeImage()
+            }
+            else -> {
+                requestPermissionLauncher.launch(Manifest.permission.CAMERA)
+            }
+        }
+    }
+
+    private fun takeImage() {
+        getTmpFileUri().let { uri ->
+            latestTmpUri = uri
+            takeImageLauncher.launch(uri)
+        }
+    }
+
+    private fun getTmpFileUri(): Uri {
+        val tmpFile = File.createTempFile("tmp_image_file", ".png", requireContext().cacheDir).apply {
+            createNewFile()
+            deleteOnExit()
+        }
+        return FileProvider.getUriForFile(requireActivity(), "${requireActivity().packageName}.provider", tmpFile)
+    }
+
     private fun populateStylistChips() {
-        AppData.allStylists.forEach { stylist ->
-            val chip = Chip(context)
-            chip.text = stylist.name
-            chip.isCheckable = true
-            chip.tag = stylist.id // Store the stylist's ID in the chip's tag
-            binding.stylistChipGroup.addView(chip)
+        viewLifecycleOwner.lifecycleScope.launch {
+            // 1. Fetch ALL users from Firebase
+            val result = FirebaseManager.getAllUsers()
+            if (result.isSuccess) {
+                val allUsers = result.getOrNull() ?: emptyList()
+
+                // 2. Filter the list to find only the WORKERS
+                val stylists = allUsers.filter { it.role.equals("WORKER", ignoreCase = true) }
+
+                binding.stylistChipGroup.removeAllViews()
+
+                // 3. Create a chip for each worker
+                stylists.forEach { stylistUser ->
+                    val chip = Chip(context)
+                    chip.text = stylistUser.name
+                    chip.isCheckable = true
+                    chip.tag = stylistUser.id // Store the worker's unique user ID
+                    binding.stylistChipGroup.addView(chip)
+                }
+            } else {
+                Toast.makeText(context, "Error fetching stylists", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -49,29 +145,49 @@ class AdminAddHairstyleFragment : Fragment() {
         val description = binding.descriptionInput.text.toString().trim()
         val price = binding.priceInput.text.toString().toDoubleOrNull()
         val duration = binding.durationInput.text.toString().toIntOrNull()
-
         val selectedStylistIds = binding.stylistChipGroup.checkedChipIds.mapNotNull { chipId ->
             view?.findViewById<Chip>(chipId)?.tag as? String
         }
 
-        // Validation
-        if (name.isEmpty() || description.isEmpty() || price == null || duration == null || selectedStylistIds.isEmpty()) {
-            Toast.makeText(context, "Please fill all fields and select at least one stylist", Toast.LENGTH_SHORT).show()
+        if (name.isEmpty() || price == null || duration == null || selectedImageUri == null || selectedStylistIds.isEmpty()) {
+            Toast.makeText(context, "Please fill all fields, select an image, and choose at least one stylist", Toast.LENGTH_LONG).show()
             return
         }
 
-        val newHairstyle = Hairstyle(
-            id = "hs_${UUID.randomUUID()}",
-            name = name,
-            description = description,
-            price = price,
-            durationHours = duration,
-            availableStylistIds = selectedStylistIds
-        )
+        binding.saveHairstyleButton.isEnabled = false
 
-        AppData.addHairstyle(newHairstyle)
-        Toast.makeText(context, "$name added successfully", Toast.LENGTH_SHORT).show()
-        findNavController().popBackStack()
+        viewLifecycleOwner.lifecycleScope.launch {
+            val hairstyleId = "hs_${UUID.randomUUID()}"
+            // 1. Upload Image
+            val imageUploadResult = FirebaseManager.uploadImage(selectedImageUri!!, "hairstyles", "$hairstyleId.jpg")
+
+            if (imageUploadResult.isSuccess) {
+                val imageUrl = imageUploadResult.getOrNull().toString()
+
+                // 2. Create Hairstyle Object
+                val newHairstyle = Hairstyle(
+                    id = hairstyleId,
+                    name = name,
+                    description = description,
+                    price = price,
+                    durationHours = duration,
+                    availableStylistIds = selectedStylistIds,
+                    imageUrl = imageUrl
+                )
+
+                // 3. Save Hairstyle to Firestore
+                val addHairstyleResult = FirebaseManager.addHairstyle(newHairstyle)
+                if (addHairstyleResult.isSuccess) {
+                    Toast.makeText(context, "$name added successfully", Toast.LENGTH_SHORT).show()
+                    findNavController().popBackStack()
+                } else {
+                    Toast.makeText(context, "Error saving hairstyle: ${addHairstyleResult.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
+                }
+            } else {
+                Toast.makeText(context, "Error uploading image: ${imageUploadResult.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
+            }
+            binding.saveHairstyleButton.isEnabled = true
+        }
     }
 
     override fun onDestroyView() {

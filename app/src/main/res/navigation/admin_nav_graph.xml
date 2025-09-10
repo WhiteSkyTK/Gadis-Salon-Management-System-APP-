@@ -5,6 +5,7 @@
     android:id="@+id/admin_nav_graph"
     app:startDestination="@id/nav_admin_dashboard">
 
+    <!-- Main Admin Destinations -->
     <fragment
         android:id="@+id/nav_admin_dashboard"
         android:name="com.rst.gadissalonmanagementsystemapp.ui.admin.AdminDashboardFragment"
@@ -69,4 +70,74 @@
         android:label="Add New User"
         tools:layout="@layout/fragment_admin_add_user" />
 
+    <!-- Admin Profile and its Sub-Pages -->
+    <fragment
+        android:id="@+id/nav_admin_profile"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.admin.AdminProfileFragment"
+        android:label="My Profile"
+        tools:layout="@layout/fragment_admin_profile" >
+
+        <!-- ADD THESE ACTIONS -->
+        <action
+            android:id="@+id/action_adminProfileFragment_to_adminSettingsFragment"
+            app:destination="@id/adminSettingsFragment" />
+        <action
+            android:id="@+id/action_adminProfileFragment_to_adminLocationFragment"
+            app:destination="@id/adminLocationFragment" />
+        <action
+            android:id="@+id/action_adminProfileFragment_to_adminAboutUsFragment"
+            app:destination="@id/adminAboutUsFragment" />
+        <action
+            android:id="@+id/action_adminProfileFragment_to_adminSupportFragment"
+            app:destination="@id/adminSupportFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/adminSettingsFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.admin.AdminSettingsFragment"
+        android:label="Settings"
+        tools:layout="@layout/fragment_settings" />
+
+    <fragment
+        android:id="@+id/adminLocationFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.admin.AdminLocationFragment"
+        android:label="Manage Location"
+        tools:layout="@layout/fragment_location" />
+
+    <fragment
+        android:id="@+id/adminAboutUsFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.admin.AdminAboutUsFragment"
+        android:label="Edit About Us"
+        tools:layout="@layout/fragment_about_us" />
+
+    <fragment
+        android:id="@+id/adminSupportFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.admin.AdminSupportFragment"
+        android:label="Support Messages"
+        tools:layout="@layout/fragment_admin_support">
+
+        <action
+            android:id="@+id/action_adminSupportFragment_to_adminReplyMessageFragment"
+            app:destination="@id/adminReplyMessageFragment" />
+        <action
+            android:id="@+id/action_adminSupportFragment_to_adminComposeMessageFragment"
+            app:destination="@id/adminComposeMessageFragment" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/adminComposeMessageFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.admin.AdminComposeMessageFragment"
+        android:label="Compose Message"
+        tools:layout="@layout/fragment_contact" />
+
+    <fragment
+        android:id="@+id/adminReplyMessageFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.admin.AdminReplyMessageFragment"
+        android:label="Reply to Message"
+        tools:layout="@layout/fragment_admin_reply_message">
+        <argument
+            android:name="supportMessage"
+            app:argType="com.rst.gadissalonmanagementsystemapp.SupportMessage" />
+    </fragment>
 </navigation>

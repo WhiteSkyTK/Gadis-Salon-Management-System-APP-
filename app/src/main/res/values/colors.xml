@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#9B51E0</color>
-    <color name="textColorPrimary">@android:color/black</color>
+    <color name="colorPrimary2">#9B51E0</color>
+    <color name="colorPrimary">#212121</color>
+    <color name="textColorPrimary">#212121</color>
     <color name="textColorSecondary">#757575</color>
     <color name="backgroundColor">#FFFFFF</color>
-    <color name="backgroundGrey">#F8F8F8</color>
-    <color name="inputFieldBackgroundColor">#F5F5F5</color>
+    <color name="backgroundGrey">#F5F5F5</color>
+    <color name="inputFieldBackgroundColor">#EEEEEE</color>
     <color name="cardBackgroundColor">#FFFFFF</color>
+    <color name="card_background_highlight">#E8EAF6 </color>
 
     <color name="white">#FFFFFFFF</color>
     <color name="black">#FF000000</color>

@@ -9,6 +9,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
+        <!-- Card for editing the Salon's "About" section -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
@@ -17,22 +18,31 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:padding="16dp">
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="About Gadis Salon"
-                    android:textSize="22sp"
+                    android:textSize="18sp"
                     android:textStyle="bold" />
-                <TextView
-                    android:id="@+id/salon_about_text"
-                    android:layout_width="wrap_content"
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="Welcome to Gadis Salon, where beauty and style come to life. Our mission is to provide exceptional hair care and styling services in a relaxing and professional environment."
-                    android:textSize="16sp" />
+                    android:hint="Salon Description">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/salon_about_input"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="top"
+                        android:minLines="4" />
+                </com.google.android.material.textfield.TextInputLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- Card for editing the App's "About" section -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -42,21 +52,35 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:padding="16dp">
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="About the App"
-                    android:textSize="22sp"
+                    android:textSize="18sp"
                     android:textStyle="bold" />
-                <TextView
-                    android:id="@+id/app_about_text"
-                    android:layout_width="wrap_content"
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="This app was proudly developed by RST Innovations: Tokollo Nonyane, Sagwadi Mashimbye, and Rinae Magadagela. It is the culmination of our final year project at Rosebank College."
-                    android:textSize="16sp" />
+                    android:hint="App Description (developed by RST Innovations)">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/app_about_input"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="top"
+                        android:minLines="4" />
+                </com.google.android.material.textfield.TextInputLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <Button
+            android:id="@+id/save_button"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_marginTop="32dp"
+            android:text="Save Changes" />
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

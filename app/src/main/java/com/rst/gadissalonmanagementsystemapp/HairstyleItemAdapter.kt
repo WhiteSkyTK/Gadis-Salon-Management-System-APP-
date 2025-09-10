@@ -3,6 +3,7 @@ package com.rst.gadissalonmanagementsystemapp
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import coil.load
 import com.rst.gadissalonmanagementsystemapp.databinding.ItemProductBinding
 import java.text.NumberFormat
 import java.util.Locale
@@ -15,7 +16,10 @@ class HairstyleItemAdapter(
 
     inner class HairstyleViewHolder(private val binding: ItemProductBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(hairstyle: Hairstyle) {
-            binding.productImage.setImageResource(hairstyle.imageResId)
+            binding.productImage.load(hairstyle.imageUrl) {
+                placeholder(R.drawable.ic_placeholder_image) // Optional: show a placeholder while loading
+                error(R.drawable.ic_placeholder_image)       // Optional: show an error image if it fails
+            }
             binding.productName.text = hairstyle.name
 
             // Format the price from the Double value

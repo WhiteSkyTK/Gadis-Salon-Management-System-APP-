@@ -40,14 +40,14 @@ class ProfileFragment : Fragment(),  ProfilePictureBottomSheet.PictureOptionList
     private val selectImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
             binding.profileImage.setImageURI(it)
-            AppData.getCurrentUser()?.profileImageUri = it.toString()
+            AppData.getCurrentUser()?.imageUrl = it.toString()
         }
     }
     private val takeImageLauncher = registerForActivityResult(ActivityResultContracts.TakePicture()) { isSuccess: Boolean ->
         if (isSuccess) {
             latestTmpUri?.let {
                 binding.profileImage.setImageURI(it)
-                AppData.getCurrentUser()?.profileImageUri = it.toString()
+                AppData.getCurrentUser()?.imageUrl = it.toString()
             }
         }
     }
@@ -69,7 +69,7 @@ class ProfileFragment : Fragment(),  ProfilePictureBottomSheet.PictureOptionList
             binding.userName.text = currentUser.name
             binding.userPhone.text = currentUser.phone
             // Load saved profile image if it exists
-            currentUser.profileImageUri?.let {
+            currentUser.imageUrl?.let {
                 binding.profileImage.setImageURI(Uri.parse(it))
             }
         } else {
@@ -121,7 +121,7 @@ class ProfileFragment : Fragment(),  ProfilePictureBottomSheet.PictureOptionList
             "camera" -> checkCameraPermissionAndTakePhoto() //
             "remove" -> {
                 binding.profileImage.setImageResource(R.drawable.ic_profile)
-                AppData.getCurrentUser()?.profileImageUri = null
+                AppData.getCurrentUser()?.imageUrl = ""
             }
         }
     }

@@ -7,17 +7,23 @@
 
     <TextView
         android:id="@+id/option_gallery"
-        style="@style/ProfileOption"
+        style="@style/BottomSheetOption"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:text="Choose from Gallery" />
 
     <TextView
         android:id="@+id/option_camera"
-        style="@style/ProfileOption"
+        style="@style/BottomSheetOption"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:text="Take Photo" />
 
     <TextView
         android:id="@+id/option_remove"
-        style="@style/ProfileOption"
+        style="@style/BottomSheetOption"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:text="Remove Photo"
         android:textColor="@color/status_red" />
 
