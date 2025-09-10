@@ -6,12 +6,16 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import coil.load
 import com.rst.gadissalonmanagementsystemapp.AppData
+import com.rst.gadissalonmanagementsystemapp.FirebaseManager
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentHairstyleDetailBinding
 import com.rst.gadissalonmanagementsystemapp.MainViewModel
 import com.rst.gadissalonmanagementsystemapp.Product
+import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -36,11 +40,17 @@ class HairstyleDetailFragment : Fragment() {
         val hairstyle = args.hairstyle // We are reusing the 'Product' data class
 
         // Now we need to pass a temporary Product to the ViewModel for the favorite logic to work
-        val tempProductForFavorite = Product(hairstyle.id, hairstyle.name, "", listOf())
+        val tempProductForFavorite = Product(
+            id = hairstyle.id,
+            name = hairstyle.name,
+            reviews = "", // We can provide an empty string for reviews
+            variants = emptyList(), // We can provide an empty list for variants
+            imageUrl = hairstyle.imageUrl
+        )
         mainViewModel.setCurrentProduct(tempProductForFavorite)
 
         // Use the new Hairstyle data to populate the views
-        binding.hairstyleImage.setImageResource(hairstyle.imageResId)
+        binding.hairstyleImage.load(hairstyle.imageUrl)
         binding.hairstyleNameDetail.text = hairstyle.name
         binding.hairstyleDescription.text = hairstyle.description
         val format = NumberFormat.getCurrencyInstance(Locale("en", "ZA"))
@@ -48,8 +58,15 @@ class HairstyleDetailFragment : Fragment() {
         binding.hairstyleDuration.text = "Duration: ${hairstyle.durationHours} hours"
 
         // Find the stylist's name from AppData
-        val stylist = AppData.allStylists.find { it.id == hairstyle.availableStylistIds.firstOrNull() }
-        binding.stylistName.text = "Stylist: ${stylist?.name ?: "Any"}"
+        viewLifecycleOwner.lifecycleScope.launch {
+            val result = FirebaseManager.getAllUsers()
+            if (result.isSuccess) {
+                val allUsers = result.getOrNull() ?: emptyList()
+                val stylistId = hairstyle.availableStylistIds.firstOrNull()
+                val stylist = allUsers.find { it.id == stylistId && it.role == "WORKER" }
+                binding.stylistName.text = "Stylist: ${stylist?.name ?: "Any"}"
+            }
+        }
 
         binding.bookNowButton.setOnClickListener {
             // Create the navigation action, passing the current hairstyle object

@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.admin.AdminProfileFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- User Info Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="20dp">
+
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/profile_image_admin"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:src="@drawable/ic_profile"
+                    app:shapeAppearanceOverlay="@style/CircleImageView"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/user_name_admin"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toEndOf="@+id/profile_image_admin"
+                    app:layout_constraintTop_toTopOf="@+id/profile_image_admin"
+                    app:layout_constraintEnd_toStartOf="@id/edit_profile_button"
+                    tools:text="TK Admin" />
+
+                <TextView
+                    android:id="@+id/user_phone_admin"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintStart_toStartOf="@id/user_name_admin"
+                    app:layout_constraintTop_toBottomOf="@id/user_name_admin"
+                    app:layout_constraintEnd_toEndOf="@id/user_name_admin"
+                    tools:text="+27 12 345 6789" />
+
+                <ImageButton
+                    android:id="@+id/edit_profile_button"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_edit"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"/>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Options Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingVertical="8dp">
+
+                <TextView
+                    android:id="@+id/contact_support_option"
+                    style="@style/ProfileOption"
+                    android:text="View Support Messages"/>
+                <View style="@style/Divider"/>
+                <TextView
+                    android:id="@+id/settings_option"
+                    style="@style/ProfileOption"
+                    android:text="Settings"/>
+                <View style="@style/Divider"/>
+                <TextView
+                    android:id="@+id/location_option"
+                    style="@style/ProfileOption"
+                    android:text="Manage Salon Location"/>
+                <View style="@style/Divider"/>
+                <TextView
+                    android:id="@+id/about_us_option"
+                    style="@style/ProfileOption"
+                    android:text="Edit 'About Us' Page"/>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Version Number -->
+        <TextView
+            android:id="@+id/version_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="24dp"
+            android:textColor="@color/textColorSecondary"
+            android:textSize="14sp"
+            tools:text="Version 1.0.0" />
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

@@ -1,6 +1,7 @@
 package com.rst.gadissalonmanagementsystemapp.ui.admin
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,15 +13,18 @@ import com.rst.gadissalonmanagementsystemapp.FirebaseManager
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentAdminListBinding
 import kotlinx.coroutines.launch
 
-// This smart fragment can display a list of users filtered by their role.
 class AdminUserListFragment : Fragment() {
     private var _binding: FragmentAdminListBinding? = null
     private val binding get() = _binding!!
     private var userRole: String? = null
 
+    // A TAG for filtering our logs
+    companion object {
+        private const val TAG = "AdminUserListFragment"
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Get the user role passed from the PagerAdapter
         arguments?.let {
             userRole = it.getString("USER_ROLE")
         }
@@ -35,23 +39,28 @@ class AdminUserListFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         binding.adminRecyclerView.layoutManager = LinearLayoutManager(context)
 
-        // Launch a coroutine to fetch the users from Firebase
+        Log.d(TAG, "Fragment created for role: $userRole")
+
         viewLifecycleOwner.lifecycleScope.launch {
+            Log.d(TAG, "Fetching users from Firebase...")
             val result = FirebaseManager.getAllUsers()
 
             if (result.isSuccess) {
                 val allUsers = result.getOrNull() ?: emptyList()
+                Log.d(TAG, "Successfully fetched ${allUsers.size} total users from Firebase.")
 
-                // Filter the full list based on the role for this specific tab
                 val filteredUsers = if (userRole != null) {
                     allUsers.filter { it.role.equals(userRole, ignoreCase = true) }
                 } else {
                     allUsers
                 }
+                Log.d(TAG, "Filtered list contains ${filteredUsers.size} users for role '$userRole'.")
+
                 binding.adminRecyclerView.adapter = AdminUserAdapter(filteredUsers)
             } else {
-                // Handle the error
-                Toast.makeText(context, "Error fetching users: ${result.exceptionOrNull()?.message}", Toast.LENGTH_SHORT).show()
+                val errorMessage = result.exceptionOrNull()?.message ?: "Unknown error"
+                Log.e(TAG, "Error fetching users: $errorMessage")
+                Toast.makeText(context, "Error fetching users: $errorMessage", Toast.LENGTH_SHORT).show()
             }
         }
     }

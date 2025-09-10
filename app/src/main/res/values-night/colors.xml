@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#BB86FC</color>
-    <color name="textColorPrimary">#E1E1E1</color>
+    <color name="colorPrimary2">#BB86FC</color>
+    <color name="colorPrimary">#FFFFFF</color>
+    <color name="textColorPrimary">#FFFFFF</color>
     <color name="textColorSecondary">#B0B0B0</color>
     <color name="backgroundColor">#121212</color>
-    <color name="backgroundGrey">#1F1F1F</color>
+    <color name="backgroundGrey">#121212</color>
     <color name="inputFieldBackgroundColor">#2C2C2C</color>
     <color name="cardBackgroundColor">#1E1E1E</color>
+    <color name="card_background_highlight">#2C2C2E </color>
 
     <color name="white">#FFFFFFFF</color>
     <color name="black">#FF000000</color>

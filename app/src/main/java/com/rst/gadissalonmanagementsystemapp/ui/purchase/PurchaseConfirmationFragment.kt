@@ -35,7 +35,7 @@ class PurchaseConfirmationFragment : Fragment() {
         if (productToShow != null) {
             // A single product was passed. Show only that item.
             val price = productToShow.variants.firstOrNull()?.price ?: 0.0
-            val singleItemInCart = listOf(CartItem(productToShow.name, price, 1, productToShow.imageResId))
+            val singleItemInCart = listOf(CartItem(productToShow.name, price, 1, productToShow.imageUrl))
             binding.summaryRecyclerView.adapter = CartAdapter(singleItemInCart)
         } else {
             // No product was passed, so show the entire cart from AppData

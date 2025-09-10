@@ -10,6 +10,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import coil.load
 import com.google.android.material.chip.Chip
 import com.rst.gadissalonmanagementsystemapp.AppData
 import com.rst.gadissalonmanagementsystemapp.MainViewModel
@@ -37,9 +38,13 @@ class ProductDetailFragment : Fragment() {
         val product = args.product
 
         // --- 1. Populate Static Views ---
-        binding.productImage.setImageResource(product.imageResId)
+        binding.productImage.load(product.imageUrl) {
+            placeholder(R.drawable.ic_placeholder_image)
+            error(R.drawable.ic_placeholder_image)
+        }
         binding.productNameDetail.text = product.name
-        binding.productReviews.text = product.reviews
+        // This field is back in the Product class
+
 
         // Tell the ViewModel which product we are viewing for the favorite logic
         mainViewModel.setCurrentProduct(product)

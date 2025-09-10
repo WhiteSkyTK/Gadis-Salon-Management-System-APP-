@@ -41,8 +41,12 @@ class AdminDashboardFragment : Fragment() {
             val userResult = FirebaseManager.getAllUsers()
             if (userResult.isSuccess) {
                 val allUsers = userResult.getOrNull() ?: emptyList()
+                // Count customers
                 val customerCount = allUsers.count { it.role.equals("CUSTOMER", ignoreCase = true) }
-                binding.usersCountText.text = customerCount.toString()
+                binding.customersCountText.text = customerCount.toString()
+                // Count workers/stylists
+                val stylistCount = allUsers.count { it.role.equals("WORKER", ignoreCase = true) }
+                binding.stylistsCountText.text = stylistCount.toString()
             } else {
                 Toast.makeText(context, "Error fetching users: ${userResult.exceptionOrNull()?.message}", Toast.LENGTH_SHORT).show()
             }

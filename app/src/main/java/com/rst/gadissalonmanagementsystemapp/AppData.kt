@@ -10,15 +10,15 @@ object AppData {
     private val _allProducts = MutableLiveData<List<Product>>(
         listOf(
             Product(
-                id = "prod_01", name = "Eco Style Gel", reviews = "152 Reviews",
+                id = "prod_01", name = "Eco Style Gel",
                 variants = listOf(ProductVariant("250ml", 50.00, stock = 25))
             ),
             Product(
-                id = "prod_02", name = "Hair Spray", reviews = "98 Reviews",
+                id = "prod_02", name = "Hair Spray",
                 variants = listOf(ProductVariant("150ml", 120.00, 140.00, stock = 15))
             ),
             Product(
-                id = "prod_03", name = "Shampoo", reviews = "210 Reviews",
+                id = "prod_03", name = "Shampoo",
                 variants = listOf(ProductVariant("400ml", 80.00, stock = 50))
             )
         )
@@ -34,12 +34,6 @@ object AppData {
         )
     )
     val allHairstyles: LiveData<List<Hairstyle>> = _allHairstyles
-
-    val allStylists = listOf(
-        Stylist("stylist_01", "Sarah"),
-        Stylist("stylist_02", "Rinae"),
-        Stylist("stylist_03", "Jane")
-    )
 
     val availableTimeSlots = listOf("09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00")
 
@@ -195,7 +189,7 @@ object AppData {
             } else {
                 // FIX: Get the price from the first variant in the list
                 val price = product.variants.firstOrNull()?.price ?: 0.0
-                user.cart.add(CartItem(product.name, price, 1, product.imageResId))
+                user.cart.add(CartItem(product.name, price, 1, product.imageUrl))
             }
             _currentUserCart.value = user.cart // Update LiveData
         }

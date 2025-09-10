@@ -1,18 +1,22 @@
 package com.rst.gadissalonmanagementsystemapp.ui.admin
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.rst.gadissalonmanagementsystemapp.AppData
+import com.rst.gadissalonmanagementsystemapp.FirebaseManager
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentAdminListBinding
+import kotlinx.coroutines.launch
 
-// This fragment displays a list of all hairstyles for the admin.
 class AdminHairstylesListFragment : Fragment() {
     private var _binding: FragmentAdminListBinding? = null
     private val binding get() = _binding!!
+    private val TAG = "AdminHairstylesList"
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentAdminListBinding.inflate(inflater, container, false)
@@ -23,10 +27,18 @@ class AdminHairstylesListFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         binding.adminRecyclerView.layoutManager = LinearLayoutManager(context)
 
-        // Observe the LiveData from AppData
-        AppData.allHairstyles.observe(viewLifecycleOwner) { hairstyleList ->
-            // Create and set the adapter when the data changes
-            binding.adminRecyclerView.adapter = AdminHairstyleAdapter(hairstyleList)
+        viewLifecycleOwner.lifecycleScope.launch {
+            Log.d(TAG, "Fetching hairstyles from Firebase...")
+            val result = FirebaseManager.getAllHairstyles()
+            if (result.isSuccess) {
+                val hairstyleList = result.getOrNull() ?: emptyList()
+                Log.d(TAG, "Successfully fetched ${hairstyleList.size} hairstyles.")
+                binding.adminRecyclerView.adapter = AdminHairstyleAdapter(hairstyleList)
+            } else {
+                val error = result.exceptionOrNull()?.message
+                Log.e(TAG, "Error fetching hairstyles: $error")
+                Toast.makeText(context, "Error: $error", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 

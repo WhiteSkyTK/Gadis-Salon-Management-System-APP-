@@ -6,14 +6,18 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.chip.Chip
 import com.rst.gadissalonmanagementsystemapp.AdminBooking
 import com.rst.gadissalonmanagementsystemapp.AppData
+import com.rst.gadissalonmanagementsystemapp.FirebaseManager
 import com.rst.gadissalonmanagementsystemapp.R
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentBookingConfirmationBinding
+import kotlinx.coroutines.launch
 import java.text.NumberFormat
+import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 import java.util.UUID
@@ -42,13 +46,55 @@ class BookingConfirmationFragment : Fragment() {
         val format = NumberFormat.getCurrencyInstance(Locale("en", "ZA"))
         binding.summaryPrice.text = format.format(hairstyle.price)
 
-        // 2. Populate the stylist chips by inflating our new layout
-        val availableStylists = AppData.allStylists.filter { hairstyle.availableStylistIds.contains(it.id) }
+        // 2. Fetch stylists and populate chips
+        populateStylistChips(hairstyle.availableStylistIds)
 
+        // 3. Setup Listeners
+        setupListeners()
 
-        // Listen for stylist selection
+        // 4. Populate Time Slots
+        binding.timeSlotRecyclerView.adapter = TimeSlotAdapter(AppData.availableTimeSlots)
+
+        // 5. Handle the final confirmation button click
+        binding.confirmBookingButton.setOnClickListener {
+            confirmBooking()
+        }
+    }
+
+    private fun populateStylistChips(availableStylistIds: List<String>) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val result = FirebaseManager.getAllUsers()
+            if (result.isSuccess) {
+                val allUsers = result.getOrNull() ?: emptyList()
+                val stylists = allUsers.filter { user ->
+                    availableStylistIds.contains(user.id) && user.role == "WORKER"
+                }
+
+                binding.stylistChipGroup.removeAllViews()
+
+                // Add the "Any Available" chip first
+                val anyChip = layoutInflater.inflate(R.layout.chip_stylist, binding.stylistChipGroup, false) as Chip
+                anyChip.text = "Any Available"
+                anyChip.isChecked = true
+                binding.stylistChipGroup.addView(anyChip)
+
+                // Then, add a chip for each specific stylist
+                stylists.forEach { stylistUser ->
+                    val chip = layoutInflater.inflate(R.layout.chip_stylist, binding.stylistChipGroup, false) as Chip
+                    chip.text = stylistUser.name
+                    chip.tag = stylistUser.name // Store the name to be used in the booking
+                    binding.stylistChipGroup.addView(chip)
+                }
+            } else {
+                Toast.makeText(context, "Error fetching stylists", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun setupListeners() {
         binding.stylistChipGroup.setOnCheckedChangeListener { group, checkedId ->
-            selectedStylistName = group.findViewById<Chip>(checkedId)?.text?.toString()
+            val selectedChip = group.findViewById<Chip>(checkedId)
+            selectedStylistName = selectedChip?.text?.toString()
             checkIfReadyToBook()
         }
 
@@ -59,64 +105,36 @@ class BookingConfirmationFragment : Fragment() {
             checkIfReadyToBook()
         }
 
-        // Populate Available Times from AppData
-        binding.timeSlotRecyclerView.adapter = TimeSlotAdapter(AppData.availableTimeSlots)
+        // TODO: Update TimeSlotAdapter to handle clicks and set the selectedTime variable
+    }
 
-        // First, clear any existing chips (important for when data might change)
-        binding.stylistChipGroup.removeAllViews()
-
-        // Add the "Any Available" chip first
-        val anyChip = layoutInflater.inflate(R.layout.chip_stylist, binding.stylistChipGroup, false) as Chip
-        anyChip.text = "Any Available"
-        anyChip.isChecked = true
-        binding.stylistChipGroup.addView(anyChip)
-
-        // Then, add a chip for each specific stylist
-        availableStylists.forEach { stylist ->
-            // Inflate our chip_stylist.xml layout
-            val chip = layoutInflater.inflate(R.layout.chip_stylist, binding.stylistChipGroup, false) as Chip
-
-            // Set the specific text for this stylist
-            chip.text = stylist.name
-
-            // Add the newly created chip to the group
-            binding.stylistChipGroup.addView(chip)
+    private fun confirmBooking() {
+        val currentUser = AppData.getCurrentUser()
+        if (currentUser == null) {
+            Toast.makeText(context, "Error: User not found", Toast.LENGTH_SHORT).show()
+            return
         }
 
-        // 3. Handle the final confirmation button click (this remains the same)
-        binding.confirmBookingButton.setOnClickListener {
-            val currentUser = AppData.getCurrentUser()
-            if (currentUser == null) {
-                // Handle case where user is not logged in
-                Toast.makeText(context, "Error: User not found", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
+        val formattedDate = SimpleDateFormat("dd MMM, yyyy", Locale.getDefault()).format(selectedDate)
 
-            // Create a new booking object with all the details
-            val newBooking = AdminBooking(
-                id = UUID.randomUUID().toString(),
-                serviceName = hairstyle.name,
-                customerName = currentUser.name,
-                stylistName = selectedStylistName ?: "Any Available", // Use selected stylist
-                date = "20 Aug, 2025", // In a real app, get this from the CalendarView
-                time = "10:00", // In a real app, get this from the selected time slot
-                status = "Pending"
-            )
+        val newBooking = AdminBooking(
+            id = UUID.randomUUID().toString(),
+            serviceName = args.hairstyle.name,
+            customerName = currentUser.name,
+            stylistName = selectedStylistName ?: "Any Available",
+            date = formattedDate,
+            time = selectedTime ?: "Any Time",
+            status = "Pending"
+        )
 
-            // Add the booking to our central data source
-            AppData.addBooking(newBooking)
-
-            Toast.makeText(context, "Booking Confirmed!", Toast.LENGTH_LONG).show()
-            findNavController().navigate(R.id.action_bookingConfirmationFragment_to_bookingSuccessFragment)
-        }
+        AppData.addBooking(newBooking)
+        Toast.makeText(context, "Booking Confirmed!", Toast.LENGTH_LONG).show()
+        findNavController().navigate(R.id.action_bookingConfirmationFragment_to_bookingSuccessFragment)
     }
 
     private fun checkIfReadyToBook() {
-        // Enable the button only if a stylist, date, AND time have been selected.
-        // We will add the selectedTime check later when the TimeSlotAdapter is updated.
         binding.confirmBookingButton.isEnabled = (selectedStylistName != null && selectedDate != null)
     }
-
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

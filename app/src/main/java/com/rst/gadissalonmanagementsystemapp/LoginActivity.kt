@@ -20,6 +20,7 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
+import com.google.firebase.messaging.FirebaseMessaging
 import com.rst.gadissalonmanagementsystemapp.databinding.ActivityLoginBinding
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -78,6 +79,7 @@ class LoginActivity : AppCompatActivity() {
         }
 
         binding.loginButton.setOnClickListener {
+            Log.d(TAG, "Login button clicked.")
             validateAndLogin()
         }
 
@@ -139,6 +141,7 @@ class LoginActivity : AppCompatActivity() {
         }
 
         // If all validation passes, perform the login
+        Log.d(TAG, "Validation passed. Performing Firebase login...")
         performFirebaseLogin(email, password)
     }
 
@@ -148,20 +151,24 @@ class LoginActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             val result = FirebaseManager.loginUser(email, password)
+            Log.d(TAG, "Login result received: $result")
 
             if (result.isSuccess) {
                 val role = result.getOrNull() ?: "CUSTOMER"
+                Log.d(TAG, "Login successful. Role: $role. Navigating...")
                 onLoginSuccess(role)
             } else {
-                // Login failed
+                val errorMessage = result.exceptionOrNull()?.message
+                Log.w(TAG, "Login failed: $errorMessage")
                 binding.loadingIndicator.visibility = View.GONE
                 binding.loginButton.isEnabled = true
-                Toast.makeText(this@LoginActivity, "Login Failed: ${result.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(this@LoginActivity, "Login Failed: $errorMessage", Toast.LENGTH_LONG).show()
             }
         }
     }
 
     private fun onLoginSuccess(role: String) {
+        Log.d(TAG, "onLoginSuccess called. Saving role '$role' and starting new activity.")
         // Save the user's role to SharedPreferences
         val prefs = getSharedPreferences(Loading.PREFS_NAME, MODE_PRIVATE)
         prefs.edit().putString(Loading.USER_ROLE_KEY, role.uppercase()).apply()
@@ -171,6 +178,15 @@ class LoginActivity : AppCompatActivity() {
             "ADMIN" -> Intent(this, AdminMainActivity::class.java)
             "WORKER" -> Intent(this, WorkerMainActivity::class.java)
             else -> Intent(this, CustomerMainActivity::class.java)
+        }
+
+        // After a successful login, get the latest FCM token and save it
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val token = task.result
+                Log.d(TAG, "FCM token for logged-in user: $token")
+                MyFirebaseMessagingService().onNewToken(token)
+            }
         }
 
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK

@@ -17,46 +17,51 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:padding="16dp">
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="About Gadis Salon"
-                    android:textSize="22sp"
+                    android:text="Original Message"
                     android:textStyle="bold" />
+
                 <TextView
-                    android:id="@+id/salon_about_text"
+                    android:id="@+id/sender_info_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="Welcome to Gadis Salon, where beauty and style come to life. Our mission is to provide exceptional hair care and styling services in a relaxing and professional environment."
-                    android:textSize="16sp" />
+                    android:text="From: TK (tk@rstinnovations.dev)" />
+
+                <TextView
+                    android:id="@+id/original_message_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/input_field_background"
+                    android:padding="12dp"
+                    android:text="This is the user's original message..." />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <com.google.android.material.card.MaterialCardView
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/reply_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp">
-            <LinearLayout
+            android:layout_marginTop="24dp"
+            android:hint="Your Reply">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/reply_input"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="About the App"
-                    android:textSize="22sp"
-                    android:textStyle="bold" />
-                <TextView
-                    android:id="@+id/app_about_text"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="This app was proudly developed by RST Innovations: Tokollo Nonyane, Sagwadi Mashimbye, and Rinae Magadagela. It is the culmination of our final year project at Rosebank College."
-                    android:textSize="16sp" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+                android:gravity="top"
+                android:minLines="5" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <Button
+            android:id="@+id/send_reply_button"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_marginTop="16dp"
+            android:text="Send Reply" />
 
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

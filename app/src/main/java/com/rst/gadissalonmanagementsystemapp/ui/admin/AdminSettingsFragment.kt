@@ -1,4 +1,4 @@
-package com.rst.gadissalonmanagementsystemapp.ui.profile
+package com.rst.gadissalonmanagementsystemapp.ui.admin
 
 import android.content.Context
 import android.content.Intent
@@ -13,11 +13,16 @@ import com.google.firebase.auth.auth
 import com.rst.gadissalonmanagementsystemapp.Loading
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentSettingsBinding
 
-class SettingsFragment : Fragment() {
+class AdminSettingsFragment : Fragment() {
+
     private var _binding: FragmentSettingsBinding? = null
     private val binding get() = _binding!!
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         _binding = FragmentSettingsBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -43,27 +48,27 @@ class SettingsFragment : Fragment() {
             } else {
                 AppCompatDelegate.MODE_NIGHT_NO
             }
-            // Apply the new theme
+            // Apply the new theme instantly
             AppCompatDelegate.setDefaultNightMode(newMode)
-            // Save the user's choice for the next time they open the app
+            // Save the user's choice so the app remembers it on the next launch
             prefs.edit().putInt("theme_mode", newMode).apply()
         }
     }
 
     private fun setupSignOutButton() {
         binding.signOutButton.setOnClickListener {
-            // Sign out from Firebase
+            // 1. Sign out from Firebase Authentication
             Firebase.auth.signOut()
 
-            // Clear the saved login state from SharedPreferences
+            // 2. Clear the saved role from the cache (SharedPreferences)
             val prefs = requireActivity().getSharedPreferences(Loading.PREFS_NAME, Context.MODE_PRIVATE)
             prefs.edit().remove(Loading.USER_ROLE_KEY).apply()
 
-            // Navigate back to the start of the app
+            // 3. Navigate back to the start of the app and clear all previous screens
             val intent = Intent(requireContext(), Loading::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(intent)
-            requireActivity().finish()
+            requireActivity().finish() // Finish the AdminMainActivity
         }
     }
 
@@ -72,3 +77,4 @@ class SettingsFragment : Fragment() {
         _binding = null
     }
 }
+

@@ -5,11 +5,11 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class Hairstyle(
-    override val id: String, // Add 'override'
-    override val name: String, // Add 'override'
-    val description: String,
-    val price: Double,
-    val durationHours: Int,
-    val availableStylistIds: List<String>,
-    val imageResId: Int = R.drawable.ic_placeholder_image
-) : Parcelable, Favoritable // Implement Favoritable
+    override val id: String = "",
+    override val name: String = "",
+    val description: String = "",
+    val price: Double = 0.0,
+    val durationHours: Int = 0,
+    val availableStylistIds: List<String> = emptyList(),
+    val imageUrl: String = ""
+) : Parcelable, Favoritable

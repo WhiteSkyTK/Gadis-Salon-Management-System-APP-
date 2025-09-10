@@ -6,17 +6,17 @@ import kotlinx.parcelize.Parcelize
 // This nested class represents a single version of a product (e.g., a specific size)
 @Parcelize
 data class ProductVariant(
-    val size: String,
-    val price: Double,
+    val size: String = "",
+    val price: Double = 0.0,
     val priceOld: Double? = null,
-    val stock: Int
+    val stock: Int = 0
 ) : Parcelable
 
 @Parcelize
 data class Product(
-    override val id: String, // Add 'override'
-    override val name: String, // Add 'override'
-    val reviews: String,
-    val variants: List<ProductVariant>,
-    val imageResId: Int = R.drawable.ic_placeholder_image
-) : Parcelable, Favoritable // Implement Favoritable
+    override val id: String = "",
+    override val name: String = "",
+    val reviews: String = "",
+    val variants: List<ProductVariant> = emptyList(),
+    val imageUrl: String = ""
+) : Parcelable, Favoritable

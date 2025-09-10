@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.rst.gadissalonmanagementsystemapp.databinding.ItemCartBinding
 import java.text.NumberFormat
 import java.util.Locale
+import coil.load
 
 class CartAdapter(private val items: List<CartItem>) : RecyclerView.Adapter<CartAdapter.CartViewHolder>() {
 
@@ -13,9 +14,13 @@ class CartAdapter(private val items: List<CartItem>) : RecyclerView.Adapter<Cart
         fun bind(item: CartItem) {
             binding.itemName.text = item.name
             binding.itemQuantity.text = item.quantity.toString()
-            binding.itemImage.setImageResource(item.imageResId)
 
-            // Format the price to show currency
+            // Use Coil to load the image from the URL
+            binding.itemImage.load(item.imageUrl) {
+                placeholder(R.drawable.ic_placeholder_image) // Show placeholder while loading
+                error(R.drawable.ic_placeholder_image) // Show placeholder if image fails to load
+            }
+
             val format = NumberFormat.getCurrencyInstance(Locale("en", "ZA"))
             binding.itemPrice.text = format.format(item.price)
         }
