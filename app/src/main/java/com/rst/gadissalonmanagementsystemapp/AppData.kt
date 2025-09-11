@@ -50,48 +50,6 @@ object AppData {
         _allBookings.value = currentList
     }
 
-    fun addProduct(product: Product) {
-        val currentList = _allProducts.value?.toMutableList() ?: mutableListOf()
-        currentList.add(product)
-        _allProducts.value = currentList
-    }
-
-    fun deleteProduct(productId: String) {
-        val currentList = _allProducts.value?.toMutableList() ?: mutableListOf()
-        currentList.removeAll { it.id == productId }
-        _allProducts.value = currentList
-    }
-
-    fun updateProduct(updatedProduct: Product) {
-        val currentList = _allProducts.value?.toMutableList() ?: mutableListOf()
-        val index = currentList.indexOfFirst { it.id == updatedProduct.id }
-        if (index != -1) {
-            currentList[index] = updatedProduct
-            _allProducts.value = currentList
-        }
-    }
-
-    fun addHairstyle(hairstyle: Hairstyle) {
-        val currentList = _allHairstyles.value?.toMutableList() ?: mutableListOf()
-        currentList.add(hairstyle)
-        _allHairstyles.value = currentList
-    }
-
-    fun deleteHairstyle(hairstyleId: String) {
-        val currentList = _allHairstyles.value?.toMutableList() ?: mutableListOf()
-        currentList.removeAll { it.id == hairstyleId }
-        _allHairstyles.value = currentList
-    }
-
-    fun updateHairstyle(updatedHairstyle: Hairstyle) {
-        val currentList = _allHairstyles.value?.toMutableList() ?: mutableListOf()
-        val index = currentList.indexOfFirst { it.id == updatedHairstyle.id }
-        if (index != -1) {
-            currentList[index] = updatedHairstyle
-            _allHairstyles.value = currentList
-        }
-    }
-
     // --- NEW WORKER/ADMIN FUNCTIONS for booking management ---
 
     fun updateBookingStatus(bookingId: String, newStatus: String, stylist: User?) {
@@ -109,27 +67,8 @@ object AppData {
         }
     }
 
-    // --- USER MANAGEMENT ---
-    private val _registeredUsers = MutableLiveData<List<User>>(emptyList()) // Start with an empty list
-    val registeredUsers: LiveData<List<User>> = _registeredUsers
     private var currentUser: User? = null
 
-
-    fun addUser(user: User) {
-        val currentList = _registeredUsers.value?.toMutableList() ?: mutableListOf()
-        currentList.add(user)
-        _registeredUsers.value = currentList
-    }
-
-    fun removeUser(userId: String) {
-        val currentList = _registeredUsers.value?.toMutableList() ?: mutableListOf()
-        currentList.removeAll { it.id == userId }
-        _registeredUsers.value = currentList
-    }
-
-    fun getRegisteredUsers(): List<User> {
-        return _registeredUsers.value?.toList() ?: emptyList()
-    }
 
     fun getCurrentUser(): User? {
         return currentUser
@@ -141,19 +80,6 @@ object AppData {
 
     private val _currentUserCart = MutableLiveData<List<CartItem>>()
     val currentUserCart: LiveData<List<CartItem>> = _currentUserCart
-
-    fun registerUser(name: String, email: String, phone: String, password: String): Boolean {
-        val currentList = _registeredUsers.value ?: emptyList()
-        // Check if email is already taken
-        if (currentList.any { it.email.equals(email, ignoreCase = true) }) {
-            return false // Registration failed
-        }
-        // Add new user to a new list and update the LiveData
-        val newList = currentList.toMutableList()
-        newList.add(User(name = name, email = email, phone = phone))
-        _registeredUsers.value = newList
-        return true // Registration successful
-    }
 
     // Now we can have a function for each type
     fun toggleFavorite(product: Product) {
@@ -176,41 +102,4 @@ object AppData {
         _currentUserFavorites.value = currentFavorites
     }
 
-    fun isFavorite(item: Favoritable): Boolean {
-        return _currentUserFavorites.value?.any { it.id == item.id } ?: false
-    }
-
-    fun addToCart(product: Product) {
-        currentUser?.let { user ->
-            val existingItem = user.cart.find { it.name == product.name }
-
-            if (existingItem != null) {
-                existingItem.quantity++
-            } else {
-                // FIX: Get the price from the first variant in the list
-                val price = product.variants.firstOrNull()?.price ?: 0.0
-                user.cart.add(CartItem(product.name, price, 1, product.imageUrl))
-            }
-            _currentUserCart.value = user.cart // Update LiveData
-        }
-    }
-
-    fun logoutUser() {
-        currentUser = null
-        _currentUserFavorites.value = emptyList()
-        _currentUserCart.value = emptyList()
-    }
-
-    fun loginUser(email: String): String? {
-        val foundUser = _registeredUsers.value?.find { it.email.equals(email, ignoreCase = true)}
-        return if (foundUser != null) {
-            currentUser = foundUser
-            _currentUserFavorites.value = currentUser?.favorites
-            _currentUserCart.value = currentUser?.cart
-            currentUser?.role
-        } else {
-            null
-        }
-    }
-    // Add functions to remove from cart, change quantity etc. here
 }

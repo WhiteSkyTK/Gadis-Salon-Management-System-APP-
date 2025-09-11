@@ -15,7 +15,9 @@ import java.util.Locale
 
 class FavoritesAdapter(
     private val items: List<Favoritable>,
-    private val onUnfavoriteClick: (Favoritable) -> Unit
+    private val onUnfavoriteClick: (Favoritable) -> Unit,
+    private val onAddToCartClick: (Product) -> Unit,
+    private val onBookClick: (Hairstyle) -> Unit
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     // Define constants for our view types
@@ -41,11 +43,11 @@ class FavoritesAdapter(
             binding.addToCartButton.visibility = View.VISIBLE
             binding.bookNowButton.visibility = View.GONE
 
-            binding.unfavoriteButton.setOnClickListener { onUnfavoriteClick(item) }
             binding.addToCartButton.setOnClickListener {
-                AppData.addToCart(item)
-                Toast.makeText(itemView.context, "${item.name} added to cart", Toast.LENGTH_SHORT).show()
+                onAddToCartClick(item)
             }
+            binding.unfavoriteButton.setOnClickListener { onUnfavoriteClick(item) }
+
         }
     }
 

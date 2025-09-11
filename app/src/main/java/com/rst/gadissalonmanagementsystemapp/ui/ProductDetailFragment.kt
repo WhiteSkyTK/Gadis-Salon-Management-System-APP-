@@ -8,16 +8,19 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import coil.load
 import com.google.android.material.chip.Chip
 import com.rst.gadissalonmanagementsystemapp.AppData
+import com.rst.gadissalonmanagementsystemapp.FirebaseManager
 import com.rst.gadissalonmanagementsystemapp.MainViewModel
 import com.rst.gadissalonmanagementsystemapp.Product
 import com.rst.gadissalonmanagementsystemapp.ProductVariant
 import com.rst.gadissalonmanagementsystemapp.R
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentProductDetailBinding
+import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -28,6 +31,8 @@ class ProductDetailFragment : Fragment() {
     private val args: ProductDetailFragmentArgs by navArgs()
     private val mainViewModel: MainViewModel by activityViewModels()
 
+    private var selectedVariant: ProductVariant? = null
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentProductDetailBinding.inflate(inflater, container, false)
         return binding.root
@@ -36,6 +41,7 @@ class ProductDetailFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val product = args.product
+        mainViewModel.setCurrentProduct(product)
 
         // --- 1. Populate Static Views ---
         binding.productImage.load(product.imageUrl) {
@@ -54,8 +60,18 @@ class ProductDetailFragment : Fragment() {
 
         // --- 3. Setup Add to Cart Logic ---
         binding.addToCartButton.setOnClickListener {
-            AppData.addToCart(product)
-            Toast.makeText(context, "${product.name} added to cart", Toast.LENGTH_SHORT).show()
+            if (selectedVariant == null) {
+                Toast.makeText(context, "Please select a size", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            viewLifecycleOwner.lifecycleScope.launch {
+                val result = FirebaseManager.addToCart(product, selectedVariant!!)
+                if (result.isSuccess) {
+                    Toast.makeText(context, "${product.name} added to cart", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(context, "Error: ${result.exceptionOrNull()?.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
 
         binding.buyNowButton.setOnClickListener {

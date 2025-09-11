@@ -8,6 +8,9 @@ import java.lang.Exception
 import android.net.Uri
 import android.util.Log
 import com.google.firebase.storage.storage
+import android.content.Context
+import com.google.firebase.FirebaseApp
+import com.google.firebase.app
 
 object FirebaseManager {
 
@@ -27,12 +30,7 @@ object FirebaseManager {
 
             if (firebaseUser != null) {
                 // Step 2: Create a User object with the details
-                val newUser = User(
-                    id = firebaseUser.uid, // Use the unique ID from Firebase Auth
-                    name = name,
-                    email = email,
-                    phone = phone,
-                )
+                val newUser = User(name = name, email = email, phone = phone)
 
                 // Step 3: Save the User object to the "users" collection in Firestore
                 usersCollection.document(firebaseUser.uid).set(newUser).await()
@@ -77,30 +75,45 @@ object FirebaseManager {
     }
 
     // This function lets an admin create a user with a specific role
-    suspend fun createUserByAdmin(name: String, email: String, phone: String, password: String, role: String, imageUrl: String): Result<Unit> {
-        return try {
-            // We create the user in Firebase Auth
-            val authResult = auth.createUserWithEmailAndPassword(email, password).await()
+    // This function now returns the new user's UID on success
+    suspend fun createUserByAdmin(
+        context: Context, // We need context to initialize the second app
+        name: String, email: String, phone: String, password: String, role: String, imageUrl: String
+    ): Result<String> {
+        // Create a unique name for our temporary app instance
+        val tempAppName = "AdminCreateUser"
+        var tempAuth = auth // Start with the current auth
+        var tempApp: FirebaseApp? = null
+
+        try {
+            // Initialize a temporary, secondary Firebase app
+            tempApp = FirebaseApp.initializeApp(context, Firebase.app.options, tempAppName)
+            tempAuth = Firebase.auth(tempApp)
+
+            // Step 1: Create the new user using the temporary auth instance
+            val authResult = tempAuth.createUserWithEmailAndPassword(email, password).await()
             val firebaseUser = authResult.user
 
             if (firebaseUser != null) {
-                // We create the User object, passing in the specified role
+                // Step 2: Save the user's details to Firestore
                 val newUser = User(
                     id = firebaseUser.uid,
                     name = name,
                     email = email,
                     phone = phone,
                     role = role,
-                    imageUrl = imageUrl// Use the role provided by the admin
+                    imageUrl = imageUrl
                 )
-                // And save it to Firestore
                 usersCollection.document(firebaseUser.uid).set(newUser).await()
-                Result.success(Unit)
+                return Result.success(firebaseUser.uid) // Return the new UID
             } else {
-                Result.failure(Exception("Failed to create user account."))
+                return Result.failure(Exception("Failed to create user account."))
             }
         } catch (e: Exception) {
-            Result.failure(e)
+            return Result.failure(e)
+        } finally {
+            // Step 3: IMPORTANT - Delete the temporary app instance to clean up
+            FirebaseApp.getInstance(tempAppName).delete()
         }
     }
 
@@ -108,12 +121,19 @@ object FirebaseManager {
         return try {
             val documentSnapshots = usersCollection.get().await()
             // Convert the documents from Firestore into a list of our User data class
-            val userList = documentSnapshots.toObjects(User::class.java)
+            val userList = documentSnapshots.map { document ->
+                // Convert the document to a User object.
+                val user = document.toObject(User::class.java)
+                // Manually set the user's ID to be the document's ID.
+                user.id = document.id
+                user
+            }
             Result.success(userList)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
+
 
     suspend fun getAllBookings(): Result<List<AdminBooking>> {
         return try {
@@ -193,6 +213,20 @@ object FirebaseManager {
         }
     }
 
+    suspend fun updateUserProfile(uid: String, name: String, phone: String, imageUrl: String): Result<Unit> {
+        return try {
+            val userUpdates = mapOf(
+                "name" to name,
+                "phone" to phone,
+                "imageUrl" to imageUrl // Add the imageUrl to the update
+            )
+            usersCollection.document(uid).update(userUpdates).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     // --- ADD THIS FUNCTION to update a user's image URL ---
     suspend fun updateUserProfileImage(uid: String, imageUrl: String): Result<Unit> {
         return try {
@@ -200,6 +234,43 @@ object FirebaseManager {
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    // Updates a user's document in Firestore
+    suspend fun updateUser(user: User): Result<Unit> {
+        return try {
+            usersCollection.document(user.id).set(user).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // Deletes a user's document from Firestore
+    suspend fun deleteUser(userId: String): Result<Unit> {
+        return try {
+            usersCollection.document(userId).delete().await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    fun addUserListener(onUpdate: (List<User>) -> Unit) {
+        usersCollection.addSnapshotListener { snapshots, error ->
+            if (error != null) {
+                Log.w("FirebaseManager", "User listener failed.", error)
+                return@addSnapshotListener
+            }
+
+            val userList = snapshots?.map { document ->
+                val user = document.toObject(User::class.java)
+                user.id = document.id
+                user
+            } ?: emptyList()
+
+            onUpdate(userList)
         }
     }
 
@@ -267,12 +338,20 @@ object FirebaseManager {
 
     suspend fun getAllSupportMessages(): Result<List<SupportMessage>> {
         return try {
-            val documents = firestore.collection("support_messages")
+            Log.d("FirebaseManager", "Fetching all support messages...")
+            val documentSnapshots = firestore.collection("support_messages")
                 .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
                 .get().await()
-            val messages = documents.toObjects(SupportMessage::class.java)
+            val messages = documentSnapshots.map { document ->
+                val message = document.toObject(SupportMessage::class.java)
+                message.id = document.id // Manually set the correct ID
+                message
+            }
+
+            Log.d("FirebaseManager", "Successfully fetched ${messages.size} messages.")
             Result.success(messages)
         } catch (e: Exception) {
+            Log.e("FirebaseManager", "Error fetching support messages", e)
             Result.failure(e)
         }
     }
@@ -283,6 +362,8 @@ object FirebaseManager {
                 .update("status", newStatus).await()
             Result.success(Unit)
         } catch (e: Exception) {
+            // Add a log to see the specific error
+            Log.e("FirebaseManager", "Error updating message status", e)
             Result.failure(e)
         }
     }
@@ -291,6 +372,54 @@ object FirebaseManager {
         return try {
             firestore.collection("support_messages").document(messageId).delete().await()
             Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // Adds a product to the current user's 'cart' subcollection
+    suspend fun addToCart(product: Product, variant: ProductVariant): Result<Unit> {
+        val userId = auth.currentUser?.uid ?: return Result.failure(Exception("User not logged in"))
+        return try {
+            val cartCollection = usersCollection.document(userId).collection("cart")
+            val cartItem = CartItem(
+                name = product.name,
+                price = variant.price,
+                quantity = 1,
+                imageUrl = product.imageUrl
+            )
+            cartCollection.document(product.id).set(cartItem).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // Toggles a product in the current user's 'favorites' subcollection
+    suspend fun toggleFavorite(product: Product): Result<Boolean> {
+        val userId = auth.currentUser?.uid ?: return Result.failure(Exception("User not logged in"))
+        return try {
+            val favoriteDoc = usersCollection.document(userId).collection("favorites").document(product.id)
+            val document = favoriteDoc.get().await()
+
+            if (document.exists()) {
+                favoriteDoc.delete().await()
+                Result.success(false) // No longer a favorite
+            } else {
+                favoriteDoc.set(product).await()
+                Result.success(true) // Is now a favorite
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // Checks if a product is in the user's favorites
+    suspend fun isFavorite(productId: String): Result<Boolean> {
+        val userId = auth.currentUser?.uid ?: return Result.failure(Exception("User not logged in"))
+        return try {
+            val document = usersCollection.document(userId).collection("favorites").document(productId).get().await()
+            Result.success(document.exists())
         } catch (e: Exception) {
             Result.failure(e)
         }

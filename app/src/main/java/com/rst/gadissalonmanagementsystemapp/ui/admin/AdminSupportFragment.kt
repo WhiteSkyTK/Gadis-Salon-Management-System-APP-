@@ -22,6 +22,7 @@ class AdminSupportFragment : Fragment() {
     private val binding get() = _binding!!
     private val TAG = "AdminSupportFragment"
 
+    private lateinit var supportAdapter: AdminSupportAdapter
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentAdminSupportBinding.inflate(inflater, container, false)
@@ -30,8 +31,7 @@ class AdminSupportFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.supportRecyclerView.layoutManager = LinearLayoutManager(context)
-
+        setupRecyclerView()
         loadMessages()
 
         binding.fabComposeMessage.setOnClickListener {
@@ -39,39 +39,51 @@ class AdminSupportFragment : Fragment() {
             findNavController().navigate(R.id.action_adminSupportFragment_to_adminComposeMessageFragment)
         }
     }
+    private fun setupRecyclerView() {
+        // Create the adapter ONCE with an empty list
+        supportAdapter = AdminSupportAdapter(
+            messages = emptyList(),
+            onItemClick = { message ->
+                val action = AdminSupportFragmentDirections.actionAdminSupportFragmentToAdminReplyMessageFragment(message)
+                findNavController().navigate(action)
+            },
+            onStatusChange = { message, newStatus ->
+                updateMessageStatus(message.id, newStatus)
+            },
+            onDelete = { message ->
+                confirmAndDeleteMessage(message.id)
+            }
+        )
+        binding.supportRecyclerView.layoutManager = LinearLayoutManager(context)
+        binding.supportRecyclerView.adapter = supportAdapter
+    }
 
     private fun loadMessages() {
         viewLifecycleOwner.lifecycleScope.launch {
             val result = FirebaseManager.getAllSupportMessages()
             if (result.isSuccess) {
                 val messages = result.getOrNull() ?: emptyList()
-                binding.supportRecyclerView.adapter = AdminSupportAdapter(
-                    messages = messages,
-                    onItemClick = { message ->
-                        // Navigate to the reply screen when an item is clicked
-                        val action = AdminSupportFragmentDirections.actionAdminSupportFragmentToAdminReplyMessageFragment(message)
-                        findNavController().navigate(action)
-                    },
-                    onStatusChange = { message, newStatus ->
-                        updateMessageStatus(message.id, newStatus)
-                    },
-                    onDelete = { message ->
-                        confirmAndDeleteMessage(message.id)
-                    }
-                )
+                // Just update the adapter's data instead of creating a new one
+                supportAdapter.updateData(messages)
             } else {
                 val error = result.exceptionOrNull()?.message
-                Log.e(TAG, "Error fetching messages: $error")
                 Toast.makeText(context, "Error: $error", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
     private fun updateMessageStatus(messageId: String, newStatus: String) {
-        lifecycleScope.launch {
-            FirebaseManager.updateSupportMessageStatus(messageId, newStatus)
-            Toast.makeText(context, "Status updated", Toast.LENGTH_SHORT).show()
-            loadMessages() // Refresh the list to show the change
+        viewLifecycleOwner.lifecycleScope.launch {
+            val result = FirebaseManager.updateSupportMessageStatus(messageId, newStatus)
+            if (result.isSuccess) {
+                Toast.makeText(context, "Status updated", Toast.LENGTH_SHORT).show()
+                Log.d(TAG, "Success updating status")
+                loadMessages() // Refresh the list
+            } else {
+                // Display the specific error message from Firebase
+                val errorMessage = result.exceptionOrNull()?.message ?: "An unknown error occurred."
+                Log.e(TAG, "Error updating status: $errorMessage")
+            }
         }
     }
 
@@ -80,10 +92,14 @@ class AdminSupportFragment : Fragment() {
             .setTitle("Delete Message")
             .setMessage("Are you sure you want to permanently delete this message?")
             .setPositiveButton("Delete") { _, _ ->
-                lifecycleScope.launch {
-                    FirebaseManager.deleteSupportMessage(messageId)
-                    Toast.makeText(context, "Message deleted", Toast.LENGTH_SHORT).show()
-                    loadMessages() // Refresh the list
+                viewLifecycleOwner.lifecycleScope.launch {
+                    val result = FirebaseManager.deleteSupportMessage(messageId)
+                    if (result.isSuccess) {
+                        Toast.makeText(context, "Message deleted", Toast.LENGTH_SHORT).show()
+                        loadMessages() // Refresh the list
+                    } else {
+                        Toast.makeText(context, "Delete failed", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
             .setNegativeButton("Cancel", null)

@@ -16,19 +16,26 @@
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
+
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:padding="20dp">
 
+
                 <com.google.android.material.imageview.ShapeableImageView
                     android:id="@+id/profile_image_admin"
                     android:layout_width="80dp"
                     android:layout_height="80dp"
+                    android:layout_marginEnd="16dp"
+                    android:layout_marginBottom="20dp"
                     android:src="@drawable/ic_profile"
-                    app:shapeAppearanceOverlay="@style/CircleImageView"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/user_name_admin"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintVertical_bias="1.0"
+                    app:shapeAppearanceOverlay="@style/CircleImageView" />
 
                 <TextView
                     android:id="@+id/user_name_admin"
@@ -93,8 +100,19 @@
                     android:id="@+id/about_us_option"
                     style="@style/ProfileOption"
                     android:text="Edit 'About Us' Page"/>
+
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
+
+        <Button
+            android:id="@+id/log_out_button"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="16dp"
+            android:text="Log Out"
+            android:textColor="@color/status_red" />
 
         <!-- Version Number -->
         <TextView

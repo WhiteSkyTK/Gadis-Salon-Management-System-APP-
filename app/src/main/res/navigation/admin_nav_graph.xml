@@ -36,6 +36,15 @@
     </fragment>
 
     <fragment
+        android:id="@+id/adminEditUserFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.admin.AdminEditUserFragment"
+        android:label="Edit User">
+        <argument
+            android:name="userId"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
         android:id="@+id/nav_admin_users"
         android:name="com.rst.gadissalonmanagementsystemapp.ui.admin.AdminUsersFragment"
         android:label="AdminUsersFragment"
@@ -44,6 +53,9 @@
         <action
             android:id="@+id/action_nav_admin_users_to_adminAddUserFragment"
             app:destination="@id/adminAddUserFragment" />
+        <action
+            android:id="@+id/action_nav_admin_users_to_adminEditUserFragment"
+            app:destination="@id/adminEditUserFragment" />
     </fragment>
 
     <fragment
@@ -70,6 +82,13 @@
         android:label="Add New User"
         tools:layout="@layout/fragment_admin_add_user" />
 
+    <fragment
+        android:id="@+id/adminEditProfileFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.admin.AdminEditProfileFragment"
+        android:label="Edit Profile"
+        tools:layout="@layout/fragment_admin_edit_profile" />
+
+
     <!-- Admin Profile and its Sub-Pages -->
     <fragment
         android:id="@+id/nav_admin_profile"
@@ -90,6 +109,10 @@
         <action
             android:id="@+id/action_adminProfileFragment_to_adminSupportFragment"
             app:destination="@id/adminSupportFragment" />
+        <action
+            android:id="@+id/action_adminProfileFragment_to_adminEditProfileFragment"
+            app:destination="@id/adminEditProfileFragment" />
+
     </fragment>
 
     <fragment

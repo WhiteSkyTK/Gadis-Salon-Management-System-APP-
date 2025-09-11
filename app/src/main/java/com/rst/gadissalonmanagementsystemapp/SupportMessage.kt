@@ -5,7 +5,7 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize // Add this
 data class SupportMessage(
-    val id: String = "",
+    var id: String = "",
     val senderUid: String = "",
     val senderName: String = "",
     val senderEmail: String = "",

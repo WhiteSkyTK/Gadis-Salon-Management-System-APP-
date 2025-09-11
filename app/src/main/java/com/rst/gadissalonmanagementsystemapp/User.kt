@@ -1,14 +1,17 @@
 package com.rst.gadissalonmanagementsystemapp
 
-import java.util.UUID // Import UUID
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 
+@Parcelize
 data class User(
-    val id: String = UUID.randomUUID().toString(), // Add a unique ID
+    // The ID should be a 'var' with a default empty string.
+    // Firestore will populate this with the real Document ID.
+    var id: String = "",
     val name: String = "",
     val email: String = "",
     val phone: String = "",
     var imageUrl: String = "",
-    val role: String = "CUSTOMER",
-    val favorites: MutableList<Favoritable> = mutableListOf(),
-    val cart: MutableList<CartItem> = mutableListOf()
-)
+    val role: String = "CUSTOMER"
+    // We don't need to parcelize favorites or cart
+) : Parcelable

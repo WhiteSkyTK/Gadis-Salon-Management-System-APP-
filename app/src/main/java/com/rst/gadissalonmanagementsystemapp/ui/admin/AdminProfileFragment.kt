@@ -1,6 +1,8 @@
 package com.rst.gadissalonmanagementsystemapp.ui.admin
 
 import android.Manifest
+import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
@@ -18,7 +20,9 @@ import androidx.navigation.fragment.findNavController
 import coil.load
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import com.google.firebase.functions.functions
 import com.rst.gadissalonmanagementsystemapp.FirebaseManager
+import com.rst.gadissalonmanagementsystemapp.Loading
 import com.rst.gadissalonmanagementsystemapp.R
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentAdminProfileBinding
 import com.rst.gadissalonmanagementsystemapp.ui.profile.ProfilePictureBottomSheet
@@ -63,6 +67,7 @@ class AdminProfileFragment : Fragment(), ProfilePictureBottomSheet.PictureOption
 
         loadAdminProfile()
         setupClickListeners()
+
     }
 
     private fun handleImageSelection(imageUri: Uri) {
@@ -121,10 +126,22 @@ class AdminProfileFragment : Fragment(), ProfilePictureBottomSheet.PictureOption
         binding.aboutUsOption.setOnClickListener {
             findNavController().navigate(R.id.action_adminProfileFragment_to_adminAboutUsFragment)
         }
-
-        // TODO: Add click listener for the edit button
         binding.editProfileButton.setOnClickListener {
-            Toast.makeText(context, "Edit profile page coming soon!", Toast.LENGTH_SHORT).show()
+            findNavController().navigate(R.id.action_adminProfileFragment_to_adminEditProfileFragment)
+        }
+        binding.logOutButton.setOnClickListener {
+            // 1. Sign out from Firebase
+            Firebase.auth.signOut()
+
+            // 2. Clear the saved user role from the local cache
+            val prefs = requireActivity().getSharedPreferences(Loading.PREFS_NAME, Context.MODE_PRIVATE)
+            prefs.edit().remove(Loading.USER_ROLE_KEY).apply()
+
+            // 3. Go back to the Loading screen and clear all previous screens
+            val intent = Intent(requireContext(), Loading::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+            requireActivity().finish() // Close the admin activity
         }
     }
 

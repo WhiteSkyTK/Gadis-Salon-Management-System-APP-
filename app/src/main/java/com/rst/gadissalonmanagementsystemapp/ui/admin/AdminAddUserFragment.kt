@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,11 +15,14 @@ import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.google.firebase.Firebase
+import com.google.firebase.functions.functions
 import com.rst.gadissalonmanagementsystemapp.FirebaseManager
 import com.rst.gadissalonmanagementsystemapp.R
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentAdminAddUserBinding
 import com.rst.gadissalonmanagementsystemapp.ui.profile.ProfilePictureBottomSheet
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import java.io.File
 import java.util.UUID
 
@@ -114,10 +118,9 @@ class AdminAddUserFragment : Fragment(), ProfilePictureBottomSheet.PictureOption
         val email = binding.emailInput.text.toString().trim()
         val phone = binding.phoneInput.text.toString().trim()
         val password = binding.passwordInput.text.toString().trim()
-
         val role = when (binding.roleRadioGroup.checkedRadioButtonId) {
             binding.radioWorker.id -> "WORKER"
-            binding.radioAdmin.id -> "ADMIN"
+            //binding.radioAdmin.id -> "ADMIN"
             else -> "CUSTOMER"
         }
 
@@ -145,16 +148,31 @@ class AdminAddUserFragment : Fragment(), ProfilePictureBottomSheet.PictureOption
             }
 
             // Now, create the user in Firebase Auth and save to Firestore
-            val result = FirebaseManager.createUserByAdmin(name, email, phone, password, role, imageUrl)
-
-            binding.loadingIndicator.visibility = View.GONE
-            binding.saveUserButton.isEnabled = true
+            val result = FirebaseManager.createUserByAdmin(requireContext(), name, email, phone, password, role, imageUrl)
 
             if (result.isSuccess) {
+                val newUserId = result.getOrNull() // Get the new user's ID
+                if (newUserId != null && role != "CUSTOMER") {
+                    // Step 2: If the user is an Admin or Worker, set their custom claim
+                    Log.d("AdminAddUser", "User created, now setting role for UID: $newUserId")
+                    val functions = Firebase.functions
+                    val data = hashMapOf("userId" to newUserId, "role" to role)
+
+                    try {
+                        functions.getHttpsCallable("setUserRole").call(data).await()
+                        Log.d("AdminAddUser", "Role set successfully for $newUserId")
+                    } catch (e: Exception) {
+                        Log.e("AdminAddUser", "Failed to set role for $newUserId", e)
+                        Toast.makeText(context, "User created but failed to set role: ${e.message}", Toast.LENGTH_LONG).show()
+                    }
+                }
+
                 Toast.makeText(context, "$role '$name' added successfully", Toast.LENGTH_SHORT).show()
                 findNavController().popBackStack()
             } else {
-                Toast.makeText(context, "Error: ${result.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "Error creating user: ${result.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
+                binding.loadingIndicator.visibility = View.GONE
+                binding.saveUserButton.isEnabled = true
             }
         }
     }

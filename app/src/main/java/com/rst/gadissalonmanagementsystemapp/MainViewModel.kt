@@ -3,6 +3,8 @@ package com.rst.gadissalonmanagementsystemapp
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.launch
 
 class MainViewModel : ViewModel() {
 
@@ -15,14 +17,21 @@ class MainViewModel : ViewModel() {
 
     fun setCurrentProduct(product: Product) {
         _currentlyViewedProduct.value = product
-        _isCurrentProductFavorite.value = AppData.isFavorite(product)
+        // Asynchronously check if the product is a favorite
+        viewModelScope.launch {
+            val result = FirebaseManager.isFavorite(product.id)
+            _isCurrentProductFavorite.value = result.getOrNull() == true
+        }
     }
 
     fun onFavoriteClicked() {
         _currentlyViewedProduct.value?.let { product ->
-            AppData.toggleFavorite(product)
-            // Update the LiveData to notify observers (the Activity)
-            _isCurrentProductFavorite.value = AppData.isFavorite(product)
+            viewModelScope.launch {
+                val result = FirebaseManager.toggleFavorite(product)
+                if (result.isSuccess) {
+                    _isCurrentProductFavorite.value = result.getOrDefault(false)
+                }
+            }
         }
     }
 }

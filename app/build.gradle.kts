@@ -85,6 +85,7 @@ dependencies {
     implementation("com.google.firebase:firebase-storage-ktx:21.0.2")
     implementation("com.google.firebase:firebase-appcheck-playintegrity:19.0.0")
     implementation("com.google.firebase:firebase-messaging-ktx:24.1.2")
+    implementation("com.google.firebase:firebase-functions-ktx:21.2.1")
     debugImplementation(libs.firebase.appcheck.debug)
     implementation(libs.google.firebase.appcheck.playintegrity)
 

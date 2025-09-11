@@ -55,7 +55,6 @@ class ContactFragment : Fragment() {
         // You can show a loading indicator here
 
         val supportMessage = SupportMessage(
-            id = UUID.randomUUID().toString(),
             senderUid = currentUser.uid,
             senderName = binding.nameInput.text.toString(),
             senderEmail = binding.emailInput.text.toString(),

@@ -32,6 +32,8 @@ class AdminMainActivity : AppCompatActivity() {
             Log.e("AdminDebug", "CRITICAL ERROR: No user is logged in!")
         }
 
+        logIdTokenClaims()
+
         // Find the NavController
         val navHostFragment = supportFragmentManager
             .findFragmentById(R.id.admin_nav_host_fragment) as NavHostFragment
@@ -43,6 +45,24 @@ class AdminMainActivity : AppCompatActivity() {
         // Setup our custom listener to manage UI changes
         setupNavigationListener()
         observeSupportMessagesForBadge()
+    }
+
+    private fun logIdTokenClaims() {
+        val user = Firebase.auth.currentUser
+        user?.getIdToken(true) // Force refresh the token
+            ?.addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val idTokenResult = task.result
+                    val claims = idTokenResult?.claims
+                    Log.d("TokenDebug", "--- User Token Claims ---")
+                    claims?.forEach { (key, value) ->
+                        Log.d("TokenDebug", "$key = $value")
+                    }
+                    Log.d("TokenDebug", "-------------------------")
+                } else {
+                    Log.e("TokenDebug", "Failed to get token", task.exception)
+                }
+            }
     }
 
     private fun observeSupportMessagesForBadge() {
