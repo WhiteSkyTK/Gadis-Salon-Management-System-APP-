@@ -125,7 +125,7 @@ class AdminAddUserFragment : Fragment(), ProfilePictureBottomSheet.PictureOption
         }
 
         if (name.isEmpty() || email.isEmpty() || phone.isEmpty() || password.isEmpty() || password.length < 6) {
-            Toast.makeText(context, "Please fill all fields. Password must be at least 6 characters.", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, "Please fill all fields. Password must be at least 6 characters.s", Toast.LENGTH_LONG).show()
             return
         }
 
