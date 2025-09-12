@@ -105,6 +105,7 @@ class AdminMainActivity : AppCompatActivity() {
                 R.id.adminAboutUsFragment,
                 R.id.adminReplyMessageFragment,
                 R.id.adminComposeMessageFragment,
+                R.id.adminEditUserFragment,
                 R.id.adminSupportFragment -> {
                     binding.bottomNavCardAdmin.visibility = View.GONE
                     binding.backButtonAdmin.visibility = View.VISIBLE

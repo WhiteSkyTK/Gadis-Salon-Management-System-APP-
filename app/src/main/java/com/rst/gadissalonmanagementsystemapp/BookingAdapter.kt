@@ -2,24 +2,23 @@ package com.rst.gadissalonmanagementsystemapp
 
 import android.graphics.drawable.GradientDrawable
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.rst.gadissalonmanagementsystemapp.databinding.ItemBookingBinding
 
-class BookingAdapter(private val bookings: List<Booking>) : RecyclerView.Adapter<BookingAdapter.BookingViewHolder>() {
+class BookingAdapter(private var bookings: List<AdminBooking>) : RecyclerView.Adapter<BookingAdapter.BookingViewHolder>() {
 
     inner class BookingViewHolder(private val binding: ItemBookingBinding) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(booking: Booking) {
-            binding.styleImage.setImageResource(booking.imageResId)
-            binding.styleName.text = booking.styleName
+        fun bind(booking: AdminBooking) {
+            binding.styleImage.visibility = View.GONE
+            binding.styleName.text = booking.serviceName
             binding.stylistName.text = "with ${booking.stylistName}"
             binding.bookingDate.text = booking.date
             binding.bookingTime.text = "at ${booking.time}"
             binding.bookingStatus.text = booking.status
-
-            // --- CORRECTED LOGIC FOR ROUNDED, COLORED BACKGROUND ---
 
             // 1. Get the correct color resource for the status
             val statusColorRes = when (booking.status.lowercase()) {
@@ -29,10 +28,7 @@ class BookingAdapter(private val bookings: List<Booking>) : RecyclerView.Adapter
                 else -> R.color.status_grey
             }
 
-            // 2. Get the color value from the resource
             val color = ContextCompat.getColor(itemView.context, statusColorRes)
-
-            // 3. Apply the color to the existing rounded background drawable
             (binding.bookingStatus.background.mutate() as? GradientDrawable)?.setColor(color)
         }
     }
@@ -47,4 +43,9 @@ class BookingAdapter(private val bookings: List<Booking>) : RecyclerView.Adapter
     }
 
     override fun getItemCount(): Int = bookings.size
+
+    fun updateData(newBookings: List<AdminBooking>) {
+        this.bookings = newBookings
+        notifyDataSetChanged()
+    }
 }

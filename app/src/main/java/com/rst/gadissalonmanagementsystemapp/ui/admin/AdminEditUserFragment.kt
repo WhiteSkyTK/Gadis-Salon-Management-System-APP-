@@ -66,7 +66,7 @@ class AdminEditUserFragment : Fragment() {
 
         when (user.role.uppercase()) {
             "WORKER" -> binding.radioWorker.isChecked = true
-            "ADMIN" -> binding.radioAdmin.isChecked = true
+            //"ADMIN" -> binding.radioAdmin.isChecked = true
             else -> binding.radioCustomer.isChecked = true
         }
     }
@@ -78,7 +78,7 @@ class AdminEditUserFragment : Fragment() {
         val newPhone = binding.phoneInput.text.toString().trim()
         val newRole = when (binding.roleRadioGroup.checkedRadioButtonId) {
             binding.radioWorker.id -> "WORKER"
-            binding.radioAdmin.id -> "ADMIN"
+            //binding.radioAdmin.id -> "ADMIN"
             else -> "CUSTOMER"
         }
 

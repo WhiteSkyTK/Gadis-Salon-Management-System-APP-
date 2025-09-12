@@ -424,4 +424,92 @@ object FirebaseManager {
             Result.failure(e)
         }
     }
+
+    // --- WORKER FUNCTIONS ---
+
+    // Fetches all bookings that have a "Pending" status
+    fun addPendingBookingsListener(onUpdate: (List<AdminBooking>) -> Unit) {
+        firestore.collection("bookings")
+            .whereEqualTo("status", "Pending")
+            .addSnapshotListener { snapshots, error ->
+                if (error != null) {
+                    Log.w("FirebaseManager", "Pending Bookings listener failed.", error)
+                    return@addSnapshotListener
+                }
+                val bookingList = snapshots?.map { doc ->
+                    val booking = doc.toObject(AdminBooking::class.java)
+                    booking.id = doc.id
+                    booking
+                } ?: emptyList()
+                onUpdate(bookingList)
+            }
+    }
+
+    // Updates a booking's status and assigns the stylist who accepted it
+    suspend fun acceptBooking(bookingId: String, stylist: User): Result<Unit> {
+        return try {
+            val updates = mapOf(
+                "status" to "Confirmed",
+                "stylistName" to stylist.name // Assign the stylist's name
+            )
+            firestore.collection("bookings").document(bookingId).update(updates).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getCurrentUser(): Result<User?> {
+        val uid = auth.currentUser?.uid ?: return Result.success(null)
+        return try {
+            val document = usersCollection.document(uid).get().await()
+            val user = document.toObject(User::class.java)
+            Result.success(user)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun deleteBooking(bookingId: String): Result<Unit> {
+        return try {
+            firestore.collection("bookings").document(bookingId).delete().await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+
+
+
+
+
+
+
+    // --- CUSTOMER FUNCTIONS ---
+
+    // Listens for real-time updates to the current user's bookings
+    fun addCurrentUserBookingsListener(onUpdate: (List<AdminBooking>) -> Unit) {
+        val currentUser = auth.currentUser
+        if (currentUser == null) {
+            onUpdate(emptyList()) // If no one is logged in, return an empty list
+            return
+        }
+
+        firestore.collection("bookings")
+            .whereEqualTo("customerName", currentUser.displayName) // Filter by the user's name
+            .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshots, error ->
+                if (error != null) {
+                    Log.w("FirebaseManager", "Current User Bookings listener failed.", error)
+                    return@addSnapshotListener
+                }
+                val bookingList = snapshots?.map { doc ->
+                    val booking = doc.toObject(AdminBooking::class.java)
+                    booking.id = doc.id
+                    booking
+                } ?: emptyList()
+                onUpdate(bookingList)
+            }
+    }
 }

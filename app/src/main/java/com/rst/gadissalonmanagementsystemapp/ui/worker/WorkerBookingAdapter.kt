@@ -33,4 +33,10 @@ class WorkerBookingAdapter(
     }
 
     override fun getItemCount(): Int = bookings.size
+
+    fun updateData(newBookings: List<AdminBooking>) {
+        (this.bookings as MutableList).clear()
+        (this.bookings as MutableList).addAll(newBookings)
+        notifyDataSetChanged()
+    }
 }
