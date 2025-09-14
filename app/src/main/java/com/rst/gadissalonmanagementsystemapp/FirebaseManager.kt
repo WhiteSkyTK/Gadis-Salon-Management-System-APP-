@@ -622,6 +622,16 @@ object FirebaseManager {
         }
     }
 
+    suspend fun updateProductOrderStatus(orderId: String, newStatus: String): Result<Unit> {
+        return try {
+            firestore.collection("product_orders").document(orderId)
+                .update("status", newStatus).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
 
 
 

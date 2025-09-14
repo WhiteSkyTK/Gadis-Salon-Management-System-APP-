@@ -7,7 +7,7 @@ import com.rst.gadissalonmanagementsystemapp.ProductOrder
 import com.rst.gadissalonmanagementsystemapp.databinding.ItemWorkerOrderBinding
 
 class WorkerOrdersAdapter(
-    private val orders: List<ProductOrder>,
+    private var orders: MutableList<ProductOrder>,
     private val onMarkAsReady: (ProductOrder) -> Unit // Click listener for the button
 ) : RecyclerView.Adapter<WorkerOrdersAdapter.ViewHolder>() {
 
@@ -34,5 +34,11 @@ class WorkerOrdersAdapter(
 
     override fun getItemCount(): Int {
         return orders.size
+    }
+
+    fun updateData(newOrders: List<ProductOrder>) {
+        orders.clear()
+        orders.addAll(newOrders)
+        notifyDataSetChanged() // Tells the RecyclerView to redraw itself
     }
 }
