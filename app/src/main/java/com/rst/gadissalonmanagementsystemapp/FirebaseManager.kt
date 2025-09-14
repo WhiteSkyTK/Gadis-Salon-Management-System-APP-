@@ -414,6 +414,37 @@ object FirebaseManager {
         }
     }
 
+    fun addFaqListener(onUpdate: (List<FaqItem>) -> Unit) {
+        firestore.collection("faqs")
+            .addSnapshotListener { snapshots, error ->
+                if (error != null) { return@addSnapshotListener }
+                val faqList = snapshots?.map { doc ->
+                    val faq = doc.toObject(FaqItem::class.java)
+                    faq.id = doc.id
+                    faq
+                } ?: emptyList()
+                onUpdate(faqList)
+            }
+    }
+
+    suspend fun addFaq(faq: FaqItem): Result<Unit> {
+        return try {
+            firestore.collection("faqs").add(faq).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun deleteFaq(faqId: String): Result<Unit> {
+        return try {
+            firestore.collection("faqs").document(faqId).delete().await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     // Checks if a product is in the user's favorites
     suspend fun isFavorite(productId: String): Result<Boolean> {
         val userId = auth.currentUser?.uid ?: return Result.failure(Exception("User not logged in"))
@@ -479,7 +510,26 @@ object FirebaseManager {
         }
     }
 
+    fun addCurrentUserSupportMessagesListener(onUpdate: (List<SupportMessage>) -> Unit) {
+        val uid = auth.currentUser?.uid ?: return onUpdate(emptyList())
 
+        firestore.collection("support_messages")
+            .whereEqualTo("senderUid", uid)
+            .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshots, error ->
+                if (error != null) {
+                    Log.w("FirebaseManager", "Current User Messages listener failed.", error)
+                    return@addSnapshotListener
+                }
+                // Map the Firestore documents to a list of SupportMessage objects
+                val messageList = snapshots?.map { doc ->
+                    val message = doc.toObject(SupportMessage::class.java)
+                    message.id = doc.id // Manually set the correct document ID
+                    message
+                } ?: emptyList()
+                onUpdate(messageList)
+            }
+    }
 
 
 

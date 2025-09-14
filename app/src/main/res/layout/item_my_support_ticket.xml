@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/message_preview_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:textStyle="bold"
+            tools:text="This is the start of my support message..." />
+
+        <TextView
+            android:id="@+id/timestamp_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="Sent: 13 Sep, 2025" />
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/status_chip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            tools:text="New" />
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

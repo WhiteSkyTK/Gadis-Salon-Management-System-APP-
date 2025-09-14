@@ -97,6 +97,11 @@
                     android:text="Manage Salon Location"/>
                 <View style="@style/Divider"/>
                 <TextView
+                    android:id="@+id/manage_faq_option"
+                    style="@style/ProfileOption"
+                    android:text="Manage FAQs"/>
+                <View style="@style/Divider"/>
+                <TextView
                     android:id="@+id/about_us_option"
                     style="@style/ProfileOption"
                     android:text="Edit 'About Us' Page"/>

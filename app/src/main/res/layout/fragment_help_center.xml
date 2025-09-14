@@ -14,17 +14,19 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
+            <!-- ID updated for clarity -->
             <TextView
-                android:id="@+id/faq_option"
+                android:id="@+id/view_my_tickets_option"
                 style="@style/ProfileOption"
-                android:text="FAQ &amp; User Guide"/>
+                android:text="View My Support Tickets"/>
 
             <View style="@style/Divider"/>
 
+            <!-- ID updated for clarity -->
             <TextView
-                android:id="@+id/contact_support_option"
+                android:id="@+id/submit_new_ticket_option"
                 style="@style/ProfileOption"
-                android:text="Contact Support"/>
+                android:text="Submit New Ticket"/>
 
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>

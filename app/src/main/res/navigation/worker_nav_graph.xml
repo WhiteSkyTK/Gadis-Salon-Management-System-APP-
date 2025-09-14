@@ -5,28 +5,93 @@
     android:id="@+id/worker_nav_graph"
     app:startDestination="@id/nav_worker_bookings">
 
+    <!-- Worker's Main Screens -->
     <fragment
         android:id="@+id/nav_worker_bookings"
         android:name="com.rst.gadissalonmanagementsystemapp.ui.worker.WorkerBookingsFragment"
-        android:label="WorkerBookingsFragment"
+        android:label="New Bookings"
         tools:layout="@layout/fragment_worker_bookings" />
-
     <fragment
         android:id="@+id/nav_worker_schedule"
         android:name="com.rst.gadissalonmanagementsystemapp.ui.worker.WorkerScheduleFragment"
-        android:label="WorkerScheduleFragment"
+        android:label="My Schedule"
         tools:layout="@layout/fragment_worker_schedule" />
-
     <fragment
         android:id="@+id/nav_worker_inventory"
         android:name="com.rst.gadissalonmanagementsystemapp.ui.worker.WorkerInventoryFragment"
-        android:label="WorkerInventoryFragment"
+        android:label="Inventory"
         tools:layout="@layout/fragment_worker_inventory" />
 
+    <!-- Worker's Profile Screen and its Actions -->
     <fragment
         android:id="@+id/nav_worker_profile"
         android:name="com.rst.gadissalonmanagementsystemapp.ui.worker.WorkerProfileFragment"
-        android:label="WorkerProfileFragment"
-        tools:layout="@layout/fragment_worker_profile" />
+        android:label="My Profile"
+        tools:layout="@layout/fragment_worker_profile">
+
+        <action
+            android:id="@+id/action_workerProfile_to_workerSettings"
+            app:destination="@id/workerSettingsFragment" />
+        <action
+            android:id="@+id/action_workerProfile_to_workerAbout"
+            app:destination="@id/workerAboutUsFragment" />
+        <action
+            android:id="@+id/action_workerProfile_to_workerLocation"
+            app:destination="@id/workerLocationFragment" />
+        <action
+            android:id="@+id/action_workerProfile_to_workerHelp"
+            app:destination="@id/workerHelpCenterFragment" />
+        <action
+            android:id="@+id/action_workerProfile_to_workerFaq"
+            app:destination="@id/workerFaqFragment" />
+    </fragment>
+
+    <!-- Worker Profile Sub-Pages -->
+    <fragment
+        android:id="@+id/workerSettingsFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.profile.SettingsFragment"
+        android:label="Settings"
+        tools:layout="@layout/fragment_settings" />
+    <fragment
+        android:id="@+id/workerAboutUsFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.profile.AboutUsFragment"
+        android:label="About Us"
+        tools:layout="@layout/fragment_about_us" />
+    <fragment
+        android:id="@+id/workerLocationFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.profile.LocationFragment"
+        android:label="Salon Location"
+        tools:layout="@layout/fragment_location" />
+    <fragment
+        android:id="@+id/workerFaqFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.profile.FaqFragment"
+        android:label="FAQ"
+        tools:layout="@layout/fragment_faq" />
+
+    <fragment
+        android:id="@+id/workerHelpCenterFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.profile.HelpCenterFragment"
+        android:label="Help &amp; Support"
+        tools:layout="@layout/fragment_help_center">
+        <action
+            android:id="@+id/action_workerHelpCenterFragment_to_mySupportTicketsFragment"
+            app:destination="@id/workerMySupportTicketsFragment" />
+        <action
+            android:id="@+id/action_workerHelpCenterFragment_to_workerContactFragment"
+            app:destination="@id/workerContactFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/workerMySupportTicketsFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.profile.MySupportTicketsFragment"
+        android:label="My Support Tickets"
+        tools:layout="@layout/fragment_my_support_tickets" />
+
+    <!-- THIS IS THE NEW DESTINATION that was missing -->
+    <fragment
+        android:id="@+id/workerContactFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.profile.ContactFragment"
+        android:label="Contact Support"
+        tools:layout="@layout/fragment_contact" />
 
 </navigation>

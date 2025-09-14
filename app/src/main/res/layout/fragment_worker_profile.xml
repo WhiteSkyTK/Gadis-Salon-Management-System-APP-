@@ -12,32 +12,107 @@
         android:orientation="vertical"
         android:padding="16dp">
 
+        <!-- User Info Card (No high-level edit button) -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:cardCornerRadius="20dp">
+            android:layout_height="wrap_content">
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="20dp">
+
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/profile_image_worker"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:src="@drawable/ic_profile"
+                    app:shapeAppearanceOverlay="@style/CircleImageView"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/user_name_worker"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toEndOf="@id/profile_image_worker"
+                    app:layout_constraintTop_toTopOf="@id/profile_image_worker"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    tools:text="Rinae Worker" />
+
+                <TextView
+                    android:id="@+id/user_phone_worker"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintStart_toStartOf="@id/user_name_worker"
+                    app:layout_constraintTop_toBottomOf="@id/user_name_worker"
+                    app:layout_constraintEnd_toEndOf="@id/user_name_worker"
+                    tools:text="+27 12 345 6789" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- Options Card (Simplified for Worker) -->
         <com.google.android.material.card.MaterialCardView
+            android:id="@+id/options_card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            app:cardCornerRadius="20dp">
-
+            android:layout_marginTop="24dp">
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:paddingVertical="8dp">
 
-                <TextView style="@style/ProfileOption" android:drawableStart="@drawable/ic_schedule" android:text="My Schedule"/>
+                <!-- "My Schedule" is removed as it's in the bottom nav -->
+                <TextView
+                    android:id="@+id/contact_support_option"
+                    style="@style/ProfileOption"
+                    android:text="Contact Support"/>
                 <View style="@style/Divider"/>
-                <TextView style="@style/ProfileOption" android:drawableStart="@drawable/ic_contact_support" android:text="Contact Support"/>
+                <TextView
+                    android:id="@+id/settings_option"
+                    style="@style/ProfileOption"
+                    android:text="Settings"/>
                 <View style="@style/Divider"/>
-                <TextView style="@style/ProfileOption" android:drawableStart="@drawable/ic_settings" android:text="Settings"/>
-
+                <TextView
+                    android:id="@+id/location_option"
+                    style="@style/ProfileOption"
+                    android:text="Gadis Salon Location"/>
+                <View style="@style/Divider"/>
+                <TextView
+                    android:id="@+id/faq_option"
+                    style="@style/ProfileOption"
+                    android:text="FAQ &amp; User Guide"/>
+                <View style="@style/Divider"/>
+                <TextView
+                    android:id="@+id/about_us_option"
+                    style="@style/ProfileOption"
+                    android:text="About Gadis Salon"/>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
+
+        <Button
+            android:id="@+id/log_out_button"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="16dp"
+            android:text="Log Out"
+            android:textColor="@color/status_red" />
+
+        <TextView
+            android:id="@+id/version_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="24dp"
+            android:textColor="@color/textColorSecondary"
+            android:textSize="14sp"
+            tools:text="Version 1.0.0" />
 
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

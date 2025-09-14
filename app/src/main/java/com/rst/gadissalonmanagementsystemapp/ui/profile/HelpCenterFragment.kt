@@ -21,11 +21,11 @@ class HelpCenterFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.faqOption.setOnClickListener {
-            findNavController().navigate(R.id.action_helpCenterFragment_to_faqFragment)
+        binding.viewMyTicketsOption.setOnClickListener {
+            findNavController().navigate(R.id.action_helpCenterFragment_to_mySupportTicketsFragment)
         }
 
-        binding.contactSupportOption.setOnClickListener {
+        binding.submitNewTicketOption.setOnClickListener {
             findNavController().navigate(R.id.action_helpCenterFragment_to_contactFragment)
         }
     }

@@ -64,7 +64,16 @@
         <action
             android:id="@+id/action_profileFragment_to_helpCenterFragment"
             app:destination="@id/helpCenterFragment" />
+        <action
+            android:id="@+id/action_profileFragment_to_faqFragment"
+            app:destination="@id/faqFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/faqFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.profile.FaqFragment"
+        android:label="FAQ &amp; User Guide"
+        tools:layout="@layout/fragment_faq" />
 
     <fragment
         android:id="@+id/productDetailFragment"
@@ -218,17 +227,16 @@
         android:label="Help &amp; Support"
         tools:layout="@layout/fragment_help_center" >
         <action
-            android:id="@+id/action_helpCenterFragment_to_faqFragment"
-            app:destination="@id/faqFragment" />
+            android:id="@+id/action_helpCenterFragment_to_mySupportTicketsFragment"
+            app:destination="@id/mySupportTicketsFragment" />
         <action
             android:id="@+id/action_helpCenterFragment_to_contactFragment"
             app:destination="@id/contactFragment" />
     </fragment>
 
     <fragment
-        android:id="@+id/faqFragment"
-        android:name="com.rst.gadissalonmanagementsystemapp.ui.profile.FaqFragment"
-        android:label="FAQ"
-        tools:layout="@layout/fragment_faq" />
+        android:id="@+id/mySupportTicketsFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.profile.MySupportTicketsFragment"
+        android:label="My Support Tickets" />
 
 </navigation>

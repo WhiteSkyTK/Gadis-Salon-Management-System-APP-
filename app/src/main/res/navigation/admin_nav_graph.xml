@@ -112,6 +112,9 @@
         <action
             android:id="@+id/action_adminProfileFragment_to_adminEditProfileFragment"
             app:destination="@id/adminEditProfileFragment" />
+        <action
+            android:id="@+id/action_adminProfileFragment_to_adminFaqFragment"
+            app:destination="@id/adminFaqFragment" />
 
     </fragment>
 
@@ -132,6 +135,11 @@
         android:name="com.rst.gadissalonmanagementsystemapp.ui.admin.AdminAboutUsFragment"
         android:label="Edit About Us"
         tools:layout="@layout/fragment_about_us" />
+    <fragment
+        android:id="@+id/adminFaqFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.admin.AdminFaqFragment"
+        android:label="Manage FAQs"
+        tools:layout="@layout/fragment_admin_faq" />
 
     <fragment
         android:id="@+id/adminSupportFragment"

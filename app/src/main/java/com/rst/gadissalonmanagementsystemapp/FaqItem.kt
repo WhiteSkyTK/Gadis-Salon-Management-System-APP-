@@ -1,7 +1,10 @@
 package com.rst.gadissalonmanagementsystemapp
 
+import com.google.firebase.firestore.Exclude
+
 data class FaqItem(
-    val question: String,
-    val answer: String,
-    var isExpanded: Boolean = false // To track if the answer is visible
+    var id: String = "",
+    val question: String = "",
+    val answer: String = "",
+    @get:Exclude var isExpanded: Boolean = false
 )

@@ -126,6 +126,9 @@ class AdminProfileFragment : Fragment(), ProfilePictureBottomSheet.PictureOption
         binding.aboutUsOption.setOnClickListener {
             findNavController().navigate(R.id.action_adminProfileFragment_to_adminAboutUsFragment)
         }
+        binding.manageFaqOption.setOnClickListener {
+            findNavController().navigate(R.id.action_adminProfileFragment_to_adminFaqFragment)
+        }
         binding.editProfileButton.setOnClickListener {
             findNavController().navigate(R.id.action_adminProfileFragment_to_adminEditProfileFragment)
         }
