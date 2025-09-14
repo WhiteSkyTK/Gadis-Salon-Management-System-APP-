@@ -6,7 +6,9 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
+import com.rst.gadissalonmanagementsystemapp.CustomerMainActivity
 import com.rst.gadissalonmanagementsystemapp.R
+import com.rst.gadissalonmanagementsystemapp.WorkerMainActivity
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentHelpCenterBinding
 
 class HelpCenterFragment : Fragment() {
@@ -22,11 +24,24 @@ class HelpCenterFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         binding.viewMyTicketsOption.setOnClickListener {
-            findNavController().navigate(R.id.action_helpCenterFragment_to_mySupportTicketsFragment)
+            // Check which activity is hosting this fragment
+            when (requireActivity()) {
+                is CustomerMainActivity -> findNavController().navigate(R.id.action_helpCenterFragment_to_mySupportTicketsFragment)
+                is WorkerMainActivity -> findNavController().navigate(R.id.action_helpCenterFragment_to_mySupportTicketsFragment)
+            }
         }
 
         binding.submitNewTicketOption.setOnClickListener {
-            findNavController().navigate(R.id.action_helpCenterFragment_to_contactFragment)
+            // Check which activity is hosting this fragment
+            when (requireActivity()) {
+                is CustomerMainActivity -> findNavController().navigate(R.id.action_helpCenterFragment_to_contactFragment)
+                is WorkerMainActivity -> findNavController().navigate(R.id.action_helpCenterFragment_to_contactFragment)
+            }
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

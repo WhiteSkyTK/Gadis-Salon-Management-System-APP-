@@ -47,6 +47,7 @@ class WorkerProfileFragment : Fragment() {
                 val worker = result.getOrNull()
                 binding.userNameWorker.text = worker?.name ?: "Stylist"
                 binding.userPhoneWorker.text = worker?.phone ?: "No phone number"
+                binding.userEmailWorker.text = worker?.email ?: "No email"
                 binding.profileImageWorker.load(worker?.imageUrl) {
                     placeholder(R.drawable.ic_profile)
                     error(R.drawable.ic_profile)
@@ -56,6 +57,9 @@ class WorkerProfileFragment : Fragment() {
     }
 
     private fun setupClickListeners() {
+        binding.editProfileButtonWorker.setOnClickListener {
+            findNavController().navigate(R.id.action_workerProfile_to_workerEditProfile)
+        }
         binding.contactSupportOption.setOnClickListener {
             findNavController().navigate(R.id.action_workerProfile_to_workerHelp)
         }

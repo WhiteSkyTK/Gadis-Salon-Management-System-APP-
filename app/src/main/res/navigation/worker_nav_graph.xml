@@ -20,7 +20,27 @@
         android:id="@+id/nav_worker_inventory"
         android:name="com.rst.gadissalonmanagementsystemapp.ui.worker.WorkerInventoryFragment"
         android:label="Inventory"
-        tools:layout="@layout/fragment_worker_inventory" />
+        tools:layout="@layout/fragment_worker_inventory">
+        <action
+            android:id="@+id/action_workerInventoryFragment_to_productDetailFragment"
+            app:destination="@id/productDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/productDetailFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.ProductDetailFragment"
+        android:label="Product Details"
+        tools:layout="@layout/fragment_product_detail">
+
+        <argument
+            android:name="userRole"
+            app:argType="string"
+            android:defaultValue="WORKER" />
+
+        <argument
+            android:name="product"
+            app:argType="com.rst.gadissalonmanagementsystemapp.Product" />
+    </fragment>
 
     <!-- Worker's Profile Screen and its Actions -->
     <fragment
@@ -44,9 +64,16 @@
         <action
             android:id="@+id/action_workerProfile_to_workerFaq"
             app:destination="@id/workerFaqFragment" />
+        <action
+            android:id="@+id/action_workerProfile_to_workerEditProfile"
+            app:destination="@id/workerEditProfileFragment" />
     </fragment>
 
     <!-- Worker Profile Sub-Pages -->
+    <fragment
+        android:id="@+id/workerEditProfileFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.worker.WorkerEditProfileFragment"
+        android:label="Edit Profile" />
     <fragment
         android:id="@+id/workerSettingsFragment"
         android:name="com.rst.gadissalonmanagementsystemapp.ui.profile.SettingsFragment"
@@ -74,11 +101,11 @@
         android:label="Help &amp; Support"
         tools:layout="@layout/fragment_help_center">
         <action
-            android:id="@+id/action_workerHelpCenterFragment_to_mySupportTicketsFragment"
-            app:destination="@id/workerMySupportTicketsFragment" />
-        <action
-            android:id="@+id/action_workerHelpCenterFragment_to_workerContactFragment"
+            android:id="@+id/action_helpCenterFragment_to_contactFragment"
             app:destination="@id/workerContactFragment" />
+        <action
+            android:id="@+id/action_helpCenterFragment_to_mySupportTicketsFragment"
+            app:destination="@id/workerMySupportTicketsFragment" />
     </fragment>
 
     <fragment

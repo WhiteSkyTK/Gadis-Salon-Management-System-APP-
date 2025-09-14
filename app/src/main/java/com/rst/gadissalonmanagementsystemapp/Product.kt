@@ -14,7 +14,7 @@ data class ProductVariant(
 
 @Parcelize
 data class Product(
-    override val id: String = "",
+    override var id: String = "",
     override val name: String = "",
     val reviews: String = "",
     val variants: List<ProductVariant> = emptyList(),

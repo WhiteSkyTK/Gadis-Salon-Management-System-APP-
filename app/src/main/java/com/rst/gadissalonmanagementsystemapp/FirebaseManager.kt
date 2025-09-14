@@ -533,6 +533,26 @@ object FirebaseManager {
 
 
 
+    // Listens for real-time updates to the products collection
+    fun addProductsListener(onUpdate: (List<Product>) -> Unit) {
+        firestore.collection("products")
+            .addSnapshotListener { snapshots, error ->
+                if (error != null) {
+                    Log.w("FirebaseManager", "Products listener failed.", error)
+                    return@addSnapshotListener
+                }
+
+                val productList = snapshots?.map { doc ->
+                    val product = doc.toObject(Product::class.java)
+                    product.id = doc.id
+                    product
+                } ?: emptyList()
+                onUpdate(productList)
+            }
+    }
+
+
+
 
 
 

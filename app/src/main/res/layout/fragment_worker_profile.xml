@@ -16,6 +16,7 @@
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
+
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -50,6 +51,24 @@
                     app:layout_constraintTop_toBottomOf="@id/user_name_worker"
                     app:layout_constraintEnd_toEndOf="@id/user_name_worker"
                     tools:text="+27 12 345 6789" />
+
+                <TextView
+                    android:id="@+id/user_email_worker"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintStart_toStartOf="@id/user_name_worker"
+                    app:layout_constraintTop_toBottomOf="@id/user_phone_worker"
+                    app:layout_constraintEnd_toEndOf="@id/user_name_worker"
+                    tools:text="worker@gadis.com" />
+
+                <ImageButton
+                    android:id="@+id/edit_profile_button_worker"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_edit"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"/>
 
             </androidx.constraintlayout.widget.ConstraintLayout>
         </com.google.android.material.card.MaterialCardView>

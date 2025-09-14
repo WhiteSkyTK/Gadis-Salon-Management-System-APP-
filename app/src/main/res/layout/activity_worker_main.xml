@@ -27,7 +27,7 @@
             android:layout_height="wrap_content">
 
             <ImageView
-                android:id="@+id/back_button_admin"
+                android:id="@+id/back_button_worker"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:padding="12dp"
@@ -45,7 +45,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:padding="16dp"
-                android:text="Worker Portal"
+                android:text="Stylists Portal"
                 android:textColor="@color/textColorPrimary"
                 android:textSize="22sp"
                 android:textStyle="bold"

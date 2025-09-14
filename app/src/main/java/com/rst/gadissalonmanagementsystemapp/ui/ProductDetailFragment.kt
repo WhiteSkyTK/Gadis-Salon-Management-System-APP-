@@ -40,25 +40,34 @@ class ProductDetailFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // --- 1. Get the arguments passed from the previous screen ---
         val product = args.product
+        val role = args.userRole
+
+        // --- 2. Tell the ViewModel about the current product for the favorite icon ---
         mainViewModel.setCurrentProduct(product)
 
-        // --- 1. Populate Static Views ---
+        // --- 3. Populate the static views with product data ---
         binding.productImage.load(product.imageUrl) {
             placeholder(R.drawable.ic_placeholder_image)
             error(R.drawable.ic_placeholder_image)
         }
         binding.productNameDetail.text = product.name
-        // This field is back in the Product class
+        // You can populate the reviews text here if you add it back to the Product data class
+        // binding.productReviews.text = product.reviews
 
-
-        // Tell the ViewModel which product we are viewing for the favorite logic
-        mainViewModel.setCurrentProduct(product)
-
-        // --- 2. Dynamically Create Size Chips ---
+        // --- 4. Dynamically create the size chips ---
         setupSizeChips(product)
 
-        // --- 3. Setup Add to Cart Logic ---
+        // --- 5. THE KEY FIX: Show or hide the bottom bar based on the user's role ---
+        if (role.equals("WORKER", ignoreCase = true)) {
+            binding.bottomBar.visibility = View.GONE
+        } else {
+            binding.bottomBar.visibility = View.VISIBLE
+        }
+
+        // --- 6. Setup click listeners (these will only be visible for customers) ---
         binding.addToCartButton.setOnClickListener {
             if (selectedVariant == null) {
                 Toast.makeText(context, "Please select a size", Toast.LENGTH_SHORT).show()
@@ -75,15 +84,10 @@ class ProductDetailFragment : Fragment() {
         }
 
         binding.buyNowButton.setOnClickListener {
-            // Find the ID of the currently checked chip in the group
-            val checkedChipId = binding.sizeChipGroup.checkedChipId
-            if (checkedChipId == View.NO_ID) {
-                // If no size is selected, show an error
+            if (selectedVariant == null) {
                 Toast.makeText(context, "Please select a size", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-
-            // Navigate to the confirmation screen, passing the selected product
             val action = ProductDetailFragmentDirections.actionProductDetailFragmentToPurchaseConfirmationFragment(product)
             findNavController().navigate(action)
         }

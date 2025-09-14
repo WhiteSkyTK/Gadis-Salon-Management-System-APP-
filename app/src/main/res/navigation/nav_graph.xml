@@ -78,8 +78,13 @@
     <fragment
         android:id="@+id/productDetailFragment"
         android:name="com.rst.gadissalonmanagementsystemapp.ui.ProductDetailFragment"
-        android:label="ProductDetailFragment"
+        android:label="Product Details"
         tools:layout="@layout/fragment_product_detail">
+
+        <argument
+            android:name="userRole"
+            app:argType="string"
+            android:defaultValue="CUSTOMER" />
 
         <argument
             android:name="product"
