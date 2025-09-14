@@ -4,16 +4,31 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.rst.gadissalonmanagementsystemapp.AdminBooking
+import com.rst.gadissalonmanagementsystemapp.Hairstyle
 import com.rst.gadissalonmanagementsystemapp.databinding.ItemWorkerScheduleBinding
 
-class WorkerScheduleAdapter(private val bookings: List<AdminBooking>) : RecyclerView.Adapter<WorkerScheduleAdapter.ViewHolder>() {
+class WorkerScheduleAdapter(
+    private var bookings: List<AdminBooking>,
+    private val allHairstyles: List<Hairstyle>,
+    private val onItemClick: (AdminBooking) -> Unit
+) : RecyclerView.Adapter<WorkerScheduleAdapter.ViewHolder>() {
 
     inner class ViewHolder(private val binding: ItemWorkerScheduleBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(booking: AdminBooking) {
-            // In a real app, you would calculate the end time based on duration
-            binding.timeText.text = "${booking.time} - 15:00"
+            val hairstyle = allHairstyles.find { it.name == booking.serviceName }
+            val duration = hairstyle?.durationHours ?: 1 // Default to 1 hour if not found
+
+            // Very basic time calculation for display
+            val startTimeHour = booking.time.split(":")[0].toInt()
+            val endTimeHour = startTimeHour + duration
+
+            binding.timeText.text = "${booking.time} - $endTimeHour:00"
             binding.serviceNameText.text = booking.serviceName
             binding.customerNameText.text = "with ${booking.customerName}"
+
+            itemView.setOnClickListener {
+                onItemClick(booking)
+            }
         }
     }
 
@@ -27,4 +42,9 @@ class WorkerScheduleAdapter(private val bookings: List<AdminBooking>) : Recycler
     }
 
     override fun getItemCount(): Int = bookings.size
+
+    fun updateData(newBookings: List<AdminBooking>) {
+        this.bookings = newBookings
+        notifyDataSetChanged()
+    }
 }

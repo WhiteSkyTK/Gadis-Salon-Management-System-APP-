@@ -13,7 +13,6 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import coil.load
 import com.google.android.material.chip.Chip
-import com.rst.gadissalonmanagementsystemapp.AppData
 import com.rst.gadissalonmanagementsystemapp.FirebaseManager
 import com.rst.gadissalonmanagementsystemapp.MainViewModel
 import com.rst.gadissalonmanagementsystemapp.Product
@@ -30,7 +29,6 @@ class ProductDetailFragment : Fragment() {
     private val binding get() = _binding!!
     private val args: ProductDetailFragmentArgs by navArgs()
     private val mainViewModel: MainViewModel by activityViewModels()
-
     private var selectedVariant: ProductVariant? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -40,93 +38,87 @@ class ProductDetailFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        // --- 1. Get the arguments passed from the previous screen ---
         val product = args.product
         val role = args.userRole
 
-        // --- 2. Tell the ViewModel about the current product for the favorite icon ---
         mainViewModel.setCurrentProduct(product)
 
-        // --- 3. Populate the static views with product data ---
-        binding.productImage.load(product.imageUrl) {
-            placeholder(R.drawable.ic_placeholder_image)
-            error(R.drawable.ic_placeholder_image)
-        }
+        // --- Populate Static Views ---
+        binding.productImage.load(product.imageUrl)
         binding.productNameDetail.text = product.name
-        // You can populate the reviews text here if you add it back to the Product data class
-        // binding.productReviews.text = product.reviews
+        binding.productReviews.text = product.reviews
 
-        // --- 4. Dynamically create the size chips ---
-        setupSizeChips(product)
-
-        // --- 5. THE KEY FIX: Show or hide the bottom bar based on the user's role ---
+        // --- Setup Dynamic UI based on Role ---
         if (role.equals("WORKER", ignoreCase = true)) {
             binding.bottomBar.visibility = View.GONE
+            binding.stockInfoCard.visibility = View.VISIBLE
         } else {
             binding.bottomBar.visibility = View.VISIBLE
+            binding.stockInfoCard.visibility = View.GONE
         }
 
-        // --- 6. Setup click listeners (these will only be visible for customers) ---
-        binding.addToCartButton.setOnClickListener {
-            if (selectedVariant == null) {
-                Toast.makeText(context, "Please select a size", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            viewLifecycleOwner.lifecycleScope.launch {
-                val result = FirebaseManager.addToCart(product, selectedVariant!!)
-                if (result.isSuccess) {
-                    Toast.makeText(context, "${product.name} added to cart", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(context, "Error: ${result.exceptionOrNull()?.message}", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-
-        binding.buyNowButton.setOnClickListener {
-            if (selectedVariant == null) {
-                Toast.makeText(context, "Please select a size", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            val action = ProductDetailFragmentDirections.actionProductDetailFragmentToPurchaseConfirmationFragment(product)
-            findNavController().navigate(action)
-        }
+        setupSizeChips(product)
+        setupClickListeners(product)
     }
 
     private fun setupSizeChips(product: Product) {
         val chipGroup = binding.sizeChipGroup
-        chipGroup.removeAllViews() // Clear any old chips
+        chipGroup.removeAllViews()
 
         product.variants.forEach { variant ->
             val chip = layoutInflater.inflate(R.layout.chip_stylist, chipGroup, false) as Chip
             chip.text = variant.size
-            chip.tag = variant // Store the full variant object in the chip's tag
+            chip.tag = variant
             chipGroup.addView(chip)
         }
 
-        // --- 4. Handle Chip Selection ---
         chipGroup.setOnCheckedChangeListener { group, checkedId ->
             val selectedChip = group.findViewById<Chip>(checkedId)
             if (selectedChip != null) {
-                val selectedVariant = selectedChip.tag as ProductVariant
-                updatePrice(selectedVariant)
+                selectedVariant = selectedChip.tag as ProductVariant
+                updateDynamicInfo(selectedVariant!!)
             }
         }
 
-        // --- 5. Select the first chip by default ---
-        (chipGroup.getChildAt(0) as? Chip)?.isChecked = true
+        (chipGroup.getChildAt(0) as? Chip)?.let {
+            it.isChecked = true
+        }
     }
 
-    private fun updatePrice(variant: ProductVariant) {
+    private fun updateDynamicInfo(variant: ProductVariant) {
         val format = NumberFormat.getCurrencyInstance(Locale("en", "ZA"))
         binding.productPriceNew.text = format.format(variant.price)
 
+        // Update old price if it exists
         if (variant.priceOld != null) {
             binding.productPriceOld.visibility = View.VISIBLE
             binding.productPriceOld.text = format.format(variant.priceOld)
             binding.productPriceOld.paintFlags = binding.productPriceOld.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
         } else {
             binding.productPriceOld.visibility = View.GONE
+        }
+
+        // Update the stock count text
+        binding.stockCountText.text = "Stock Remaining: ${variant.stock}"
+    }
+
+    private fun setupClickListeners(product: Product) {
+        binding.addToCartButton.setOnClickListener {
+            selectedVariant?.let { variant ->
+                viewLifecycleOwner.lifecycleScope.launch {
+                    FirebaseManager.addToCart(product, variant)
+                    Toast.makeText(context, "${product.name} added to cart", Toast.LENGTH_SHORT).show()
+                }
+            } ?: Toast.makeText(context, "Please select a size", Toast.LENGTH_SHORT).show()
+        }
+
+        binding.buyNowButton.setOnClickListener {
+            if (selectedVariant != null) {
+                val action = ProductDetailFragmentDirections.actionProductDetailFragmentToPurchaseConfirmationFragment(product)
+                findNavController().navigate(action)
+            } else {
+                Toast.makeText(context, "Please select a size", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 

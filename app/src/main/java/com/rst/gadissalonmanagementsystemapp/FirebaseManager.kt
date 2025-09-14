@@ -458,38 +458,6 @@ object FirebaseManager {
 
     // --- WORKER FUNCTIONS ---
 
-    // Fetches all bookings that have a "Pending" status
-    fun addPendingBookingsListener(onUpdate: (List<AdminBooking>) -> Unit) {
-        firestore.collection("bookings")
-            .whereEqualTo("status", "Pending")
-            .addSnapshotListener { snapshots, error ->
-                if (error != null) {
-                    Log.w("FirebaseManager", "Pending Bookings listener failed.", error)
-                    return@addSnapshotListener
-                }
-                val bookingList = snapshots?.map { doc ->
-                    val booking = doc.toObject(AdminBooking::class.java)
-                    booking.id = doc.id
-                    booking
-                } ?: emptyList()
-                onUpdate(bookingList)
-            }
-    }
-
-    // Updates a booking's status and assigns the stylist who accepted it
-    suspend fun acceptBooking(bookingId: String, stylist: User): Result<Unit> {
-        return try {
-            val updates = mapOf(
-                "status" to "Confirmed",
-                "stylistName" to stylist.name // Assign the stylist's name
-            )
-            firestore.collection("bookings").document(bookingId).update(updates).await()
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
     suspend fun getCurrentUser(): Result<User?> {
         val uid = auth.currentUser?.uid ?: return Result.success(null)
         return try {
@@ -551,7 +519,108 @@ object FirebaseManager {
             }
     }
 
+    fun addWorkerScheduleListener(onUpdate: (List<AdminBooking>) -> Unit) {
+        // First, get the currently logged-in user's name to filter the bookings
+        val currentUserName = auth.currentUser?.displayName
+        if (currentUserName == null) {
+            Log.w("FirebaseManager", "Cannot get schedule, user is not logged in or has no display name.")
+            onUpdate(emptyList()) // Return an empty list if there's no user
+            return
+        }
 
+        firestore.collection("bookings")
+            // Find documents where the 'stylistName' field matches the current worker's name
+            .whereEqualTo("stylistName", currentUserName)
+            // And where the 'status' field is 'Confirmed'
+            .whereEqualTo("status", "Confirmed")
+            .addSnapshotListener { snapshots, error ->
+                if (error != null) {
+                    Log.w("FirebaseManager", "Worker Schedule listener failed.", error)
+                    return@addSnapshotListener
+                }
+
+                val bookingList = snapshots?.map { doc ->
+                    val booking = doc.toObject(AdminBooking::class.java)
+                    booking.id = doc.id
+                    booking
+                } ?: emptyList()
+
+                // Send the updated list back to the fragment
+                onUpdate(bookingList)
+            }
+    }
+
+    fun addPendingBookingsListener(onUpdate: (List<AdminBooking>) -> Unit) {
+        firestore.collection("bookings")
+            .whereEqualTo("status", "Pending")
+            .addSnapshotListener { snapshots, error ->
+                if (error != null) {
+                    Log.w("FirebaseManager", "Pending Bookings listener failed.", error)
+                    return@addSnapshotListener
+                }
+                val bookingList = snapshots?.map { doc ->
+                    val booking = doc.toObject(AdminBooking::class.java)
+                    booking.id = doc.id
+                    booking
+                } ?: emptyList()
+                onUpdate(bookingList)
+            }
+    }
+
+    suspend fun acceptBooking(bookingId: String, stylist: User): Result<Unit> {
+        return try {
+            val updates = mapOf(
+                "status" to "Confirmed",
+                "stylistName" to stylist.name
+            )
+            firestore.collection("bookings").document(bookingId).update(updates).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // A general function to update status, useful for declining/cancelling
+    suspend fun updateBookingStatus(bookingId: String, newStatus: String): Result<Unit> {
+        return try {
+            firestore.collection("bookings").document(bookingId).update("status", newStatus).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    fun addPendingOrdersListener(onUpdate: (List<ProductOrder>) -> Unit) {
+        firestore.collection("product_orders")
+            .whereEqualTo("status", "Pending Pickup")
+            .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshots, error ->
+                if (error != null) { return@addSnapshotListener }
+                val orderList = snapshots?.toObjects(ProductOrder::class.java) ?: emptyList()
+                onUpdate(orderList)
+            }
+    }
+
+    // Listens for new chat messages for a specific booking
+    fun addChatMessagesListener(bookingId: String, onUpdate: (List<ChatMessage>) -> Unit) {
+        firestore.collection("bookings").document(bookingId).collection("messages")
+            .orderBy("timestamp")
+            .addSnapshotListener { snapshots, _ ->
+                val messages = snapshots?.toObjects(ChatMessage::class.java) ?: emptyList()
+                onUpdate(messages)
+            }
+    }
+
+    // Sends a new chat message
+    suspend fun sendChatMessage(bookingId: String, message: ChatMessage): Result<Unit> {
+        return try {
+            firestore.collection("bookings").document(bookingId).collection("messages")
+                .add(message).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 
 
 

@@ -11,7 +11,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.rst.gadissalonmanagementsystemapp.AdminBooking
 import com.rst.gadissalonmanagementsystemapp.FirebaseManager
-import com.rst.gadissalonmanagementsystemapp.User
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentWorkerBookingsBinding
 import kotlinx.coroutines.launch
 
@@ -38,12 +37,7 @@ class WorkerBookingsFragment : Fragment() {
                 acceptBooking(booking)
             },
             onDecline = { booking ->
-                // In a real app, you'd set the status to "Declined"
-                // For now, let's just delete it for simplicity
-                viewLifecycleOwner.lifecycleScope.launch {
-                    FirebaseManager.deleteBooking(booking.id) // We will add this function
-                    Toast.makeText(context, "Booking Declined", Toast.LENGTH_SHORT).show()
-                }
+                declineBooking(booking)
             }
         )
         binding.workerBookingsRecyclerView.layoutManager = LinearLayoutManager(context)
@@ -52,30 +46,35 @@ class WorkerBookingsFragment : Fragment() {
 
     private fun listenForPendingBookings() {
         FirebaseManager.addPendingBookingsListener { pendingBookings ->
-            Log.d("WorkerBookings", "Found ${pendingBookings.size} pending bookings.")
+            Log.d("WorkerBookings", "Live update: Found ${pendingBookings.size} pending bookings.")
             adapter.updateData(pendingBookings)
         }
     }
 
     private fun acceptBooking(booking: AdminBooking) {
         viewLifecycleOwner.lifecycleScope.launch {
-            // First, fetch the current worker's full profile
             val workerResult = FirebaseManager.getCurrentUser()
-            if (workerResult.isSuccess) {
-                val currentWorker = workerResult.getOrNull()
-
-                if (currentWorker != null) {
-                    val result = FirebaseManager.acceptBooking(booking.id, currentWorker)
-                    if (result.isSuccess) {
-                        Toast.makeText(context, "Booking Accepted!", Toast.LENGTH_SHORT).show()
-                    } else {
-                        Toast.makeText(context, "Failed to accept booking.", Toast.LENGTH_SHORT).show()
-                    }
+            if (workerResult.isSuccess && workerResult.getOrNull() != null) {
+                val currentWorker = workerResult.getOrNull()!!
+                val result = FirebaseManager.acceptBooking(booking.id, currentWorker)
+                if (result.isSuccess) {
+                    Toast.makeText(context, "Booking Accepted!", Toast.LENGTH_SHORT).show()
                 } else {
-                    Toast.makeText(context, "Error: Could not identify current worker.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Failed to accept booking.", Toast.LENGTH_SHORT).show()
                 }
             } else {
-                Toast.makeText(context, "Error: Could not fetch worker profile.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Error: Could not identify current worker.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun declineBooking(booking: AdminBooking) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val result = FirebaseManager.updateBookingStatus(booking.id, "Declined")
+            if (result.isSuccess) {
+                Toast.makeText(context, "Booking Declined", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(context, "Failed to decline booking.", Toast.LENGTH_SHORT).show()
             }
         }
     }

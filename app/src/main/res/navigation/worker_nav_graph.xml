@@ -15,7 +15,12 @@
         android:id="@+id/nav_worker_schedule"
         android:name="com.rst.gadissalonmanagementsystemapp.ui.worker.WorkerScheduleFragment"
         android:label="My Schedule"
-        tools:layout="@layout/fragment_worker_schedule" />
+        tools:layout="@layout/fragment_worker_schedule">
+
+    <action
+        android:id="@+id/action_workerScheduleFragment_to_bookingDetailWorkerFragment"
+        app:destination="@id/bookingDetailWorkerFragment" />
+    </fragment>
     <fragment
         android:id="@+id/nav_worker_inventory"
         android:name="com.rst.gadissalonmanagementsystemapp.ui.worker.WorkerInventoryFragment"
@@ -43,6 +48,20 @@
     </fragment>
 
     <!-- Worker's Profile Screen and its Actions -->
+    <fragment
+        android:id="@+id/bookingDetailWorkerFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.worker.BookingDetailWorkerFragment"
+        android:label="Booking Details"
+        tools:layout="@layout/fragment_booking_detail_worker">
+        <argument
+            android:name="booking"
+            app:argType="com.rst.gadissalonmanagementsystemapp.AdminBooking" />
+    </fragment>
+    <fragment
+        android:id="@+id/nav_worker_orders"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.worker.WorkerOrdersFragment"
+        android:label="Product Orders"
+        tools:layout="@layout/fragment_worker_orders" />
     <fragment
         android:id="@+id/nav_worker_profile"
         android:name="com.rst.gadissalonmanagementsystemapp.ui.worker.WorkerProfileFragment"

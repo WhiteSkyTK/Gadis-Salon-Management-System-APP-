@@ -13,6 +13,10 @@
         android:icon="@drawable/ic_inventory"
         android:title="Inventory" />
     <item
+        android:id="@+id/nav_worker_orders"
+        android:icon="@drawable/ic_orders"
+        android:title="Orders" />
+    <item
         android:id="@+id/nav_worker_profile"
         android:icon="@drawable/ic_profile"
         android:title="Profile" />

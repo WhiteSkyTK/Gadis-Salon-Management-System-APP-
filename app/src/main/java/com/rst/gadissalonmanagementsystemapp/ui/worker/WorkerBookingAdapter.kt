@@ -7,7 +7,7 @@ import com.rst.gadissalonmanagementsystemapp.AdminBooking
 import com.rst.gadissalonmanagementsystemapp.databinding.ItemWorkerBookingBinding
 
 class WorkerBookingAdapter(
-    private val bookings: List<AdminBooking>,
+    private var bookings: List<AdminBooking>,
     private val onAccept: (AdminBooking) -> Unit,
     private val onDecline: (AdminBooking) -> Unit
 ) : RecyclerView.Adapter<WorkerBookingAdapter.ViewHolder>() {
@@ -35,8 +35,7 @@ class WorkerBookingAdapter(
     override fun getItemCount(): Int = bookings.size
 
     fun updateData(newBookings: List<AdminBooking>) {
-        (this.bookings as MutableList).clear()
-        (this.bookings as MutableList).addAll(newBookings)
+        this.bookings = newBookings
         notifyDataSetChanged()
     }
 }

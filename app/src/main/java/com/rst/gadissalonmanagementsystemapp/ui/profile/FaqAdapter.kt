@@ -17,6 +17,9 @@ class FaqAdapter(private var faqList: List<FaqItem>) : RecyclerView.Adapter<FaqA
             // Show or hide the answer based on the isExpanded flag
             binding.faqAnswer.visibility = if (faqItem.isExpanded) View.VISIBLE else View.GONE
 
+            // Animate the arrow rotation
+            binding.arrowIcon.animate().rotation(if (faqItem.isExpanded) 180f else 0f).setDuration(200).start()
+
             // Toggle the expanded state when the item is clicked
             itemView.setOnClickListener {
                 faqItem.isExpanded = !faqItem.isExpanded

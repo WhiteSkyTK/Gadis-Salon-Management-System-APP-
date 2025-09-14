@@ -244,4 +244,10 @@
         android:name="com.rst.gadissalonmanagementsystemapp.ui.profile.MySupportTicketsFragment"
         android:label="My Support Tickets" />
 
+    <fragment
+        android:id="@+id/customerOrdersFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.orders.CustomerOrdersFragment"
+        android:label="My Orders"
+        tools:layout="@layout/fragment_customer_orders" />
+
 </navigation>

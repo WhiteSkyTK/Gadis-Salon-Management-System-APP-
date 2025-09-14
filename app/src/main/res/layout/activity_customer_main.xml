@@ -132,98 +132,15 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
-        <LinearLayout
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/bottom_nav_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:paddingTop="12dp"
-            android:paddingBottom="12dp"
-            android:weightSum="4">
-
-            <LinearLayout
-                android:id="@+id/nav_home"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="vertical">
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_home"
-                    app:tint="@color/bottom_nav_color_selector"
-                    android:duplicateParentState="true"/> <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Home"
-                    android:textColor="@color/bottom_nav_color_selector"
-                    android:duplicateParentState="true"/>
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/nav_shop"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="vertical">
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_shop"
-                    app:tint="@color/bottom_nav_color_selector"
-                    android:duplicateParentState="true"/>
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Shop"
-                    android:textColor="@color/bottom_nav_color_selector"
-                    android:duplicateParentState="true"/>
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/nav_booking"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="vertical">
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_booking"
-                    app:tint="@color/bottom_nav_color_selector"
-                    android:duplicateParentState="true"/>
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Booking"
-                    android:textColor="@color/bottom_nav_color_selector"
-                    android:duplicateParentState="true"/>
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/nav_profile"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="vertical">
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_profile"
-                    app:tint="@color/bottom_nav_color_selector"
-                    android:duplicateParentState="true"/>
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Profile"
-                    android:textColor="@color/bottom_nav_color_selector"
-                    android:duplicateParentState="true"/>
-            </LinearLayout>
-
-        </LinearLayout>
+            android:background="@android:color/transparent"
+            app:itemIconTint="@color/bottom_nav_color_selector"
+            app:itemTextColor="@color/bottom_nav_color_selector"
+            app:labelVisibilityMode="labeled"
+            app:menu="@menu/customer_bottom_nav_menu" />
 
     </com.google.android.material.card.MaterialCardView>
 </androidx.constraintlayout.widget.ConstraintLayout>

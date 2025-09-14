@@ -52,20 +52,6 @@ object AppData {
 
     // --- NEW WORKER/ADMIN FUNCTIONS for booking management ---
 
-    fun updateBookingStatus(bookingId: String, newStatus: String, stylist: User?) {
-        val currentList = _allBookings.value?.toMutableList() ?: return
-        val bookingIndex = currentList.indexOfFirst { it.id == bookingId }
-
-        if (bookingIndex != -1) {
-            val oldBooking = currentList[bookingIndex]
-            // Update the booking with the new status and the stylist who accepted it
-            currentList[bookingIndex] = oldBooking.copy(
-                status = newStatus,
-                stylistName = stylist?.name ?: oldBooking.stylistName
-            )
-            _allBookings.value = currentList
-        }
-    }
 
     private var currentUser: User? = null
 
