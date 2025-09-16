@@ -1,8 +1,9 @@
 package com.rst.gadissalonmanagementsystemapp
 
-import com.google.firebase.Timestamp
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 
-// This is the main data class for all bookings in the app
+@Parcelize
 data class AdminBooking(
     var id: String = "", // var so Firestore can set it
     val serviceName: String = "",
@@ -12,4 +13,4 @@ data class AdminBooking(
     val time: String = "",
     var status: String = "Pending",
     val timestamp: Long = System.currentTimeMillis()
-)
+) : Parcelable

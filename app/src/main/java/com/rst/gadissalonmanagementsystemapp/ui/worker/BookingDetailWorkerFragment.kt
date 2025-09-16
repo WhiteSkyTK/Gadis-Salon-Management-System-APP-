@@ -56,7 +56,7 @@ class BookingDetailWorkerFragment : Fragment() {
         FirebaseManager.addChatMessagesListener(bookingId) { messages ->
             val uid = currentUser?.id ?: ""
             // We set the 'isSentByUser' flag here for the UI
-            messages.forEach { it.isSentByUser = (it.senderUid == uid) }
+            messages.forEach { it.isSentByUser = (it.senderId == uid) }
             binding.chatRecyclerView.adapter = ChatAdapter(messages)
         }
 
@@ -66,7 +66,7 @@ class BookingDetailWorkerFragment : Fragment() {
                 // Create the message object to be saved to Firebase
                 val message = ChatMessage(
                     bookingId = bookingId,
-                    senderUid = currentUser!!.id,
+                    senderId = currentUser!!.id,
                     senderName = currentUser!!.name,
                     messageText = messageText,
                     timestamp = System.currentTimeMillis()

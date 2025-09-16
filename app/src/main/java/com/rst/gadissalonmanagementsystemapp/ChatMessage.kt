@@ -6,7 +6,7 @@ import com.google.firebase.firestore.Exclude
 data class ChatMessage(
     val messageId: String = "",
     val bookingId: String = "",
-    val senderUid: String = "", // Changed from senderId for consistency
+    val senderId: String = "",
     val senderName: String = "",
     val messageText: String = "",
     val timestamp: Long = 0L,
