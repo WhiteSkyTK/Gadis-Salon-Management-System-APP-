@@ -23,7 +23,6 @@ class HairstyleDetailFragment : Fragment() {
     private var _binding: FragmentHairstyleDetailBinding? = null
     private val binding get() = _binding!!
 
-    // Use Safe Args to get the passed arguments
     private val args: HairstyleDetailFragmentArgs by navArgs()
     private val mainViewModel: MainViewModel by activityViewModels()
 
