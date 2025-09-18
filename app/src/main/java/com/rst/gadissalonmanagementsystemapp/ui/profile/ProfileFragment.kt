@@ -1,9 +1,12 @@
 package com.rst.gadissalonmanagementsystemapp.ui.profile
 
 import android.Manifest
+import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,11 +15,18 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.rst.gadissalonmanagementsystemapp.AppData
+import coil.load
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
+import com.rst.gadissalonmanagementsystemapp.FirebaseManager
+import com.rst.gadissalonmanagementsystemapp.Loading
 import com.rst.gadissalonmanagementsystemapp.R
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentProfileBinding
+import kotlinx.coroutines.launch
 import java.io.File
+import java.util.UUID
 
 class ProfileFragment : Fragment(),  ProfilePictureBottomSheet.PictureOptionListener {
 
@@ -28,27 +38,14 @@ class ProfileFragment : Fragment(),  ProfilePictureBottomSheet.PictureOptionList
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
-        if (isGranted) {
-            // Permission is granted. Now we can launch the camera.
-            takeImage()
-        } else {
-            // User denied the permission. Show a message.
-            Toast.makeText(context, "Camera permission is required to take a photo.", Toast.LENGTH_LONG).show()
-        }
+        if (isGranted) takeImage() else Toast.makeText(context, "Camera permission is required.", Toast.LENGTH_SHORT).show()
     }
-    // --- Activity Result Launchers for Gallery and Camera ---
     private val selectImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        uri?.let {
-            binding.profileImage.setImageURI(it)
-            AppData.getCurrentUser()?.imageUrl = it.toString()
-        }
+        uri?.let { handleImageSelection(it) }
     }
     private val takeImageLauncher = registerForActivityResult(ActivityResultContracts.TakePicture()) { isSuccess: Boolean ->
         if (isSuccess) {
-            latestTmpUri?.let {
-                binding.profileImage.setImageURI(it)
-                AppData.getCurrentUser()?.imageUrl = it.toString()
-            }
+            latestTmpUri?.let { handleImageSelection(it) }
         }
     }
 
@@ -59,28 +56,39 @@ class ProfileFragment : Fragment(),  ProfilePictureBottomSheet.PictureOptionList
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        loadUserProfile()
+        setupClickListeners()
+    }
 
-        // --- 1. Get the currently logged-in user from AppData ---
-        val currentUser = AppData.getCurrentUser()
-
-        // --- 2. Display the user's information ---
-        if (currentUser != null) {
-            // If a user is logged in, display their details
-            binding.userName.text = currentUser.name
-            binding.userPhone.text = currentUser.phone
-            // Load saved profile image if it exists
-            currentUser.imageUrl?.let {
-                binding.profileImage.setImageURI(Uri.parse(it))
+    private fun loadUserProfile() {
+        val uid = Firebase.auth.currentUser?.uid ?: return
+        viewLifecycleOwner.lifecycleScope.launch {
+            val result = FirebaseManager.getUser(uid)
+            if (result.isSuccess) {
+                val user = result.getOrNull()
+                binding.userName.text = user?.name
+                binding.userPhone.text = user?.phone
+                binding.userEmail.text = user?.email
+                binding.profileImage.load(user?.imageUrl) {
+                    placeholder(R.drawable.ic_profile)
+                    error(R.drawable.ic_profile)
+                }
             }
-        } else {
-            // If for some reason no one is logged in, show default text
-            binding.userName.text = "Guest User"
-            binding.userPhone.text = "Please log in"
         }
+    }
 
-        // --- Setup Click Listeners ---
-        binding.contactSupportOption.setOnClickListener {
-            findNavController().navigate(R.id.action_profileFragment_to_contactFragment)
+    private fun setupClickListeners() {
+        binding.profileImage.setOnClickListener {
+            ProfilePictureBottomSheet().show(childFragmentManager, "CustomerProfilePicturePicker")
+        }
+        binding.editProfileButton.setOnClickListener {
+            findNavController().navigate(R.id.action_profileFragment_to_customerEditProfileFragment)
+        }
+        binding.helpSupportOption.setOnClickListener {
+            findNavController().navigate(R.id.action_profileFragment_to_helpCenterFragment)
+        }
+        binding.faqOption.setOnClickListener {
+            findNavController().navigate(R.id.action_profileFragment_to_faqFragment)
         }
         binding.settingsOption.setOnClickListener {
             findNavController().navigate(R.id.action_profileFragment_to_settingsFragment)
@@ -91,57 +99,66 @@ class ProfileFragment : Fragment(),  ProfilePictureBottomSheet.PictureOptionList
         binding.aboutUsOption.setOnClickListener {
             findNavController().navigate(R.id.action_profileFragment_to_aboutUsFragment)
         }
-
-        binding.profileImage.setOnClickListener {
-            ProfilePictureBottomSheet().show(childFragmentManager, "ProfilePictureBottomSheet")
-        }
-
-        // --- 3. Get App Version Programmatically (this logic is the same) ---
-        try {
-            val packageInfo = requireActivity().packageManager.getPackageInfo(requireActivity().packageName, 0)
-            binding.versionText.text = "Version ${packageInfo.versionName}"
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-
-        // --- 4. Setup Click Listeners for Options ---
-        binding.contactSupportOption.setOnClickListener {
-            // This now navigates to the new Help Center screen
-            findNavController().navigate(R.id.action_profileFragment_to_helpCenterFragment)
-        }
-        binding.settingsOption.setOnClickListener {
-            findNavController().navigate(R.id.action_profileFragment_to_settingsFragment)
+        binding.logOutButton.setOnClickListener {
+            Firebase.auth.signOut()
+            val prefs = requireActivity().getSharedPreferences(Loading.PREFS_NAME, Context.MODE_PRIVATE)
+            prefs.edit().remove(Loading.USER_ROLE_KEY).apply()
+            val intent = Intent(requireContext(), Loading::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+            startActivity(intent)
+            requireActivity().finish()
         }
     }
 
     // --- This function is called from the Bottom Sheet ---
+
     override fun onOptionSelected(option: String) {
         when (option) {
             "gallery" -> selectImageLauncher.launch("image/*")
-            "camera" -> checkCameraPermissionAndTakePhoto() //
-            "remove" -> {
-                binding.profileImage.setImageResource(R.drawable.ic_profile)
-                AppData.getCurrentUser()?.imageUrl = ""
+            "camera" -> checkCameraPermissionAndTakePhoto()
+            "remove" -> removeProfilePicture()
+        }
+    }
+
+    private fun handleImageSelection(imageUri: Uri) {
+        val uid = Firebase.auth.currentUser?.uid ?: return
+        viewLifecycleOwner.lifecycleScope.launch {
+            Toast.makeText(context, "Uploading photo...", Toast.LENGTH_SHORT).show()
+            val uploadResult = FirebaseManager.uploadImage(imageUri, "profile_pictures", "$uid.jpg")
+            if (uploadResult.isSuccess) {
+                val downloadUrl = uploadResult.getOrNull().toString()
+                val updateResult = FirebaseManager.updateUserProfileImage(uid, downloadUrl)
+                if (updateResult.isSuccess) {
+                    binding.profileImage.setImageURI(imageUri)
+                    Toast.makeText(context, "Profile picture updated!", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(context, "Error updating profile.", Toast.LENGTH_LONG).show()
+                }
+            } else {
+                Toast.makeText(context, "Error uploading photo.", Toast.LENGTH_LONG).show()
             }
         }
     }
 
+    private fun removeProfilePicture() {
+        val uid = Firebase.auth.currentUser?.uid ?: return
+        viewLifecycleOwner.lifecycleScope.launch {
+            val updateResult = FirebaseManager.updateUserProfileImage(uid, "") // Save an empty string
+            if (updateResult.isSuccess) {
+                binding.profileImage.setImageResource(R.drawable.ic_profile)
+                Toast.makeText(context, "Profile picture removed.", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(context, "Error removing photo.", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+
     private fun checkCameraPermissionAndTakePhoto() {
         when {
-            // Check if the permission is already granted
-            ContextCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.CAMERA
-            ) == PackageManager.PERMISSION_GRANTED -> {
-                // You can use the API that requires the permission.
-                takeImage()
-            }
-            // TODO: You can add a check for shouldShowRequestPermissionRationale here if needed
-            else -> {
-                // Directly ask for the permission.
-                // The registered ActivityResultCallback gets the result of this request.
-                requestPermissionLauncher.launch(Manifest.permission.CAMERA)
-            }
+            ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED -> takeImage()
+            else -> requestPermissionLauncher.launch(Manifest.permission.CAMERA)
         }
     }
 

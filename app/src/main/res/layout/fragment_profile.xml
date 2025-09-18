@@ -1,167 +1,135 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/profile_fragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/backgroundGrey"
     tools:context=".ui.profile.ProfileFragment">
 
-    <!-- Top Bar with Title -->
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/top_bar_profile"
-        android:layout_width="0dp"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
-        app:cardCornerRadius="20dp"
-        app:cardElevation="4dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        android:orientation="vertical"
+        android:padding="16dp">
 
-        <TextView
-            android:id="@+id/title_profile"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:padding="16dp"
-            android:text="My Profile"
-            android:textColor="@color/textColorPrimary"
-            android:textSize="22sp"
-            android:textStyle="bold" />
-    </com.google.android.material.card.MaterialCardView>
+        <!-- User Info Card with Edit Button -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="20dp">
 
-    <!-- Scrollable content area -->
-    <androidx.core.widget.NestedScrollView
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginTop="16dp"
-        app:layout_constraintTop_toBottomOf="@id/top_bar_profile"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent">
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/profile_image"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:src="@drawable/ic_profile"
+                    app:shapeAppearanceOverlay="@style/CircleImageView"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
 
-        <LinearLayout
+                <TextView
+                    android:id="@+id/user_name"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toEndOf="@id/profile_image"
+                    app:layout_constraintTop_toTopOf="@id/profile_image"
+                    app:layout_constraintEnd_toStartOf="@id/edit_profile_button"
+                    tools:text="Sagwadi Customer" />
+
+                <TextView
+                    android:id="@+id/user_phone"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintStart_toStartOf="@id/user_name"
+                    app:layout_constraintTop_toBottomOf="@id/user_name"
+                    app:layout_constraintEnd_toEndOf="@id/user_name"
+                    tools:text="+27 12 345 6789" />
+
+                <TextView
+                    android:id="@+id/user_email"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintStart_toStartOf="@id/user_name"
+                    app:layout_constraintTop_toBottomOf="@id/user_phone"
+                    app:layout_constraintEnd_toEndOf="@id/user_name"
+                    tools:text="customer@gadis.com" />
+
+                <ImageButton
+                    android:id="@+id/edit_profile_button"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_edit"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"/>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Options Card -->
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:paddingBottom="16dp">
-
-            <!-- User Info Card -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/user_info_card"
+            android:layout_marginTop="24dp">
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="4dp">
+                android:orientation="vertical"
+                android:paddingVertical="8dp">
 
-                <androidx.constraintlayout.widget.ConstraintLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:padding="20dp">
+                <TextView
+                    android:id="@+id/help_support_option"
+                    style="@style/ProfileOption"
+                    android:text="Help &amp; Support"/>
+                <View style="@style/Divider"/>
+                <TextView
+                    android:id="@+id/settings_option"
+                    style="@style/ProfileOption"
+                    android:text="Settings"/>
+                <View style="@style/Divider"/>
+                <TextView
+                    android:id="@+id/location_option"
+                    style="@style/ProfileOption"
+                    android:text="Gadis Salon Location"/>
+                <View style="@style/Divider"/>
+                <TextView
+                    android:id="@+id/faq_option"
+                    style="@style/ProfileOption"
+                    android:text="FAQ &amp; User Guide"/>
+                <View style="@style/Divider"/>
+                <TextView
+                    android:id="@+id/about_us_option"
+                    style="@style/ProfileOption"
+                    android:text="About Gadis Salon"/>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
-                    <com.google.android.material.imageview.ShapeableImageView
-                        android:id="@+id/profile_image"
-                        android:layout_width="80dp"
-                        android:layout_height="80dp"
-                        android:background="@color/inputFieldBackgroundColor"
-                        android:padding="4dp"
-                        android:src="@drawable/ic_profile"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:shapeAppearanceOverlay="@style/CircleImageView" />
+        <Button
+            android:id="@+id/log_out_button"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="16dp"
+            android:text="Log Out"
+            android:textColor="@color/status_red" />
 
-                    <TextView
-                        android:id="@+id/user_name"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="16dp"
-                        android:textColor="@color/textColorPrimary"
-                        android:textSize="20sp"
-                        android:textStyle="bold"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toEndOf="@id/profile_image"
-                        app:layout_constraintTop_toTopOf="@id/profile_image"
-                        tools:text="Jane Doe" />
+        <!-- Version Number -->
+        <TextView
+            android:id="@+id/version_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="24dp"
+            android:textColor="@color/textColorSecondary"
+            android:textSize="14sp"
+            tools:text="Version 1.0.0" />
 
-                    <TextView
-                        android:id="@+id/user_phone"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:textColor="@color/textColorSecondary"
-                        android:textSize="16sp"
-                        app:layout_constraintBottom_toBottomOf="@id/profile_image"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toStartOf="@id/user_name"
-                        tools:text="+1 234 567 890" />
-
-                </androidx.constraintlayout.widget.ConstraintLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Options Card -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/options_card"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="4dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:paddingTop="8dp"
-                    android:paddingBottom="8dp">
-
-                    <!-- Contact Support -->
-                    <TextView
-                        android:id="@+id/contact_support_option"
-                        style="@style/ProfileOption"
-                        android:drawableStart="@drawable/ic_contact_support"
-                        android:text="Contact &amp; Support"/>
-                    <View style="@style/Divider"/>
-                    <!-- Settings -->
-                    <TextView
-                        android:id="@+id/settings_option"
-                        style="@style/ProfileOption"
-                        android:drawableStart="@drawable/ic_settings"
-                        android:text="Settings"/>
-                    <View style="@style/Divider"/>
-                    <!-- Location -->
-                    <TextView
-                        android:id="@+id/location_option"
-                        style="@style/ProfileOption"
-                        android:drawableStart="@drawable/ic_location"
-                        android:text="Location"/>
-                    <View style="@style/Divider"/>
-                    <!-- About Us -->
-                    <TextView
-                        android:id="@+id/about_us_option"
-                        style="@style/ProfileOption"
-                        android:drawableStart="@drawable/ic_info"
-                        android:text="About Us"
-                        app:tint="@android:color/black" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Version Number -->
-            <TextView
-                android:id="@+id/version_text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="24dp"
-                android:textColor="@color/textColorSecondary"
-                android:textSize="14sp"
-                tools:text="Version 1.0.0" />
-
-        </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

@@ -8,7 +8,7 @@ import com.rst.gadissalonmanagementsystemapp.AdminBooking
 import com.rst.gadissalonmanagementsystemapp.R
 import com.rst.gadissalonmanagementsystemapp.databinding.ItemAdminBookingBinding
 
-class AdminBookingAdapter(private val bookings: List<AdminBooking>) : RecyclerView.Adapter<AdminBookingAdapter.ViewHolder>() {
+class AdminBookingAdapter(private var bookings: List<AdminBooking>) : RecyclerView.Adapter<AdminBookingAdapter.ViewHolder>() {
 
     inner class ViewHolder(private val binding: ItemAdminBookingBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(booking: AdminBooking) {
@@ -39,4 +39,9 @@ class AdminBookingAdapter(private val bookings: List<AdminBooking>) : RecyclerVi
     }
 
     override fun getItemCount(): Int = bookings.size
+
+    fun updateData(newBookings: List<AdminBooking>) {
+        this.bookings = newBookings
+        notifyDataSetChanged() // Refreshes the list
+    }
 }

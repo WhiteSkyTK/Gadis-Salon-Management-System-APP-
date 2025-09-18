@@ -145,6 +145,144 @@ object FirebaseManager {
         }
     }
 
+    // Gets all confirmed bookings for a specific stylist on a specific date
+    suspend fun getBookingsForStylistOnDate(stylistName: String, date: String): Result<List<AdminBooking>> {
+        return try {
+            val snapshots = firestore.collection("bookings")
+                .whereEqualTo("stylistName", stylistName)
+                .whereEqualTo("date", date)
+                .whereEqualTo("status", "Confirmed")
+                .get().await()
+            val bookings = snapshots.toObjects(AdminBooking::class.java)
+            Result.success(bookings)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // Creates a new booking document in the 'bookings' collection
+    suspend fun createBooking(booking: AdminBooking): Result<Unit> {
+        return try {
+            firestore.collection("bookings").add(booking).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // Fetches the master list of available time slots from Firestore
+    suspend fun getSalonTimeSlots(): Result<List<String>> {
+        return try {
+            val document = firestore.collection("app_content").document("salon_hours").get().await()
+            // Get the 'time_slots' array field from the document
+            val slots = document.get("time_slots") as? List<String> ?: emptyList()
+            Result.success(slots)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // --- FAVORITES FUNCTIONS ---
+    fun addCurrentUserFavoritesListener(onUpdate: (List<Favoritable>) -> Unit) {
+        val uid = auth.currentUser?.uid ?: return onUpdate(emptyList())
+
+        usersCollection.document(uid).collection("favorites")
+            .addSnapshotListener { snapshots, error ->
+                if (error != null) {
+                    Log.w("FirebaseManager", "Favorites listener failed.", error)
+                    onUpdate(emptyList())
+                    return@addSnapshotListener
+                }
+
+                // This is a smart way to handle a mixed list.
+                // We try to convert each document to a Hairstyle first, and if that fails,
+                // we try to convert it to a Product.
+                val favoritesList = snapshots?.documents?.mapNotNull { doc ->
+                    // First, try to map to a Hairstyle
+                    doc.toObject(Hairstyle::class.java)?.also { it.id = doc.id }
+                    // If that returns null, try to map to a Product
+                        ?: doc.toObject(Product::class.java)?.also { it.id = doc.id }
+                } ?: emptyList()
+
+                onUpdate(favoritesList)
+            }
+    }
+
+    fun addBookingsListener(onUpdate: (List<AdminBooking>) -> Unit) {
+        firestore.collection("bookings")
+            .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshots, error ->
+                if (error != null) {
+                    Log.w("FirebaseManager", "Bookings listener failed.", error)
+                    return@addSnapshotListener
+                }
+                val bookingList = snapshots?.map { doc ->
+                    val booking = doc.toObject(AdminBooking::class.java)
+                    booking.id = doc.id
+                    booking
+                } ?: emptyList()
+                onUpdate(bookingList)
+            }
+    }
+
+    // --- CART & ORDER FUNCTIONS ---
+
+    // Listens for real-time updates to the user's cart
+    fun addCurrentUserCartListener(onUpdate: (List<CartItem>) -> Unit) {
+        val uid = auth.currentUser?.uid ?: return onUpdate(emptyList())
+        usersCollection.document(uid).collection("cart")
+            .addSnapshotListener { snapshots, error ->
+                if (error != null) { return@addSnapshotListener }
+                val cartList = snapshots?.toObjects(CartItem::class.java) ?: emptyList()
+                onUpdate(cartList)
+            }
+    }
+
+    // Updates the quantity of an item in the cart
+    suspend fun updateCartItemQuantity(productId: String, newQuantity: Int): Result<Unit> {
+        val uid = auth.currentUser?.uid ?: return Result.failure(Exception("Not logged in"))
+        return try {
+            if (newQuantity > 0) {
+                usersCollection.document(uid).collection("cart").document(productId)
+                    .update("quantity", newQuantity).await()
+            } else {
+                // If quantity is 0 or less, remove the item
+                removeCartItem(productId)
+            }
+            Result.success(Unit)
+        } catch (e: Exception) { Result.failure(e) }
+    }
+
+    // Removes an item from the cart
+    suspend fun removeCartItem(productId: String): Result<Unit> {
+        val uid = auth.currentUser?.uid ?: return Result.failure(Exception("Not logged in"))
+        return try {
+            usersCollection.document(uid).collection("cart").document(productId).delete().await()
+            Result.success(Unit)
+        } catch (e: Exception) { Result.failure(e) }
+    }
+
+    // Creates a final order and clears the cart
+    suspend fun createProductOrder(order: ProductOrder): Result<Unit> {
+        val uid = auth.currentUser?.uid ?: return Result.failure(Exception("Not logged in"))
+        return try {
+            // Save the order to a master 'product_orders' collection
+            firestore.collection("product_orders").document(order.id).set(order).await()
+            // Clear the user's cart
+            clearCurrentUserCart(uid)
+            Result.success(Unit)
+        } catch (e: Exception) { Result.failure(e) }
+    }
+
+    // Helper function to clear the cart
+    private suspend fun clearCurrentUserCart(uid: String) {
+        val cartItems = usersCollection.document(uid).collection("cart").get().await()
+        for (document in cartItems.documents) {
+            document.reference.delete().await()
+        }
+    }
+
+
     // Function to upload an image and get its download URL
     suspend fun uploadImage(uri: Uri, folder: String, fileName: String): Result<Uri> {
         return try {
@@ -451,6 +589,27 @@ object FirebaseManager {
         return try {
             val document = usersCollection.document(userId).collection("favorites").document(productId).get().await()
             Result.success(document.exists())
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // --- ADD THIS NEW FUNCTION for toggling favorite hairstyles ---
+    suspend fun toggleFavorite(hairstyle: Hairstyle): Result<Boolean> {
+        val userId = auth.currentUser?.uid ?: return Result.failure(Exception("User not logged in"))
+        return try {
+            val favoriteDoc = usersCollection.document(userId).collection("favorites").document(hairstyle.id)
+            val document = favoriteDoc.get().await()
+
+            if (document.exists()) {
+                // It's already a favorite, so remove it
+                favoriteDoc.delete().await()
+                Result.success(false) // No longer a favorite
+            } else {
+                // It's not a favorite, so add it
+                favoriteDoc.set(hairstyle).await()
+                Result.success(true) // Is now a favorite
+            }
         } catch (e: Exception) {
             Result.failure(e)
         }

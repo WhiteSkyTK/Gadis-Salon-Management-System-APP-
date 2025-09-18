@@ -4,15 +4,15 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.rst.gadissalonmanagementsystemapp.AppData
-import com.rst.gadissalonmanagementsystemapp.CartAdapter
-import com.rst.gadissalonmanagementsystemapp.CartItem
+import com.rst.gadissalonmanagementsystemapp.ui.cart.CartAdapter
+import com.rst.gadissalonmanagementsystemapp.FirebaseManager
 import com.rst.gadissalonmanagementsystemapp.R
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentCartBinding
+import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -20,6 +20,7 @@ class CartFragment : Fragment() {
 
     private var _binding: FragmentCartBinding? = null
     private val binding get() = _binding!!
+    private lateinit var cartAdapter: CartAdapter
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentCartBinding.inflate(inflater, container, false)
@@ -28,26 +29,34 @@ class CartFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        AppData.currentUserCart.observe(viewLifecycleOwner) { cartItems ->
-            binding.cartRecyclerView.adapter = CartAdapter(cartItems)
-
-            // Recalculate and display the total price whenever the cart changes
-            val totalPrice = cartItems.sumOf { it.price * it.quantity }
-            val format = NumberFormat.getCurrencyInstance(Locale("en", "ZA"))
-            binding.totalPrice.text = format.format(totalPrice)
-        }
+        setupRecyclerView()
+        listenForCartUpdates()
 
         binding.buyNowButtonCart.setOnClickListener {
-            // In a real app, you would process the payment here
-            Toast.makeText(context, "Purchase Complete!", Toast.LENGTH_LONG).show()
-            // Navigate to the new success screen
             findNavController().navigate(R.id.action_cartFragment_to_purchaseConfirmationFragment)
         }
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
+    private fun setupRecyclerView() {
+        cartAdapter = CartAdapter(
+            cartItems = mutableListOf(),
+            onQuantityChanged = { productId, newQuantity ->
+                lifecycleScope.launch { FirebaseManager.updateCartItemQuantity(productId, newQuantity) }
+            },
+            onRemove = { productId ->
+                lifecycleScope.launch { FirebaseManager.removeCartItem(productId) }
+            }
+        )
+        binding.cartRecyclerView.layoutManager = LinearLayoutManager(context)
+        binding.cartRecyclerView.adapter = cartAdapter
+    }
+
+    private fun listenForCartUpdates() {
+        FirebaseManager.addCurrentUserCartListener { cartItems ->
+            cartAdapter.updateData(cartItems)
+            val totalPrice = cartItems.sumOf { it.price * it.quantity }
+            val format = NumberFormat.getCurrencyInstance(Locale("en", "ZA"))
+            binding.totalPrice.text = format.format(totalPrice)
+        }
     }
 }

@@ -10,7 +10,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import coil.load
-import com.rst.gadissalonmanagementsystemapp.AppData
 import com.rst.gadissalonmanagementsystemapp.FirebaseManager
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentHairstyleDetailBinding
 import com.rst.gadissalonmanagementsystemapp.MainViewModel
@@ -57,22 +56,9 @@ class HairstyleDetailFragment : Fragment() {
         binding.hairstylePrice.text = format.format(hairstyle.price)
         binding.hairstyleDuration.text = "Duration: ${hairstyle.durationHours} hours"
 
-        // Find the stylist's name from AppData
-        viewLifecycleOwner.lifecycleScope.launch {
-            val result = FirebaseManager.getAllUsers()
-            if (result.isSuccess) {
-                val allUsers = result.getOrNull() ?: emptyList()
-                val stylistId = hairstyle.availableStylistIds.firstOrNull()
-                val stylist = allUsers.find { it.id == stylistId && it.role == "WORKER" }
-                binding.stylistName.text = "Stylist: ${stylist?.name ?: "Any"}"
-            }
-        }
-
         binding.bookNowButton.setOnClickListener {
-            // Create the navigation action, passing the current hairstyle object
+            // This correctly navigates to the confirmation screen
             val action = HairstyleDetailFragmentDirections.actionHairstyleDetailFragmentToBookingConfirmationFragment(hairstyle)
-
-            // Navigate to the confirmation screen
             findNavController().navigate(action)
         }
     }

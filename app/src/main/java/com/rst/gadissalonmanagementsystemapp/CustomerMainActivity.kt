@@ -27,6 +27,7 @@ class CustomerMainActivity : AppCompatActivity() {
         navController = navHostFragment.navController
 
         // Call both setup functions
+        mainViewModel.loadCurrentUser()
         setupBottomNavigation()
         setupUiVisibilityListener()
     }
@@ -51,9 +52,14 @@ class CustomerMainActivity : AppCompatActivity() {
         navController.addOnDestinationChangedListener { _, destination, _ ->
             // Part 1: Handle Top Bar Appearance
             when (destination.id) {
-                R.id.productDetailFragment, R.id.hairstyleDetailFragment -> showDetailTopBar()
-                R.id.settingsFragment, R.id.aboutUsFragment, R.id.contactFragment,
-                R.id.locationFragment, R.id.favoritesFragment, R.id.cartFragment,
+                R.id.productDetailFragment,
+                R.id.hairstyleDetailFragment, R.id.bookingConfirmationFragment -> showDetailTopBar()
+                R.id.settingsFragment,
+                R.id.aboutUsFragment,
+                R.id.contactFragment,
+                R.id.locationFragment,
+                R.id.favoritesFragment,
+                R.id.cartFragment,
                 R.id.notificationsFragment -> showProfileDetailTopBar()
                 else -> showHomeTopBar()
             }

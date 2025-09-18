@@ -6,7 +6,6 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.RecyclerView
-import com.rst.gadissalonmanagementsystemapp.AppData
 import com.rst.gadissalonmanagementsystemapp.User
 import com.rst.gadissalonmanagementsystemapp.databinding.ItemAdminUserBinding
 import kotlinx.coroutines.CoroutineScope

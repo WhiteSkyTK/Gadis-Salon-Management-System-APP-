@@ -1,8 +1,9 @@
 package com.rst.gadissalonmanagementsystemapp
 
 data class CartItem(
-    val name: String,
-    val price: Double,
-    var quantity: Int, // 'var' so we can change it
-    val imageUrl: String
+    val productId: String = "",
+    val name: String = "",
+    val price: Double = 0.0,
+    var quantity: Int = 0,
+    val imageUrl: String = ""
 )

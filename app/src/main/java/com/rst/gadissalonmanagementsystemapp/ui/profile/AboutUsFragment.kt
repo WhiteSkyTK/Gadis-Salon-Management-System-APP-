@@ -1,6 +1,7 @@
 package com.rst.gadissalonmanagementsystemapp.ui.profile
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,10 +12,16 @@ import com.rst.gadissalonmanagementsystemapp.databinding.FragmentAboutUsBinding
 import kotlinx.coroutines.launch
 
 class AboutUsFragment : Fragment() {
+
     private var _binding: FragmentAboutUsBinding? = null
     private val binding get() = _binding!!
+    private val TAG = "AboutUsFragment"
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         _binding = FragmentAboutUsBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -22,13 +29,23 @@ class AboutUsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Fetch the content from Firebase and display it
+        // Launch a coroutine to fetch the content from Firebase
         viewLifecycleOwner.lifecycleScope.launch {
+            Log.d(TAG, "Fetching About Us content from Firebase...")
             val result = FirebaseManager.getAboutUsContent()
+
             if (result.isSuccess) {
                 val content = result.getOrNull()
-                binding.salonAboutText.text = content?.get("salon_about")
-                binding.appAboutText.text = content?.get("app_about")
+                if (content != null) {
+                    // Update the UI with the fetched text
+                    binding.salonAboutText.text = content["salon_about"]
+                    binding.appAboutText.text = content["app_about"]
+                    Log.d(TAG, "Successfully displayed About Us content.")
+                } else {
+                    Log.w(TAG, "About Us content was null.")
+                }
+            } else {
+                Log.e(TAG, "Error fetching About Us content: ${result.exceptionOrNull()?.message}")
             }
         }
     }

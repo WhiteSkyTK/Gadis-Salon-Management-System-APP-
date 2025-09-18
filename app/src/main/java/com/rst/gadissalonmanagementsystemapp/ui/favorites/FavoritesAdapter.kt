@@ -1,26 +1,26 @@
-package com.rst.gadissalonmanagementsystemapp
+package com.rst.gadissalonmanagementsystemapp.ui.favorites
 
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
-import com.rst.gadissalonmanagementsystemapp.*
+import com.rst.gadissalonmanagementsystemapp.Favoritable
+import com.rst.gadissalonmanagementsystemapp.Hairstyle
+import com.rst.gadissalonmanagementsystemapp.Product
+import com.rst.gadissalonmanagementsystemapp.R
 import com.rst.gadissalonmanagementsystemapp.databinding.ItemFavoriteBinding
-import com.rst.gadissalonmanagementsystemapp.ui.favorites.FavoritesFragmentDirections
 import java.text.NumberFormat
 import java.util.Locale
 
 class FavoritesAdapter(
-    private val items: List<Favoritable>,
+    private var items: List<Favoritable>,
     private val onUnfavoriteClick: (Favoritable) -> Unit,
     private val onAddToCartClick: (Product) -> Unit,
     private val onBookClick: (Hairstyle) -> Unit
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    // Define constants for our view types
     companion object {
         private const val VIEW_TYPE_PRODUCT = 1
         private const val VIEW_TYPE_HAIRSTYLE = 2
@@ -39,15 +39,11 @@ class FavoritesAdapter(
             binding.itemSize.visibility = View.VISIBLE
             binding.itemSize.text = item.variants.firstOrNull()?.size
 
-            // Show product-specific buttons
             binding.addToCartButton.visibility = View.VISIBLE
             binding.bookNowButton.visibility = View.GONE
 
-            binding.addToCartButton.setOnClickListener {
-                onAddToCartClick(item)
-            }
+            binding.addToCartButton.setOnClickListener { onAddToCartClick(item) }
             binding.unfavoriteButton.setOnClickListener { onUnfavoriteClick(item) }
-
         }
     }
 
@@ -62,7 +58,6 @@ class FavoritesAdapter(
             binding.itemPrice.text = format.format(item.price)
             binding.itemSize.visibility = View.GONE
 
-            // Show hairstyle-specific buttons
             binding.addToCartButton.visibility = View.GONE
             binding.bookNowButton.visibility = View.VISIBLE
 
@@ -74,7 +69,6 @@ class FavoritesAdapter(
         }
     }
 
-    // This method tells the adapter which layout to use for which item
     override fun getItemViewType(position: Int): Int {
         return when (items[position]) {
             is Product -> VIEW_TYPE_PRODUCT
@@ -100,4 +94,10 @@ class FavoritesAdapter(
     }
 
     override fun getItemCount(): Int = items.size
+
+    // --- THIS IS THE NEWLY ADDED FUNCTION ---
+    fun updateData(newItems: List<Favoritable>) {
+        this.items = newItems
+        notifyDataSetChanged() // Tells the RecyclerView to redraw itself
+    }
 }

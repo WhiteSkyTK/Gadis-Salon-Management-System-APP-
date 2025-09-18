@@ -4,6 +4,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import kotlinx.coroutines.launch
 
 class MainViewModel : ViewModel() {
@@ -14,6 +16,9 @@ class MainViewModel : ViewModel() {
     // LiveData to observe the favorite status of the current product
     private val _isCurrentProductFavorite = MutableLiveData<Boolean>()
     val isCurrentProductFavorite: LiveData<Boolean> = _isCurrentProductFavorite
+
+    private val _currentUser = MutableLiveData<User?>()
+    val currentUser: LiveData<User?> = _currentUser
 
     fun setCurrentProduct(product: Product) {
         _currentlyViewedProduct.value = product
@@ -30,6 +35,20 @@ class MainViewModel : ViewModel() {
                 val result = FirebaseManager.toggleFavorite(product)
                 if (result.isSuccess) {
                     _isCurrentProductFavorite.value = result.getOrDefault(false)
+                }
+            }
+        }
+    }
+
+    fun loadCurrentUser() {
+        val uid = Firebase.auth.currentUser?.uid
+        if (uid != null) {
+            viewModelScope.launch {
+                val result = FirebaseManager.getUser(uid)
+                if (result.isSuccess) {
+                    _currentUser.value = result.getOrNull()
+                } else {
+                    _currentUser.value = null
                 }
             }
         }
