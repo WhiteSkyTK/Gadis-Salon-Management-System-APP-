@@ -11,6 +11,8 @@ import com.google.firebase.storage.storage
 import android.content.Context
 import com.google.firebase.FirebaseApp
 import com.google.firebase.app
+import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.functions.functions
 
 object FirebaseManager {
 
@@ -228,29 +230,52 @@ object FirebaseManager {
     // --- CART & ORDER FUNCTIONS ---
 
     // Listens for real-time updates to the user's cart
-    fun addCurrentUserCartListener(onUpdate: (List<CartItem>) -> Unit) {
-        val uid = auth.currentUser?.uid ?: return onUpdate(emptyList())
-        usersCollection.document(uid).collection("cart")
+    fun addCurrentUserCartListener(onUpdate: (List<CartItem>) -> Unit): ListenerRegistration? {
+        val uid = auth.currentUser?.uid
+        if (uid == null) {
+            onUpdate(emptyList())
+            return null
+        }
+
+        return usersCollection.document(uid).collection("cart")
             .addSnapshotListener { snapshots, error ->
-                if (error != null) { return@addSnapshotListener }
+                if (error != null) {
+                    Log.w("FirebaseManager", "Cart listener failed.", error)
+                    return@addSnapshotListener
+                }
                 val cartList = snapshots?.toObjects(CartItem::class.java) ?: emptyList()
                 onUpdate(cartList)
             }
     }
 
-    // Updates the quantity of an item in the cart
-    suspend fun updateCartItemQuantity(productId: String, newQuantity: Int): Result<Unit> {
+    // This new version uses a transaction to safely check stock before updating
+    suspend fun updateCartItemQuantity(productId: String, size: String, newQuantity: Int): Result<Unit> {
         val uid = auth.currentUser?.uid ?: return Result.failure(Exception("Not logged in"))
         return try {
-            if (newQuantity > 0) {
-                usersCollection.document(uid).collection("cart").document(productId)
-                    .update("quantity", newQuantity).await()
+            val productDocRef = firestore.collection("products").document(productId)
+            val cartItemDocRef = usersCollection.document(uid).collection("cart").document("${productId}_${size}")
+
+            if (newQuantity <= 0) {
+                // If the new quantity is zero or less, just remove the item
+                cartItemDocRef.delete().await()
             } else {
-                // If quantity is 0 or less, remove the item
-                removeCartItem(productId)
+                firestore.runTransaction { transaction ->
+                    val productSnapshot = transaction.get(productDocRef)
+                    val product = productSnapshot.toObject(Product::class.java)
+                    val variant = product?.variants?.find { it.size == size }
+                    val currentStock = variant?.stock ?: 0
+
+                    if (newQuantity <= currentStock) {
+                        transaction.update(cartItemDocRef, "quantity", newQuantity)
+                    } else {
+                        throw Exception("Cannot add more. Stock limit of $currentStock reached.")
+                    }
+                }.await()
             }
             Result.success(Unit)
-        } catch (e: Exception) { Result.failure(e) }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
     // Removes an item from the cart
@@ -388,7 +413,8 @@ object FirebaseManager {
     // Deletes a user's document from Firestore
     suspend fun deleteUser(userId: String): Result<Unit> {
         return try {
-            usersCollection.document(userId).delete().await()
+            val data = hashMapOf("userId" to userId)
+            Firebase.functions.getHttpsCallable("deleteUser").call(data).await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -517,16 +543,35 @@ object FirebaseManager {
 
     // Adds a product to the current user's 'cart' subcollection
     suspend fun addToCart(product: Product, variant: ProductVariant): Result<Unit> {
-        val userId = auth.currentUser?.uid ?: return Result.failure(Exception("User not logged in"))
+        val uid = auth.currentUser?.uid ?: return Result.failure(Exception("User not logged in"))
         return try {
-            val cartCollection = usersCollection.document(userId).collection("cart")
-            val cartItem = CartItem(
-                name = product.name,
-                price = variant.price,
-                quantity = 1,
-                imageUrl = product.imageUrl
-            )
-            cartCollection.document(product.id).set(cartItem).await()
+            val cartDocRef = usersCollection.document(uid).collection("cart").document(product.id + "_" + variant.size)
+            val productDocRef = firestore.collection("products").document(product.id)
+
+            firestore.runTransaction { transaction ->
+                val productSnapshot = transaction.get(productDocRef)
+                val productData = productSnapshot.toObject(Product::class.java)
+                val variantInDb = productData?.variants?.find { it.size == variant.size }
+                val currentStock = variantInDb?.stock ?: 0
+
+                val cartSnapshot = transaction.get(cartDocRef)
+                val currentQuantityInCart = if (cartSnapshot.exists()) cartSnapshot.getLong("quantity")?.toInt() ?: 0 else 0
+
+                if (currentQuantityInCart < currentStock) {
+                    val newQuantity = currentQuantityInCart + 1
+                    val cartItem = CartItem(
+                        productId = product.id,
+                        size = variant.size,
+                        name = product.name,
+                        price = variant.price,
+                        quantity = newQuantity,
+                        imageUrl = product.imageUrl
+                    )
+                    transaction.set(cartDocRef, cartItem)
+                } else {
+                    throw Exception("No more stock available for this item.")
+                }
+            }.await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -791,11 +836,7 @@ object FirebaseManager {
         }
     }
 
-
-
-
     // --- CUSTOMER FUNCTIONS ---
-
     // Listens for real-time updates to the current user's bookings
     fun addCurrentUserBookingsListener(onUpdate: (List<AdminBooking>) -> Unit) {
         val currentUser = auth.currentUser
@@ -819,5 +860,91 @@ object FirebaseManager {
                 } ?: emptyList()
                 onUpdate(bookingList)
             }
+    }
+
+    // --- NOTIFICATION FUNCTIONS ---
+
+    // Listens for real-time updates to the current user's notifications
+    fun addUserNotificationsListener(onUpdate: (List<AppNotification>) -> Unit): ListenerRegistration? {
+        val uid = auth.currentUser?.uid
+        if (uid == null) {
+            onUpdate(emptyList())
+            return null
+        }
+
+        return usersCollection.document(uid).collection("notifications")
+            .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshots, error ->
+                if (error != null) { return@addSnapshotListener }
+                val notifications = snapshots?.toObjects(AppNotification::class.java) ?: emptyList()
+                onUpdate(notifications)
+            }
+    }
+
+    // Marks a specific notification as read
+    suspend fun markNotificationAsRead(notificationId: String): Result<Unit> {
+        val uid = auth.currentUser?.uid ?: return Result.failure(Exception("Not logged in"))
+        return try {
+            usersCollection.document(uid).collection("notifications").document(notificationId)
+                .update("isRead", true).await()
+            Result.success(Unit)
+        } catch (e: Exception) { Result.failure(e) }
+    }
+
+    // Listens for real-time updates to the current user's product orders
+    fun addCurrentUserOrdersListener(onUpdate: (List<ProductOrder>) -> Unit): ListenerRegistration? {
+        val uid = auth.currentUser?.uid ?: return null
+        val userName = auth.currentUser?.displayName ?: ""
+
+        return firestore.collection("product_orders")
+            .whereEqualTo("customerId", uid)  // Filter by name
+            .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshots, error ->
+                if (error != null) { return@addSnapshotListener }
+                val orderList = snapshots?.toObjects(ProductOrder::class.java) ?: emptyList()
+                onUpdate(orderList)
+            }
+    }
+
+    // This function handles both new and returning Google users
+    suspend fun signInWithGoogle(firebaseUser: com.google.firebase.auth.FirebaseUser): Result<String> {
+        return try {
+            val userDocRef = usersCollection.document(firebaseUser.uid)
+            val document = userDocRef.get().await()
+
+            if (document.exists()) {
+                // Case 1: The user already exists in Firestore.
+                // We just fetch their role and return it.
+                Log.d("FirebaseManager", "Google user already exists. Fetching role.")
+                val role = document.getString("role") ?: "CUSTOMER"
+                Result.success(role)
+            } else {
+                // Case 2: This is a new user signing in with Google for the first time.
+                // We create a new profile for them.
+                Log.d("FirebaseManager", "New Google user. Creating profile in Firestore.")
+                val newUser = User(
+                    id = firebaseUser.uid,
+                    name = firebaseUser.displayName ?: "No Name",
+                    email = firebaseUser.email ?: "",
+                    phone = firebaseUser.phoneNumber ?: "", // Usually empty
+                    imageUrl = firebaseUser.photoUrl?.toString() ?: "",
+                    role = "CUSTOMER" // All new Google sign-ups are customers
+                )
+                userDocRef.set(newUser).await()
+                Result.success("CUSTOMER")
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // Sends a password reset link to the provided email address
+    suspend fun sendPasswordResetEmail(email: String): Result<Unit> {
+        return try {
+            auth.sendPasswordResetEmail(email).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }

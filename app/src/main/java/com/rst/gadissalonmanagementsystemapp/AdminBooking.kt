@@ -5,7 +5,8 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class AdminBooking(
-    var id: String = "", // var so Firestore can set it
+    var id: String = "",
+    val customerId: String = "",
     val serviceName: String = "",
     val customerName: String = "",
     val stylistName: String = "",

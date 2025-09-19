@@ -6,6 +6,8 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.RecyclerView
+import coil.load
+import com.rst.gadissalonmanagementsystemapp.R
 import com.rst.gadissalonmanagementsystemapp.User
 import com.rst.gadissalonmanagementsystemapp.databinding.ItemAdminUserBinding
 import kotlinx.coroutines.CoroutineScope
@@ -23,12 +25,21 @@ class AdminUserAdapter(
             binding.userName.text = user.name
             binding.userEmail.text = user.email
             binding.userRoleChip.text = user.role.uppercase()
+            binding.userImage.load(user.imageUrl) {
+                placeholder(R.drawable.ic_profile)
+                error(R.drawable.ic_profile)
+            }
 
             binding.editButton.setOnClickListener {
                 onEditClick(user)
             }
             binding.deleteButton.setOnClickListener {
-                onDeleteClick(user)
+                AlertDialog.Builder(itemView.context)
+                    .setTitle("Delete User")
+                    .setMessage("Are you sure you want to permanently delete ${user.name}?")
+                    .setPositiveButton("Delete") { _, _ -> onDeleteClick(user) }
+                    .setNegativeButton("Cancel", null)
+                    .show()
             }
         }
     }

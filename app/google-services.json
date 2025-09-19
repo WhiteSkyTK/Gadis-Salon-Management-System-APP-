@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "1067418184764",
+    "project_id": "gdsm-6a8d0",
+    "storage_bucket": "gdsm-6a8d0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1067418184764:android:0996fb5433d99ec5836739",
+        "android_client_info": {
+          "package_name": "com.rst.gadissalonmanagementsystemapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1067418184764-7gqlehbddndjfks6ok6urmmjllb7v3jk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.rst.gadissalonmanagementsystemapp",
+            "certificate_hash": "85d4f5c89678d2e6342ef7d7dc2a99247d07526f"
+          }
+        },
+        {
+          "client_id": "1067418184764-jgqtegb7t9sdajlusdmu8efof7qa16gg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDlhum47lOEvsc4XkwO6Hlr-cnmhzfu7t0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1067418184764-6pr8ae44lfhv3ldom1pobuejmgu0fkgd.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

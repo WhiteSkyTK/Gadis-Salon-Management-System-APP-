@@ -12,36 +12,27 @@ import java.util.Locale
 
 class CartAdapter(
     private var cartItems: List<CartItem>,
-    private val onQuantityChanged: (String, Int) -> Unit,
-    private val onRemove: (String) -> Unit
+    private val onQuantityChanged: (CartItem, Int) -> Unit,
+    private val onRemove: (CartItem) -> Unit
 ) : RecyclerView.Adapter<CartAdapter.ViewHolder>() {
 
     inner class ViewHolder(private val binding: ItemCartBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(item: CartItem) {
             binding.itemName.text = item.name
+            binding.itemSize.text = item.size
             binding.itemQuantity.text = item.quantity.toString()
-            binding.itemImage.load(item.imageUrl) {
-                placeholder(R.drawable.ic_placeholder_image)
-                error(R.drawable.ic_placeholder_image)
-            }
-            val format = NumberFormat.getCurrencyInstance(Locale("en", "ZA"))
-            binding.itemPrice.text = format.format(item.price)
+            binding.itemImage.load(item.imageUrl) { placeholder(R.drawable.ic_placeholder_image) }
+            binding.itemPrice.text = NumberFormat.getCurrencyInstance(Locale("en", "ZA")).format(item.price)
 
             // --- Click Listeners for Interactive Buttons ---
             binding.buttonPlus.setOnClickListener {
-                onQuantityChanged(item.productId, item.quantity + 1)
+                onQuantityChanged(item, item.quantity + 1)
             }
             binding.buttonMinus.setOnClickListener {
-                // Prevent quantity from going below 1
-                if (item.quantity > 1) {
-                    onQuantityChanged(item.productId, item.quantity - 1)
-                } else {
-                    // If quantity is 1, a minus click should remove the item
-                    onRemove(item.productId)
-                }
+                onQuantityChanged(item, item.quantity - 1)
             }
             binding.buttonRemove.setOnClickListener {
-                onRemove(item.productId)
+                onRemove(item)
             }
         }
     }

@@ -5,6 +5,8 @@ import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.NavHostFragment
@@ -14,7 +16,7 @@ class CustomerMainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityCustomerMainBinding
     private lateinit var navController: NavController
-    private val mainViewModel: MainViewModel by viewModels()
+    val mainViewModel: MainViewModel by viewModels()
     private var currentNavIndex = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -22,21 +24,40 @@ class CustomerMainActivity : AppCompatActivity() {
         binding = ActivityCustomerMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        mainViewModel.loadCurrentUser()
+        mainViewModel.loadAllHairstyles()
+
         val navHostFragment = supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         navController = navHostFragment.navController
 
         // Call both setup functions
-        mainViewModel.loadCurrentUser()
         setupBottomNavigation()
         setupUiVisibilityListener()
     }
 
     private fun setupUiVisibilityListener() {
-        // --- CLICK LISTENERS FOR TOP ICONS ---
-        binding.iconFavorites.setOnClickListener { navController.navigate(R.id.favoritesFragment) }
-        binding.iconCart.setOnClickListener { navController.navigate(R.id.cartFragment) }
-        binding.iconNotifications.setOnClickListener { navController.navigate(R.id.notificationsFragment) }
+        binding.iconFavorites.setOnClickListener {
+            if (navController.currentDestination?.id == R.id.favoritesFragment) {
+                navController.navigateUp() // If already open, go back
+            } else {
+                navController.navigate(R.id.favoritesFragment)
+            }
+        }
+        binding.iconCart.setOnClickListener {
+            if (navController.currentDestination?.id == R.id.cartFragment) {
+                navController.navigateUp()
+            } else {
+                navController.navigate(R.id.cartFragment)
+            }
+        }
+        binding.iconNotifications.setOnClickListener {
+            if (navController.currentDestination?.id == R.id.notificationsFragment) {
+                navController.navigateUp()
+            } else {
+                navController.navigate(R.id.notificationsFragment)
+            }
+        }
         binding.backButton.setOnClickListener { navController.navigateUp() }
 
         // --- Logic for the main favorite icon ---
@@ -53,10 +74,19 @@ class CustomerMainActivity : AppCompatActivity() {
             // Part 1: Handle Top Bar Appearance
             when (destination.id) {
                 R.id.productDetailFragment,
-                R.id.hairstyleDetailFragment, R.id.bookingConfirmationFragment -> showDetailTopBar()
+                R.id.hairstyleDetailFragment,
+                R.id.bookingConfirmationFragment -> {
+                    showDetailTopBar()
+                }
                 R.id.settingsFragment,
+                R.id.purchaseConfirmationFragment -> {
+                    showDetailTopBar()
+                }
                 R.id.aboutUsFragment,
                 R.id.contactFragment,
+                R.id.orderDetailFragment -> {
+                    showDetailTopBar()
+                }
                 R.id.locationFragment,
                 R.id.favoritesFragment,
                 R.id.cartFragment,
@@ -64,7 +94,13 @@ class CustomerMainActivity : AppCompatActivity() {
                 else -> showHomeTopBar()
             }
 
-            // Part 2: Handle Bottom Nav Selection
+            // Part 2: Set the selected state for the top nav icons
+            binding.iconFavorites.isSelected = (destination.id == R.id.favoritesFragment)
+            binding.iconCart.isSelected = (destination.id == R.id.cartFragment)
+            binding.iconNotifications.isSelected = (destination.id == R.id.notificationsFragment)
+
+
+            // Part 3: Handle Bottom Nav Selection
             when (destination.id) {
                 R.id.homeFragment -> binding.bottomNavView.selectedItemId = R.id.homeFragment
                 R.id.shopFragment -> binding.bottomNavView.selectedItemId = R.id.shopFragment

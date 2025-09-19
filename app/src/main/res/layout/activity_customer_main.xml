@@ -87,21 +87,24 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:padding="8dp"
-                android:src="@drawable/ic_favorite_border" />
+                android:src="@drawable/ic_favorite_border"
+                app:tint="@drawable/top_nav_icon_color_selector"/>
             <ImageView
                 android:id="@+id/icon_cart"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:layout_marginStart="4dp"
                 android:padding="8dp"
-                android:src="@drawable/ic_shopping_cart" />
+                android:src="@drawable/ic_shopping_cart"
+                app:tint="@drawable/top_nav_icon_color_selector"/>
             <ImageView
                 android:id="@+id/icon_notifications"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:layout_marginStart="4dp"
                 android:padding="8dp"
-                android:src="@drawable/ic_notifications" />
+                android:src="@drawable/ic_notifications"
+                app:tint="@drawable/top_nav_icon_color_selector"/>
         </LinearLayout>
 
     </com.google.android.material.card.MaterialCardView>

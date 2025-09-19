@@ -104,12 +104,19 @@ class ProductDetailFragment : Fragment() {
 
     private fun setupClickListeners(product: Product) {
         binding.addToCartButton.setOnClickListener {
-            selectedVariant?.let { variant ->
-                viewLifecycleOwner.lifecycleScope.launch {
-                    FirebaseManager.addToCart(product, variant)
+            if (selectedVariant == null) {
+                Toast.makeText(context, "Please select a size", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            viewLifecycleOwner.lifecycleScope.launch {
+                // --- THIS IS THE FIX: The addToCart function now handles the composite ID internally ---
+                val result = FirebaseManager.addToCart(product, selectedVariant!!)
+                if (result.isSuccess) {
                     Toast.makeText(context, "${product.name} added to cart", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(context, "Error: ${result.exceptionOrNull()?.message}", Toast.LENGTH_SHORT).show()
                 }
-            } ?: Toast.makeText(context, "Please select a size", Toast.LENGTH_SHORT).show()
+            }
         }
 
         binding.buyNowButton.setOnClickListener {

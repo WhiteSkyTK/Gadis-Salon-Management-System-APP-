@@ -58,9 +58,13 @@ class LoginActivity : AppCompatActivity() {
                     Log.d(TAG, "firebaseAuthWithGoogle:" + account.id)
                     firebaseAuthWithGoogle(account.idToken!!)
                 } catch (e: ApiException) {
+                    binding.loadingIndicator.visibility = View.GONE
                     Log.w(TAG, "Google sign in failed", e)
                     Toast.makeText(this, "Google Sign-In failed.", Toast.LENGTH_SHORT).show()
                 }
+            } else {
+                // This happens if the user closes the Google sign-in popup
+                binding.loadingIndicator.visibility = View.GONE // <-- HIDE on cancel
             }
         }
 
@@ -90,6 +94,7 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun signInWithGoogle() {
+        binding.loadingIndicator.visibility = View.VISIBLE
         val signInIntent = googleSignInClient.signInIntent
         googleSignInLauncher.launch(signInIntent)
     }
@@ -99,17 +104,22 @@ class LoginActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 auth.signInWithCredential(credential).await()
-
-                // Sign-in success, now check if this is a new user in our database
                 val firebaseUser = auth.currentUser
-                if (firebaseUser != null) {
-                    // TODO: Here you would check your Firestore/Realtime Database
-                    // to see if a user document with this UID already exists.
-                    // If not, you create one. For now, we'll assume all are customers.
 
-                    onLoginSuccess("CUSTOMER")
+                if (firebaseUser != null) {
+                    // Call our new manager function to handle creating the user if needed
+                    // and to get their role.
+                    val result = FirebaseManager.signInWithGoogle(firebaseUser)
+                    if (result.isSuccess) {
+                        val role = result.getOrNull() ?: "CUSTOMER"
+                        onLoginSuccess(role)
+                    } else {
+                        binding.loadingIndicator.visibility = View.GONE
+                        Toast.makeText(this@LoginActivity, "Failed to create user profile.", Toast.LENGTH_SHORT).show()
+                    }
                 }
             } catch (e: Exception) {
+                binding.loadingIndicator.visibility = View.GONE
                 Log.w(TAG, "signInWithCredential failed", e)
                 Toast.makeText(this@LoginActivity, "Authentication failed.", Toast.LENGTH_SHORT).show()
             }

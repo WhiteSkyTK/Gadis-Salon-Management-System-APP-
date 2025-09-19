@@ -19,6 +19,10 @@
             android:id="@+id/action_homeFragment_to_hairstyleDetailFragment"
             app:destination="@id/hairstyleDetailFragment" />
 
+        <action
+            android:id="@+id/action_homeFragment_to_shopFragment"
+            app:destination="@id/shopFragment" />
+
     </fragment>
 
     <fragment
@@ -26,6 +30,11 @@
         android:name="com.rst.gadissalonmanagementsystemapp.ui.shop.ShopFragment"
         android:label="fragment_shop"
         tools:layout="@layout/fragment_shop">
+
+        <argument
+            android:name="initialTabIndex"
+            app:argType="integer"
+            android:defaultValue="0" />
 
         <action
             android:id="@+id/action_shopFragment_to_productDetailFragment"
@@ -260,9 +269,23 @@
         android:label="My Support Tickets" />
 
     <fragment
+        android:id="@+id/orderDetailFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.orders.OrderDetailFragment"
+        android:label="Order Details">
+        <argument
+            android:name="order"
+            app:argType="com.rst.gadissalonmanagementsystemapp.ProductOrder" />
+    </fragment>
+
+    <fragment
         android:id="@+id/customerOrdersFragment"
         android:name="com.rst.gadissalonmanagementsystemapp.ui.orders.CustomerOrdersFragment"
         android:label="My Orders"
-        tools:layout="@layout/fragment_customer_orders" />
+        tools:layout="@layout/fragment_customer_orders" >
+
+    <action
+        android:id="@+id/action_customerOrdersFragment_to_orderDetailFragment"
+        app:destination="@id/orderDetailFragment" />
+    </fragment>
 
 </navigation>

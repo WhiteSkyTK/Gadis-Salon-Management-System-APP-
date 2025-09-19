@@ -38,6 +38,16 @@
             tools:text="Eco Style Gel" />
 
         <TextView
+            android:id="@+id/item_size"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/textColorSecondary"
+            android:textSize="14sp"
+            app:layout_constraintStart_toStartOf="@id/item_name"
+            app:layout_constraintTop_toBottomOf="@id/item_name"
+            tools:text="250ml" />
+
+        <TextView
             android:id="@+id/item_price"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -45,7 +55,7 @@
             android:textSize="16sp"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="@id/item_name"
-            app:layout_constraintTop_toBottomOf="@id/item_name"
+            app:layout_constraintTop_toBottomOf="@id/item_size"
             tools:text="R50" />
 
         <ImageButton

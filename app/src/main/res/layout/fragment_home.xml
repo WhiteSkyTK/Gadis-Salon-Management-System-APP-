@@ -14,9 +14,10 @@
         android:orientation="vertical">
 
         <com.google.android.material.card.MaterialCardView
-            android:id="@+id/products_card"
+            android:id="@+id/hairstyles_card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="0dp"
             android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
             app:cardCornerRadius="20dp"
@@ -34,36 +35,35 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Products"
+                        android:text="Popular Hairstyles"
                         android:layout_alignParentStart="true"
                         android:textColor="@color/textColorPrimary"
                         android:textSize="18sp"
                         android:textStyle="bold"/>
                     <TextView
-                        android:id="@+id/view_all_products"
+                        android:id="@+id/view_all_hairstyles"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="View All"
                         android:layout_alignParentEnd="true"
-                        android:textColor="@color/colorPrimary"
+                        android:textColor="@color/colorPrimary2"
                         android:textSize="16sp"/>
                 </RelativeLayout>
 
                 <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/recycler_view_products"
+                    android:id="@+id/recycler_view_hairstyles"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:orientation="horizontal"
-                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                    app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+                    app:spanCount="2"
                     tools:listitem="@layout/item_product"
-                    tools:itemCount="3"/>
+                    tools:itemCount="4"/>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-
         <com.google.android.material.card.MaterialCardView
-            android:id="@+id/hairstyles_card"
+            android:id="@+id/products_card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
@@ -84,30 +84,29 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Hair Style"
-                        android:layout_alignParentStart="true"
+                        android:text="Featured Products"
                         android:textColor="@color/textColorPrimary"
                         android:textSize="18sp"
                         android:textStyle="bold"/>
                     <TextView
-                        android:id="@+id/view_all_hairstyles"
+                        android:id="@+id/view_all_products"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="View All"
                         android:layout_alignParentEnd="true"
-                        android:textColor="@color/colorPrimary"
+                        android:textColor="@color/colorPrimary2"
                         android:textSize="16sp"/>
                 </RelativeLayout>
 
                 <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/recycler_view_hairstyles"
+                    android:id="@+id/recycler_view_products"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:orientation="horizontal"
-                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                    app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+                    app:spanCount="2"
                     tools:listitem="@layout/item_product"
-                    tools:itemCount="2"/>
+                    tools:itemCount="4"/>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 

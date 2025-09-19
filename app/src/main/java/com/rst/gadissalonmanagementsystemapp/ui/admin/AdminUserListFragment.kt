@@ -73,20 +73,17 @@ class AdminUserListFragment : Fragment() {
     }
 
     private fun confirmAndDeleteUser(user: User) {
-        AlertDialog.Builder(requireContext())
-            .setTitle("Delete User")
-            .setMessage("Are you sure you want to delete ${user.name}?")
-            .setPositiveButton("Delete") { _, _ ->
-                viewLifecycleOwner.lifecycleScope.launch {
-                    // Call the FirebaseManager to delete from Firestore
-                    FirebaseManager.deleteUser(user.id)
-                    // TODO: Also add a function to delete the user from Firebase Authentication
-                    Toast.makeText(context, "${user.name} deleted.", Toast.LENGTH_SHORT).show()
-                    // The real-time listener will automatically refresh the list
-                }
+        // The AlertDialog is now handled inside the adapter for simplicity
+        // This is called directly from the adapter's onDeleteClick lambda
+        viewLifecycleOwner.lifecycleScope.launch {
+            val result = FirebaseManager.deleteUser(user.id)
+            if (result.isSuccess) {
+                Toast.makeText(context, "${user.name} deleted.", Toast.LENGTH_SHORT).show()
+                // The real-time listener will automatically refresh the list
+            } else {
+                Toast.makeText(context, "Error: ${result.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
             }
-            .setNegativeButton("Cancel", null)
-            .show()
+        }
     }
 
 

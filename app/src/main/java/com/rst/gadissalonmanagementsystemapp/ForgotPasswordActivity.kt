@@ -10,7 +10,6 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.rst.gadissalonmanagementsystemapp.databinding.ActivityForgotPasswordBinding
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class ForgotPasswordActivity : AppCompatActivity() {
@@ -34,14 +33,11 @@ class ForgotPasswordActivity : AppCompatActivity() {
     }
 
     private fun setupClickListeners() {
-        // Handle the "Send Reset Link" button click
         binding.sendLinkButton.setOnClickListener {
             validateAndSend()
         }
-
-        // Handle the "Back to LoginActivity" text click
         binding.backToLoginText.setOnClickListener {
-            finish() // Simply closes this activity and returns to the previous one (LoginActivity)
+            finish()
         }
     }
 
@@ -54,28 +50,33 @@ class ForgotPasswordActivity : AppCompatActivity() {
             return
         }
 
-        // If validation passes, simulate sending the link
-        performSendResetLink()
+        // If validation passes, call the function to send the real reset link
+        performSendResetLink(email)
     }
 
-    private fun performSendResetLink() {
+    private fun performSendResetLink(email: String) {
         // Show loading state
         binding.loadingIndicator.visibility = View.VISIBLE
         binding.sendLinkButton.isEnabled = false
 
-        // Use a coroutine to simulate a network delay
+        // Use a coroutine to call our suspend function in FirebaseManager
         lifecycleScope.launch {
-            delay(2000) // Fake 2-second delay
+            val result = FirebaseManager.sendPasswordResetEmail(email)
 
             // Hide loading state
             binding.loadingIndicator.visibility = View.GONE
             binding.sendLinkButton.isEnabled = true
 
-            // Show success message
-            Toast.makeText(this@ForgotPasswordActivity, "Reset link sent to your email", Toast.LENGTH_LONG).show()
-
-            // Go back to the login screen automatically after success
-            finish()
+            if (result.isSuccess) {
+                // Show success message
+                Toast.makeText(this@ForgotPasswordActivity, "Reset link sent successfully to your email.", Toast.LENGTH_LONG).show()
+                // Go back to the login screen automatically after success
+                finish()
+            } else {
+                // Show the specific error from Firebase
+                val errorMessage = result.exceptionOrNull()?.message ?: "An unknown error occurred."
+                Toast.makeText(this@ForgotPasswordActivity, "Error: $errorMessage", Toast.LENGTH_LONG).show()
+            }
         }
     }
 }

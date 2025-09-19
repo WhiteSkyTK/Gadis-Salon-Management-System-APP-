@@ -20,12 +20,24 @@ class MainViewModel : ViewModel() {
     private val _currentUser = MutableLiveData<User?>()
     val currentUser: LiveData<User?> = _currentUser
 
+    private val _allHairstyles = MutableLiveData<List<Hairstyle>>()
+    val allHairstyles: LiveData<List<Hairstyle>> = _allHairstyles
+
     fun setCurrentProduct(product: Product) {
         _currentlyViewedProduct.value = product
         // Asynchronously check if the product is a favorite
         viewModelScope.launch {
             val result = FirebaseManager.isFavorite(product.id)
             _isCurrentProductFavorite.value = result.getOrNull() == true
+        }
+    }
+
+    fun loadAllHairstyles() {
+        viewModelScope.launch {
+            val result = FirebaseManager.getAllHairstyles()
+            if (result.isSuccess) {
+                _allHairstyles.value = result.getOrNull() ?: emptyList()
+            }
         }
     }
 

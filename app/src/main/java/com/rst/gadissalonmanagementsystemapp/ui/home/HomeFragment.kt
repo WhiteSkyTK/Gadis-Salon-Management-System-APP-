@@ -40,12 +40,14 @@ class HomeFragment : Fragment() {
 
     private fun setupClickListeners() {
         binding.viewAllProducts.setOnClickListener {
-            // TODO: In the ShopFragment, navigate to the "Products" tab
-            findNavController().navigate(R.id.shopFragment)
+            // Navigate to the Shop and tell it to open the first tab (index 0)
+            val action = HomeFragmentDirections.actionHomeFragmentToShopFragment(0)
+            findNavController().navigate(action)
         }
         binding.viewAllHairstyles.setOnClickListener {
-            // TODO: In the ShopFragment, navigate to the "Hairstyles" tab
-            findNavController().navigate(R.id.shopFragment)
+            // Navigate to the Shop and tell it to open the second tab (index 1)
+            val action = HomeFragmentDirections.actionHomeFragmentToShopFragment(1)
+            findNavController().navigate(action)
         }
     }
 
@@ -57,7 +59,7 @@ class HomeFragment : Fragment() {
             // --- Fetch Products ---
             val productsResult = FirebaseManager.getAllProducts()
             if (productsResult.isSuccess) {
-                val productList = productsResult.getOrNull() ?: emptyList()
+                val productList = productsResult.getOrNull()?.take(4) ?: emptyList()
                 Log.d(TAG, "Successfully fetched ${productList.size} products.")
                 binding.recyclerViewProducts.adapter = HomeItemAdapter(productList) { product ->
                     findNavController().navigate(HomeFragmentDirections.actionHomeFragmentToProductDetailFragment(product))
@@ -71,7 +73,7 @@ class HomeFragment : Fragment() {
             // --- Fetch Hairstyles ---
             val hairstylesResult = FirebaseManager.getAllHairstyles()
             if (hairstylesResult.isSuccess) {
-                val hairstyleList = hairstylesResult.getOrNull() ?: emptyList()
+                val hairstyleList = hairstylesResult.getOrNull()?.take(4) ?: emptyList()
                 Log.d(TAG, "Successfully fetched ${hairstyleList.size} hairstyles.")
                 binding.recyclerViewHairstyles.adapter = HairstyleItemAdapter(hairstyleList) { hairstyle ->
                     findNavController().navigate(HomeFragmentDirections.actionHomeFragmentToHairstyleDetailFragment(hairstyle))
