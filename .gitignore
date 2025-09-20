@@ -17,6 +17,6 @@ RSTINNOVATIONS
 .jks
 # Dependency directories
 node_modules/
-
+google-services.json
 # Local environment variables
 .env
