@@ -1,9 +1,11 @@
-package com.rst.gadissalonmanagementsystemapp
+package com.rst.gadissalonmanagementsystemapp.ui.shop
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
+import com.rst.gadissalonmanagementsystemapp.Hairstyle
+import com.rst.gadissalonmanagementsystemapp.R
 import com.rst.gadissalonmanagementsystemapp.databinding.ItemProductBinding
 import java.text.NumberFormat
 import java.util.Locale

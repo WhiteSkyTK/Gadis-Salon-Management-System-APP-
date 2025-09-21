@@ -6,6 +6,7 @@ import kotlinx.parcelize.Parcelize
 @Parcelize
 data class AdminBooking(
     var id: String = "",
+    val hairstyleId: String = "",
     val customerId: String = "",
     val serviceName: String = "",
     val customerName: String = "",

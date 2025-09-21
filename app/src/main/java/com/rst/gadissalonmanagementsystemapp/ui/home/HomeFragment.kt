@@ -11,8 +11,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.rst.gadissalonmanagementsystemapp.FirebaseManager
-import com.rst.gadissalonmanagementsystemapp.HairstyleItemAdapter
-import com.rst.gadissalonmanagementsystemapp.HomeItemAdapter
+import com.rst.gadissalonmanagementsystemapp.ui.shop.HairstyleItemAdapter
+import com.rst.gadissalonmanagementsystemapp.ui.home.HomeItemAdapter
 import com.rst.gadissalonmanagementsystemapp.R
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentHomeBinding
 import kotlinx.coroutines.launch

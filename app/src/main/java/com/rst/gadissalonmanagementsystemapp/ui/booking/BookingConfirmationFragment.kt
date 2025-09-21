@@ -81,21 +81,22 @@ class BookingConfirmationFragment : Fragment() {
 
     private fun populateStylistChips(availableStylistIds: List<String>) {
         viewLifecycleOwner.lifecycleScope.launch {
-            Log.d(TAG, "Fetching all users to find stylists...")
-            val result = FirebaseManager.getAllUsers()
+            Log.d(TAG, "Fetching ${availableStylistIds.size} specific stylists from Firebase...")
+            val result = FirebaseManager.getStylistsByIds(availableStylistIds)
             if (result.isSuccess) {
-                val allUsers = result.getOrNull() ?: emptyList()
-                allAvailableStylists = allUsers.filter { user ->
-                    availableStylistIds.contains(user.id) && user.role == "WORKER"
-                }
-                Log.d(TAG, "Found ${allAvailableStylists.size} available stylists for this service.")
+                // The result will ONLY contain the workers for this hairstyle
+                allAvailableStylists = result.getOrNull() ?: emptyList()
+                Log.d(TAG, "Successfully fetched ${allAvailableStylists.size} available stylists.")
 
                 binding.stylistChipGroup.removeAllViews()
+
+                // Add the "Any Available" chip
                 val anyChip = layoutInflater.inflate(R.layout.chip_stylist, binding.stylistChipGroup, false) as Chip
                 anyChip.text = "Any Available"
                 anyChip.isChecked = true
                 binding.stylistChipGroup.addView(anyChip)
 
+                // Add a chip for each specific stylist
                 allAvailableStylists.forEach { stylistUser ->
                     val chip = layoutInflater.inflate(R.layout.chip_stylist, binding.stylistChipGroup, false) as Chip
                     chip.text = stylistUser.name
@@ -103,6 +104,8 @@ class BookingConfirmationFragment : Fragment() {
                     binding.stylistChipGroup.addView(chip)
                 }
                 updateAvailableTimeSlots() // Initial time slot calculation
+            } else {
+                Log.e(TAG, "Error fetching stylists: ${result.exceptionOrNull()?.message}")
             }
         }
     }
@@ -184,18 +187,27 @@ class BookingConfirmationFragment : Fragment() {
 
     private fun getOccupiedSlots(existingBookings: List<AdminBooking>): Set<String> {
         val occupied = mutableSetOf<String>()
-        val allHairstyles = mainViewModel.allHairstyles.value ?: emptyList()
+        // Safely get the list from the ViewModel. If it's not ready, log an error and stop.
+        val allHairstyles = mainViewModel.allHairstyles.value ?: run {
+            Log.e(TAG, "Hairstyles list from ViewModel is null. Cannot calculate occupied slots correctly.")
+            return occupied // Return empty set if data is not ready
+        }
         Log.d(TAG, "Calculating occupied slots with ${allHairstyles.size} total hairstyles available in ViewModel.")
 
         existingBookings.forEach { booking ->
             val hairstyle = allHairstyles.find { it.name == booking.serviceName }
-            val duration = hairstyle?.durationHours ?: 1
+            // Add a warning if a hairstyle from a booking isn't in our main list
+            if (hairstyle == null) {
+                Log.w(TAG, "Could not find hairstyle '${booking.serviceName}' in ViewModel to calculate duration. Defaulting to 1 hour.")
+            }
+            val duration = hairstyle?.durationHours ?: 1 // Default to 1 hour if not found
             val startTimeHour = booking.time.split(":")[0].toInt()
 
             for (i in 0 until duration) {
                 occupied.add(String.format("%02d:00", startTimeHour + i))
             }
         }
+        Log.d(TAG, "Calculated occupied slots: $occupied")
         return occupied
     }
 
@@ -209,6 +221,7 @@ class BookingConfirmationFragment : Fragment() {
             val currentUser = userResult.getOrNull()!!
 
             val newBooking = AdminBooking(
+                hairstyleId = args.hairstyle.id,
                 serviceName = args.hairstyle.name,
                 customerId = currentUser.id,
                 customerName = currentUser.name,

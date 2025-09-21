@@ -1,0 +1,21 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- This is the first tick (the one in the back) -->
+    <group android:translateX="-3">
+    <path
+        android:fillColor="#000000"
+        android:pathData="M9,16.2L4.8,12l-1.4,1.4L9,19 21,7l-1.4,-1.4L9,16.2z" />
+    </group>
+    <!-- This is the second tick, shifted slightly to the left to create the overlap -->
+    <!-- It's the exact same shape as the first one -->
+    <group android:translateX="3">
+        <path
+            android:fillColor="#000000"
+            android:pathData="M9,16.2L4.8,12l-1.4,1.4L9,19 21,7l-1.4,-1.4L9,16.2z" />
+    </group>
+
+</vector>

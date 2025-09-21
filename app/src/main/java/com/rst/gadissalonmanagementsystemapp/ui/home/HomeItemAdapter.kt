@@ -1,10 +1,12 @@
-package com.rst.gadissalonmanagementsystemapp
+package com.rst.gadissalonmanagementsystemapp.ui.home
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
-import com.rst.gadissalonmanagementsystemapp.databinding.ItemProductBinding // Import the binding class for your item layout
+import com.rst.gadissalonmanagementsystemapp.Product
+import com.rst.gadissalonmanagementsystemapp.R
+import com.rst.gadissalonmanagementsystemapp.databinding.ItemProductBinding
 import java.text.NumberFormat
 import java.util.Locale
 

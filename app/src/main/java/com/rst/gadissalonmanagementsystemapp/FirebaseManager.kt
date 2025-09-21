@@ -1,18 +1,20 @@
 package com.rst.gadissalonmanagementsystemapp
 
+import android.content.Context
+import android.net.Uri
+import android.util.Log
+import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.auth
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
+import com.google.firebase.storage.storage
+import com.google.firebase.app
+import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.Query
+import com.google.firebase.functions.functions
 import kotlinx.coroutines.tasks.await
 import java.lang.Exception
-import android.net.Uri
-import android.util.Log
-import com.google.firebase.storage.storage
-import android.content.Context
-import com.google.firebase.FirebaseApp
-import com.google.firebase.app
-import com.google.firebase.firestore.ListenerRegistration
-import com.google.firebase.functions.functions
 
 object FirebaseManager {
 
@@ -76,46 +78,37 @@ object FirebaseManager {
         }
     }
 
-    // This function lets an admin create a user with a specific role
-    // This function now returns the new user's UID on success
+    // This is the simpler version that creates a user but logs the admin out.
     suspend fun createUserByAdmin(
-        context: Context, // We need context to initialize the second app
         name: String, email: String, phone: String, password: String, role: String, imageUrl: String
     ): Result<String> {
-        // Create a unique name for our temporary app instance
-        val tempAppName = "AdminCreateUser"
-        var tempAuth = auth // Start with the current auth
-        var tempApp: FirebaseApp? = null
+        return try {
+            val authResult = auth.createUserWithEmailAndPassword(email, password).await()
+            val firebaseUser = authResult.user!!
 
-        try {
-            // Initialize a temporary, secondary Firebase app
-            tempApp = FirebaseApp.initializeApp(context, Firebase.app.options, tempAppName)
-            tempAuth = Firebase.auth(tempApp)
-
-            // Step 1: Create the new user using the temporary auth instance
-            val authResult = tempAuth.createUserWithEmailAndPassword(email, password).await()
-            val firebaseUser = authResult.user
-
-            if (firebaseUser != null) {
-                // Step 2: Save the user's details to Firestore
-                val newUser = User(
-                    id = firebaseUser.uid,
-                    name = name,
-                    email = email,
-                    phone = phone,
-                    role = role,
-                    imageUrl = imageUrl
-                )
-                usersCollection.document(firebaseUser.uid).set(newUser).await()
-                return Result.success(firebaseUser.uid) // Return the new UID
-            } else {
-                return Result.failure(Exception("Failed to create user account."))
-            }
+            val newUser = User(
+                id = firebaseUser.uid,
+                name = name,
+                email = email,
+                phone = phone,
+                role = role,
+                imageUrl = imageUrl
+            )
+            usersCollection.document(firebaseUser.uid).set(newUser).await()
+            Result.success(firebaseUser.uid) // Return the new UID
         } catch (e: Exception) {
-            return Result.failure(e)
-        } finally {
-            // Step 3: IMPORTANT - Delete the temporary app instance to clean up
-            FirebaseApp.getInstance(tempAppName).delete()
+            Result.failure(e)
+        }
+    }
+
+    // This function specifically calls the 'setUserRole' Cloud Function.
+    suspend fun setRoleForUser(userId: String, role: String): Result<Unit> {
+        return try {
+            val data = hashMapOf("userId" to userId, "role" to role)
+            Firebase.functions.getHttpsCallable("setUserRole").call(data).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 
@@ -806,10 +799,14 @@ object FirebaseManager {
     }
 
     // Listens for new chat messages for a specific booking
-    fun addChatMessagesListener(bookingId: String, onUpdate: (List<ChatMessage>) -> Unit) {
-        firestore.collection("bookings").document(bookingId).collection("messages")
+    fun addChatMessagesListener(bookingId: String, onUpdate: (List<ChatMessage>) -> Unit): ListenerRegistration {
+        return firestore.collection("bookings").document(bookingId).collection("messages")
             .orderBy("timestamp")
-            .addSnapshotListener { snapshots, _ ->
+            .addSnapshotListener { snapshots, error ->
+                if (error != null) {
+                    Log.w("FirebaseManager", "Chat listener failed.", error)
+                    return@addSnapshotListener
+                }
                 val messages = snapshots?.toObjects(ChatMessage::class.java) ?: emptyList()
                 onUpdate(messages)
             }
@@ -944,6 +941,43 @@ object FirebaseManager {
             auth.sendPasswordResetEmail(email).await()
             Result.success(Unit)
         } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // Fetches a specific list of users (stylists) by their unique IDs
+    suspend fun getStylistsByIds(stylistIds: List<String>): Result<List<User>> {
+        if (stylistIds.isEmpty()) {
+            return Result.success(emptyList())
+        }
+        return try {
+            val documentSnapshots = usersCollection.whereIn("id", stylistIds).get().await()
+            val userList = documentSnapshots.toObjects(User::class.java)
+            Result.success(userList)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // Updates all unread messages in a chat to "Read"
+    suspend fun markMessagesAsRead(bookingId: String): Result<Unit> {
+        val uid = auth.currentUser?.uid ?: return Result.failure(Exception("Not logged in"))
+        return try {
+            val messagesRef = firestore.collection("bookings").document(bookingId).collection("messages")
+            val query: Query = messagesRef.whereNotEqualTo("senderUid", uid).whereEqualTo("status", "SENT")
+            val unreadDocsSnapshot = query.get().await()
+
+            firestore.runTransaction { transaction ->
+                // Loop directly over the snapshot result, not its '.documents' property
+                for (document in unreadDocsSnapshot) {
+                    transaction.update(document.reference, "status", "READ")
+                }
+                // Transactions must return a result; null is fine.
+                null
+            }.await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e("FirebaseManager", "Error marking messages as read", e)
             Result.failure(e)
         }
     }

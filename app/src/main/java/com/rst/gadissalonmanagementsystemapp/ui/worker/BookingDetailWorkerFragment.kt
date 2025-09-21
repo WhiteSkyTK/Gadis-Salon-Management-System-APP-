@@ -47,6 +47,10 @@ class BookingDetailWorkerFragment : Fragment() {
         binding.bookingTimeDetail.text = "On: ${booking.date} at ${booking.time}"
 
         setupChat(booking.id)
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            FirebaseManager.markMessagesAsRead(booking.id)
+        }
     }
 
     private fun setupChat(bookingId: String) {
@@ -56,7 +60,7 @@ class BookingDetailWorkerFragment : Fragment() {
         FirebaseManager.addChatMessagesListener(bookingId) { messages ->
             val uid = currentUser?.id ?: ""
             // We set the 'isSentByUser' flag here for the UI
-            messages.forEach { it.isSentByUser = (it.senderId == uid) }
+            messages.forEach { it.isSentByUser = (it.senderUid  == uid) }
             binding.chatRecyclerView.adapter = ChatAdapter(messages)
         }
 
@@ -66,7 +70,7 @@ class BookingDetailWorkerFragment : Fragment() {
                 // Create the message object to be saved to Firebase
                 val message = ChatMessage(
                     bookingId = bookingId,
-                    senderId = currentUser!!.id,
+                    senderUid  = currentUser!!.id,
                     senderName = currentUser!!.name,
                     messageText = messageText,
                     timestamp = System.currentTimeMillis()

@@ -1,6 +1,7 @@
 package com.rst.gadissalonmanagementsystemapp.ui.admin
 
 import android.Manifest
+import android.app.AlertDialog
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
@@ -16,9 +17,11 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import com.google.firebase.functions.functions
 import com.rst.gadissalonmanagementsystemapp.FirebaseManager
 import com.rst.gadissalonmanagementsystemapp.R
+import com.rst.gadissalonmanagementsystemapp.databinding.DialogConfirmPasswordBinding
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentAdminAddUserBinding
 import com.rst.gadissalonmanagementsystemapp.ui.profile.ProfilePictureBottomSheet
 import kotlinx.coroutines.launch
@@ -69,7 +72,7 @@ class AdminAddUserFragment : Fragment(), ProfilePictureBottomSheet.PictureOption
         }
 
         binding.saveUserButton.setOnClickListener {
-            saveUser()
+            validateAndShowConfirmation()
         }
     }
 
@@ -113,7 +116,7 @@ class AdminAddUserFragment : Fragment(), ProfilePictureBottomSheet.PictureOption
         return FileProvider.getUriForFile(requireActivity(), "${requireActivity().packageName}.provider", tmpFile)
     }
 
-    private fun saveUser() {
+    /*private fun saveUser() {
         val name = binding.nameInput.text.toString().trim()
         val email = binding.emailInput.text.toString().trim()
         val phone = binding.phoneInput.text.toString().trim()
@@ -174,6 +177,87 @@ class AdminAddUserFragment : Fragment(), ProfilePictureBottomSheet.PictureOption
                 binding.loadingIndicator.visibility = View.GONE
                 binding.saveUserButton.isEnabled = true
             }
+        }
+    }
+
+     */
+
+    private fun validateAndShowConfirmation() {
+        val name = binding.nameInput.text.toString().trim()
+        val email = binding.emailInput.text.toString().trim()
+        val phone = binding.phoneInput.text.toString().trim()
+        val password = binding.passwordInput.text.toString().trim()
+        val role = when (binding.roleRadioGroup.checkedRadioButtonId) {
+            binding.radioWorker.id -> "WORKER"
+                //binding.radioAdmin.id -> "ADMIN"
+            else -> "CUSTOMER"
+        }
+
+        if (name.isEmpty() || email.isEmpty() || phone.isEmpty() || password.length < 6) {
+            Toast.makeText(context, "Please fill all fields. Password must be >= 6 characters.", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        // Show the password confirmation dialog
+        showAdminPasswordDialog { adminPassword ->
+            // This code runs after the admin confirms their password
+            performSecureUserCreation(name, email, phone, password, role, adminPassword)
+        }
+    }
+
+    private fun showAdminPasswordDialog(onConfirm: (String) -> Unit) {
+        val dialogBinding = DialogConfirmPasswordBinding.inflate(layoutInflater)
+        AlertDialog.Builder(requireContext())
+            .setTitle("Confirm Action")
+            .setView(dialogBinding.root)
+            .setPositiveButton("Confirm") { _, _ ->
+                val enteredPassword = dialogBinding.passwordInput.text.toString()
+                onConfirm(enteredPassword)
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun performSecureUserCreation(name: String, email: String, phone: String, password: String, role: String, adminPassword: String) {
+        binding.loadingIndicator.visibility = View.VISIBLE
+        binding.saveUserButton.isEnabled = false
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            val adminEmail = Firebase.auth.currentUser?.email
+            if (adminEmail == null) {
+                Toast.makeText(context, "Could not verify admin session. Please log in again.", Toast.LENGTH_SHORT).show()
+                binding.loadingIndicator.visibility = View.GONE
+                binding.saveUserButton.isEnabled = true
+                return@launch
+            }
+
+            // Step 1: Create the new user (this will sign the current admin out)
+            val createResult = FirebaseManager.createUserByAdmin(name, email, phone, password, role, selectedImageUri?.toString() ?: "")
+
+            if (createResult.isSuccess) {
+                val newUserId = createResult.getOrNull()!!
+
+                // Step 2: Immediately sign the admin back in to get their admin token
+                val reLoginResult = FirebaseManager.loginUser(adminEmail, adminPassword)
+
+                if (reLoginResult.isSuccess) {
+                    // Step 3: Now that the admin is logged in again, set the new user's role
+                    val roleResult = FirebaseManager.setRoleForUser(newUserId, role)
+                    if (roleResult.isSuccess) {
+                        Toast.makeText(context, "$role '$name' added successfully", Toast.LENGTH_SHORT).show()
+                        findNavController().popBackStack()
+                    } else {
+                        Toast.makeText(context, "User created, but failed to set role: ${roleResult.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
+                    }
+                } else {
+                    Toast.makeText(context, "Admin re-authentication failed. Please log out and back in.", Toast.LENGTH_LONG).show()
+                }
+            } else {
+                Toast.makeText(context, "Error creating user: ${createResult.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
+            }
+
+            binding.loadingIndicator.visibility = View.GONE
+            binding.saveUserButton.isEnabled = true
         }
     }
 

@@ -6,7 +6,7 @@ Gadis Salon is a comprehensive, modern salon management application developed as
 
 **Team Members:**
 
-- **Tokollo "TK" Nonyane (ST10296818)**
+- **Tokollo Nonyane (ST10296818)**
 - **Sagwadi Mashimbye (ST10168528)**
 - **Rinae Magadagela (ST10361117)**
 

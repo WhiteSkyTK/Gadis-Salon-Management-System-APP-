@@ -1,3 +1,13 @@
 node_modules/
 *.local
 google-services.json
+.json
+
+# Secret files and local configuration
+*.jks
+local.properties
+.env.*
+*.json
+
+# Ignore the node_modules folder for functions
+functions/node_modules

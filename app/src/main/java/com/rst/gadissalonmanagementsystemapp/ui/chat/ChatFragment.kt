@@ -4,17 +4,23 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import com.rst.gadissalonmanagementsystemapp.ChatMessage
+import com.rst.gadissalonmanagementsystemapp.FirebaseManager
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentChatBinding
+import kotlinx.coroutines.launch
 
 class ChatFragment : Fragment() {
     private var _binding: FragmentChatBinding? = null
     private val binding get() = _binding!!
+    private val args: ChatFragmentArgs by navArgs()
 
-    // We'll use a mutable list to simulate sending and receiving messages
-    private val chatMessages = mutableListOf<ChatMessage>()
     private lateinit var chatAdapter: ChatAdapter
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -24,51 +30,58 @@ class ChatFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        val bookingId = args.bookingId
 
         setupRecyclerView()
-        loadDummyMessages()
+        listenForMessages(bookingId)
 
         binding.sendButton.setOnClickListener {
-            sendMessage()
+            sendMessage(bookingId)
         }
     }
 
     private fun setupRecyclerView() {
-        chatAdapter = ChatAdapter(chatMessages)
+        // Create the adapter once with an empty list
+        chatAdapter = ChatAdapter(emptyList())
         binding.chatRecyclerView.apply {
             layoutManager = LinearLayoutManager(context).apply {
-                stackFromEnd = true // Makes the list start from the bottom
+                stackFromEnd = true
             }
             adapter = chatAdapter
         }
     }
 
-    private fun loadDummyMessages() {
-        // In a real app, you'd get these from AppData or Firebase
-        chatMessages.addAll(listOf(
-            ChatMessage("msg1", "booking1", "stylist1", "Sarah", "Hi TK, looking forward to your appointment!", System.currentTimeMillis() - 100000, false),
-            ChatMessage("msg2", "booking1", "user1", "TK", "Me too! See you then.", System.currentTimeMillis() - 50000, true)
-        ))
-        chatAdapter.notifyDataSetChanged()
+    private fun listenForMessages(bookingId: String) {
+        // Start listening for real-time updates to this specific chat
+        FirebaseManager.addChatMessagesListener(bookingId) { messages ->
+            val uid = Firebase.auth.currentUser?.uid ?: ""
+            messages.forEach { it.isSentByUser = (it.senderUid == uid) }
+            chatAdapter.updateData(messages) // We will add this to the adapter
+            binding.chatRecyclerView.scrollToPosition(messages.size - 1)
+        }
     }
 
-    private fun sendMessage() {
+    private fun sendMessage(bookingId: String) {
         val messageText = binding.messageInput.text.toString().trim()
-        if (messageText.isNotEmpty()) {
-            val newMessage = ChatMessage(
-                messageId = "msg${chatMessages.size + 1}",
-                bookingId = "booking1",
-                senderId = "user1",
-                senderName = "TK",
+        val currentUser = Firebase.auth.currentUser
+
+        if (messageText.isNotEmpty() && currentUser != null) {
+            val message = ChatMessage(
+                bookingId = bookingId,
+                senderUid = currentUser.uid,
+                senderName = currentUser.displayName ?: "User",
                 messageText = messageText,
-                timestamp = System.currentTimeMillis(),
-                isSentByUser = true
+                timestamp = System.currentTimeMillis()
             )
-            // Add the new message to our list and update the UI
-            chatMessages.add(newMessage)
-            chatAdapter.notifyItemInserted(chatMessages.size - 1)
-            binding.chatRecyclerView.scrollToPosition(chatMessages.size - 1)
-            binding.messageInput.setText("")
+
+            viewLifecycleOwner.lifecycleScope.launch {
+                val result = FirebaseManager.sendChatMessage(bookingId, message)
+                if (result.isSuccess) {
+                    binding.messageInput.setText("")
+                } else {
+                    Toast.makeText(context, "Failed to send message.", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
 

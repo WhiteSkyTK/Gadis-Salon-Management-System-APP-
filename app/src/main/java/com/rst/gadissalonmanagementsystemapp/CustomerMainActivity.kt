@@ -2,11 +2,10 @@ package com.rst.gadissalonmanagementsystemapp
 
 import android.os.Bundle
 import android.view.View
+import android.view.animation.AnimationUtils
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.NavHostFragment
@@ -75,21 +74,19 @@ class CustomerMainActivity : AppCompatActivity() {
             when (destination.id) {
                 R.id.productDetailFragment,
                 R.id.hairstyleDetailFragment,
-                R.id.bookingConfirmationFragment -> {
-                    showDetailTopBar()
-                }
+                R.id.customerEditProfileFragment,
+                R.id.orderDetailFragment,
+                R.id.purchaseConfirmationFragment,
+                R.id.bookingConfirmationFragment -> showDetailTopBar()
+
                 R.id.settingsFragment,
-                R.id.purchaseConfirmationFragment -> {
-                    showDetailTopBar()
-                }
                 R.id.aboutUsFragment,
                 R.id.contactFragment,
-                R.id.orderDetailFragment -> {
-                    showDetailTopBar()
-                }
                 R.id.locationFragment,
                 R.id.favoritesFragment,
                 R.id.cartFragment,
+                R.id.helpCenterFragment,
+                R.id.mySupportTicketsFragment,
                 R.id.notificationsFragment -> showProfileDetailTopBar()
                 else -> showHomeTopBar()
             }
@@ -148,13 +145,57 @@ class CustomerMainActivity : AppCompatActivity() {
         }
     }
 
+    private fun animateViewVisibility(view: View, show: Boolean) {
+        if (show && view.visibility == View.GONE) {
+            view.startAnimation(AnimationUtils.loadAnimation(this, R.anim.fade_in))
+            view.visibility = View.VISIBLE
+        } else if (!show && view.visibility == View.VISIBLE) {
+            view.startAnimation(AnimationUtils.loadAnimation(this, R.anim.fade_out))
+            view.visibility = View.GONE
+        }
+    }
+
     private fun showHomeTopBar() {
+        animateViewVisibility(binding.backButtonCard, false)
+        binding.bottomNavBar.visibility = View.VISIBLE // Bottom bar doesn't need animation
+        animateViewVisibility(binding.iconsCard, true)
+        animateViewVisibility(binding.iconFavoriteMain, false)
+
+        val params = binding.salonNameCard.layoutParams as ConstraintLayout.LayoutParams
+        params.horizontalBias = 0.05f
+        binding.salonNameCard.layoutParams = params
+    }
+
+    private fun showDetailTopBar() {
+        animateViewVisibility(binding.backButtonCard, true)
+        binding.bottomNavBar.visibility = View.GONE
+        animateViewVisibility(binding.iconsCard, false)
+        animateViewVisibility(binding.iconFavoriteMain, true)
+
+        val params = binding.salonNameCard.layoutParams as ConstraintLayout.LayoutParams
+        params.horizontalBias = 0.5f
+        binding.salonNameCard.layoutParams = params
+    }
+
+    private fun showProfileDetailTopBar() {
+        animateViewVisibility(binding.backButtonCard, true)
+        binding.bottomNavBar.visibility = View.GONE
+        animateViewVisibility(binding.iconsCard, true)
+        animateViewVisibility(binding.iconFavoriteMain, false)
+
+        val params = binding.salonNameCard.layoutParams as ConstraintLayout.LayoutParams
+        params.horizontalBias = 0.5f
+        binding.salonNameCard.layoutParams = params
+    }
+
+    /*private fun showHomeTopBar() {
         binding.backButtonCard.visibility = View.GONE
         binding.bottomNavBar.visibility = View.VISIBLE
         binding.iconFavorites.visibility = View.VISIBLE
         binding.iconCart.visibility = View.VISIBLE
         binding.iconNotifications.visibility = View.VISIBLE
         binding.iconFavoriteMain.visibility = View.GONE
+
         val params = binding.salonNameCard.layoutParams as ConstraintLayout.LayoutParams
         params.horizontalBias = 0.05f
         binding.salonNameCard.layoutParams = params
@@ -183,5 +224,6 @@ class CustomerMainActivity : AppCompatActivity() {
         params.horizontalBias = 0.5f
         binding.salonNameCard.layoutParams = params
     }
+     */
 }
 

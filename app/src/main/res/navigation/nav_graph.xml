@@ -47,10 +47,39 @@
     </fragment>
 
     <fragment
+        android:id="@+id/chatFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.chat.ChatFragment"
+        android:label="Chat"
+        tools:layout="@layout/fragment_chat">
+        <argument
+            android:name="bookingId"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/bookingDetailCustomerFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.booking.BookingDetailCustomerFragment"
+        android:label="Booking Details"
+        tools:layout="@layout/fragment_booking_detail_customer">
+        <argument
+            android:name="booking"
+            app:argType="com.rst.gadissalonmanagementsystemapp.AdminBooking" />
+
+        <action
+            android:id="@+id/action_bookingDetailCustomerFragment_to_chatFragment"
+            app:destination="@id/chatFragment" />
+    </fragment>
+
+    <fragment
         android:id="@+id/bookingFragment"
         android:name="com.rst.gadissalonmanagementsystemapp.ui.booking.BookingFragment"
         android:label="fragment_booking"
-        tools:layout="@layout/fragment_booking" />
+        tools:layout="@layout/fragment_booking" >
+
+        <action
+            android:id="@+id/action_bookingFragment_to_bookingDetailCustomerFragment"
+            app:destination="@id/bookingDetailCustomerFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/profileFragment"

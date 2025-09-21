@@ -1,19 +1,29 @@
-package com.rst.gadissalonmanagementsystemapp
+package com.rst.gadissalonmanagementsystemapp.ui.booking
 
 import android.graphics.drawable.GradientDrawable
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
+import coil.load
+import com.rst.gadissalonmanagementsystemapp.AdminBooking
+import com.rst.gadissalonmanagementsystemapp.Hairstyle
+import com.rst.gadissalonmanagementsystemapp.R
 import com.rst.gadissalonmanagementsystemapp.databinding.ItemBookingBinding
 
-class BookingAdapter(private var bookings: List<AdminBooking>) : RecyclerView.Adapter<BookingAdapter.BookingViewHolder>() {
-
+class BookingAdapter(
+    private var bookings: List<AdminBooking>,
+    private val allHairstyles: List<Hairstyle>,
+    private val onItemClick: (AdminBooking) -> Unit
+) : RecyclerView.Adapter<BookingAdapter.BookingViewHolder>() {
     inner class BookingViewHolder(private val binding: ItemBookingBinding) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(booking: AdminBooking) {
-            binding.styleImage.visibility = View.GONE
+            val hairstyle = allHairstyles.find { it.id == booking.hairstyleId }
+            binding.styleImage.load(hairstyle?.imageUrl) {
+                placeholder(R.drawable.ic_placeholder_image)
+            }
+
             binding.styleName.text = booking.serviceName
             binding.stylistName.text = "with ${booking.stylistName}"
             binding.bookingDate.text = booking.date
@@ -24,12 +34,16 @@ class BookingAdapter(private var bookings: List<AdminBooking>) : RecyclerView.Ad
             val statusColorRes = when (booking.status.lowercase()) {
                 "completed" -> R.color.status_green
                 "cancelled" -> R.color.status_red
-                "confirmed" -> R.color.colorPrimary
+                "confirmed" -> R.color.colorPrimary2
                 else -> R.color.status_grey
             }
 
             val color = ContextCompat.getColor(itemView.context, statusColorRes)
             (binding.bookingStatus.background.mutate() as? GradientDrawable)?.setColor(color)
+
+            itemView.setOnClickListener {
+                onItemClick(booking)
+            }
         }
     }
 

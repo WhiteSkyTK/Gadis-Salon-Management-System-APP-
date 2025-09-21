@@ -10,7 +10,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.rst.gadissalonmanagementsystemapp.FirebaseManager
-import com.rst.gadissalonmanagementsystemapp.HairstyleItemAdapter
+import com.rst.gadissalonmanagementsystemapp.ui.shop.HairstyleItemAdapter
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentItemGridBinding
 import kotlinx.coroutines.launch
 

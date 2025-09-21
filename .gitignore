@@ -14,9 +14,18 @@
 .cxx
 local.properties
 RSTINNOVATIONS
-.jks
+*.jks
+*.json
 # Dependency directories
 node_modules/
 google-services.json
 # Local environment variables
 .env
+
+# Secret files and local configuration
+*.jks
+local.properties
+.env.*
+
+# Ignore the node_modules folder for functions
+functions/node_modules
