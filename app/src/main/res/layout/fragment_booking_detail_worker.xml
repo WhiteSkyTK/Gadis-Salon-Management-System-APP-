@@ -14,32 +14,52 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
-        <LinearLayout
+
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
             android:padding="16dp">
+
+            <ImageView
+                android:id="@+id/hairstyle_image_detail"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:scaleType="centerCrop"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:src="@drawable/ic_placeholder_image"/>
 
             <TextView
                 android:id="@+id/service_name_detail"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
                 android:textSize="20sp"
                 android:textStyle="bold"
+                app:layout_constraintStart_toEndOf="@id/hairstyle_image_detail"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
                 tools:text="Butterfly Locs" />
+
 
             <TextView
                 android:id="@+id/customer_name_detail"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                app:layout_constraintStart_toStartOf="@id/service_name_detail"
+                app:layout_constraintTop_toBottomOf="@id/service_name_detail"
+                app:layout_constraintEnd_toEndOf="@id/service_name_detail"
                 tools:text="Customer: Sagwadi M." />
 
             <TextView
                 android:id="@+id/booking_time_detail"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                tools:text="On: 25 Aug, 2025 at 10:00" />
-        </LinearLayout>
+                app:layout_constraintStart_toStartOf="@id/service_name_detail"
+                app:layout_constraintTop_toBottomOf="@id/customer_name_detail"
+                app:layout_constraintEnd_toEndOf="@id/service_name_detail"
+                tools:text="On: 20 Sep, 2025 at 10:00" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.card.MaterialCardView>
 
     <!-- Chat History -->

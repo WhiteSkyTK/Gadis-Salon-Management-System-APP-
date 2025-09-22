@@ -7,11 +7,18 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
+import coil.load
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
+import com.google.firebase.firestore.ListenerRegistration
 import com.rst.gadissalonmanagementsystemapp.ChatMessage
 import com.rst.gadissalonmanagementsystemapp.FirebaseManager
+import com.rst.gadissalonmanagementsystemapp.MainViewModel
+import com.rst.gadissalonmanagementsystemapp.R
 import com.rst.gadissalonmanagementsystemapp.User
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentBookingDetailWorkerBinding
 import com.rst.gadissalonmanagementsystemapp.ui.chat.ChatAdapter
@@ -22,7 +29,10 @@ class BookingDetailWorkerFragment : Fragment() {
     private var _binding: FragmentBookingDetailWorkerBinding? = null
     private val binding get() = _binding!!
     private val args: BookingDetailWorkerFragmentArgs by navArgs()
+    private val mainViewModel: MainViewModel by activityViewModels()
     private var currentUser: User? = null
+    private var chatListener: ListenerRegistration? = null
+    private lateinit var chatAdapter: ChatAdapter
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentBookingDetailWorkerBinding.inflate(inflater, container, false)
@@ -42,48 +52,78 @@ class BookingDetailWorkerFragment : Fragment() {
         }
 
         // --- Populate the booking details card ---
+        val hairstyle = mainViewModel.allHairstyles.value?.find { it.id == booking.hairstyleId }
+        binding.hairstyleImageDetail.load(hairstyle?.imageUrl) {
+            placeholder(R.drawable.ic_placeholder_image)
+        }
         binding.serviceNameDetail.text = booking.serviceName
         binding.customerNameDetail.text = "Customer: ${booking.customerName}"
         binding.bookingTimeDetail.text = "On: ${booking.date} at ${booking.time}"
 
-        setupChat(booking.id)
+        setupRecyclerView()
+        binding.sendButton.setOnClickListener { sendMessage(booking.id) }
 
         viewLifecycleOwner.lifecycleScope.launch {
             FirebaseManager.markMessagesAsRead(booking.id)
         }
     }
 
-    private fun setupChat(bookingId: String) {
+
+    override fun onStart() {
+        super.onStart()
+        listenForMessages(args.booking.id)
+
+        // --- THIS IS THE FINAL, POLISHED LOGIC ---
+        viewLifecycleOwner.lifecycleScope.launch {
+            Log.d("WorkerChat", "Screen visible. Marking messages as read for booking: ${args.booking.id}")
+            FirebaseManager.markMessagesAsRead(args.booking.id)
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        chatListener?.remove()
+    }
+
+    private fun setupRecyclerView() {
+        // --- THE FIX ---
+        // We now pass a mutableListOf() instead of an emptyList()
+        chatAdapter = ChatAdapter(mutableListOf())
         val chatLayoutManager = LinearLayoutManager(context).apply { stackFromEnd = true }
         binding.chatRecyclerView.layoutManager = chatLayoutManager
+        binding.chatRecyclerView.adapter = chatAdapter
+    }
 
-        FirebaseManager.addChatMessagesListener(bookingId) { messages ->
-            val uid = currentUser?.id ?: ""
-            // We set the 'isSentByUser' flag here for the UI
-            messages.forEach { it.isSentByUser = (it.senderUid  == uid) }
-            binding.chatRecyclerView.adapter = ChatAdapter(messages)
+    private fun listenForMessages(bookingId: String) {
+        // We now store the returned listener in our class property
+        chatListener = FirebaseManager.addChatMessagesListener(bookingId) { messages ->
+            // This check is crucial: only update the UI if the view still exists
+            if (view != null) {
+                val uid = Firebase.auth.currentUser?.uid ?: ""
+                messages.forEach { it.isSentByUser = (it.senderUid == uid) }
+                (binding.chatRecyclerView.adapter as ChatAdapter).updateData(messages)
+            }
         }
+    }
 
-        binding.sendButton.setOnClickListener {
-            val messageText = binding.messageInput.text.toString().trim()
-            if (messageText.isNotEmpty() && currentUser != null) {
-                // Create the message object to be saved to Firebase
-                val message = ChatMessage(
-                    bookingId = bookingId,
-                    senderUid  = currentUser!!.id,
-                    senderName = currentUser!!.name,
-                    messageText = messageText,
-                    timestamp = System.currentTimeMillis()
-                )
+    private fun sendMessage(bookingId: String) {
+        val messageText = binding.messageInput.text.toString().trim()
+        val currentUser = Firebase.auth.currentUser
 
-                // Send the message via FirebaseManager
-                viewLifecycleOwner.lifecycleScope.launch {
-                    val result = FirebaseManager.sendChatMessage(bookingId, message)
-                    if (result.isSuccess) {
-                        binding.messageInput.setText("") // Clear the input field
-                    } else {
-                        Toast.makeText(context, "Failed to send message.", Toast.LENGTH_SHORT).show()
-                    }
+        if (messageText.isNotEmpty() && currentUser != null) {
+            val message = ChatMessage(
+                bookingId = bookingId,
+                senderUid = currentUser.uid,
+                senderName = currentUser.displayName ?: "Customer",
+                messageText = messageText
+            )
+
+            viewLifecycleOwner.lifecycleScope.launch {
+                val result = FirebaseManager.sendChatMessage(bookingId, message)
+                if (result.isSuccess) {
+                    binding.messageInput.setText("") // Clear the input field after sending
+                } else {
+                    Toast.makeText(context, "Failed to send message.", Toast.LENGTH_SHORT).show()
                 }
             }
         }

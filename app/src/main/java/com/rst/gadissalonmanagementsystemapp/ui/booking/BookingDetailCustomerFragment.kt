@@ -1,6 +1,7 @@
 package com.rst.gadissalonmanagementsystemapp.ui.booking
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -29,6 +30,7 @@ class BookingDetailCustomerFragment : Fragment() {
     private val args: BookingDetailCustomerFragmentArgs by navArgs()
     private val mainViewModel: MainViewModel by activityViewModels()
     private var chatListener: ListenerRegistration? = null
+    private lateinit var chatAdapter: ChatAdapter
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentBookingDetailCustomerBinding.inflate(inflater, container, false)
@@ -39,9 +41,8 @@ class BookingDetailCustomerFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         val booking = args.booking
 
-        // Find the full hairstyle object from the ViewModel to get its image URL
+        // Populate the booking details card
         val hairstyle = mainViewModel.allHairstyles.value?.find { it.id == booking.hairstyleId }
-
         binding.hairstyleImageDetail.load(hairstyle?.imageUrl) {
             placeholder(R.drawable.ic_placeholder_image)
         }
@@ -49,14 +50,18 @@ class BookingDetailCustomerFragment : Fragment() {
         binding.stylistNameDetail.text = "With: ${booking.stylistName}"
         binding.bookingTimeDetail.text = "On: ${booking.date} at ${booking.time}"
 
-        setupChat(booking.id)
-
+        setupRecyclerView()
+        binding.sendButton.setOnClickListener { sendMessage(booking.id) }
     }
 
     override fun onStart() {
         super.onStart()
         // Start listening for messages when the screen becomes visible
         listenForMessages(args.booking.id)
+        viewLifecycleOwner.lifecycleScope.launch {
+            Log.d("CustomerChat", "Screen visible. Marking messages as read for booking: ${args.booking.id}")
+            FirebaseManager.markMessagesAsRead(args.booking.id)
+        }
     }
 
     override fun onStop() {
@@ -65,24 +70,24 @@ class BookingDetailCustomerFragment : Fragment() {
         chatListener?.remove()
     }
 
-    private fun setupChat(bookingId: String) {
+    private fun setupRecyclerView() {
+        // --- THE FIX ---
+        // We now pass a mutableListOf() instead of an emptyList()
+        chatAdapter = ChatAdapter(mutableListOf())
         val chatLayoutManager = LinearLayoutManager(context).apply { stackFromEnd = true }
         binding.chatRecyclerView.layoutManager = chatLayoutManager
-        binding.chatRecyclerView.adapter = ChatAdapter(emptyList()) // Start with an empty adapter
-
-        binding.sendButton.setOnClickListener {
-            sendMessage(bookingId)
-        }
+        binding.chatRecyclerView.adapter = chatAdapter
     }
-
     private fun listenForMessages(bookingId: String) {
-        // We now store the returned listener in our class property
+        // This is now the ONLY place where the listener is created.
         chatListener = FirebaseManager.addChatMessagesListener(bookingId) { messages ->
-            // This check is crucial: only update the UI if the view still exists
             if (view != null) {
                 val uid = Firebase.auth.currentUser?.uid ?: ""
                 messages.forEach { it.isSentByUser = (it.senderUid == uid) }
-                (binding.chatRecyclerView.adapter as ChatAdapter).updateData(messages)
+                chatAdapter.updateData(messages)
+                if (messages.isNotEmpty()) {
+                    binding.chatRecyclerView.scrollToPosition(messages.size - 1)
+                }
             }
         }
     }
@@ -96,8 +101,7 @@ class BookingDetailCustomerFragment : Fragment() {
                 bookingId = bookingId,
                 senderUid = currentUser.uid,
                 senderName = currentUser.displayName ?: "Customer",
-                messageText = messageText,
-                timestamp = System.currentTimeMillis()
+                messageText = messageText
             )
 
             viewLifecycleOwner.lifecycleScope.launch {

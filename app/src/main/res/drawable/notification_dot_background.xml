@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+
+    <!-- Use the status_red color you already have defined -->
+    <solid android:color="@color/colorPrimary2" />
+
+    <!-- You can adjust the size here if you want it bigger or smaller -->
+    <size
+        android:width="10dp"
+        android:height="10dp" />
+
+</shape>

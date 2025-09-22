@@ -7,12 +7,17 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
+import com.google.firebase.firestore.ListenerRegistration
 import com.rst.gadissalonmanagementsystemapp.databinding.ActivityWorkerMainBinding
 
 class WorkerMainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityWorkerMainBinding
     private lateinit var navController: NavController
+
+    private var bookingsListener: ListenerRegistration? = null
+    private var ordersListener: ListenerRegistration? = null
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,6 +36,36 @@ class WorkerMainActivity : AppCompatActivity() {
         // Call our new function to set up the UI listener
         setupNavigationListener()
     }
+
+    override fun onStart() {
+        super.onStart()
+        // When the activity starts, begin listening for new bookings and orders
+        listenForNotifications()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // When the activity stops, remove the listeners to save resources and prevent memory leaks
+        bookingsListener?.remove()
+        ordersListener?.remove()
+    }
+
+    private fun listenForNotifications() {
+        // Listener for new booking requests
+        bookingsListener = FirebaseManager.addPendingBookingsCountListener { count ->
+            val badge = binding.bottomNavWorker.getOrCreateBadge(R.id.nav_worker_bookings)
+            badge.isVisible = count > 0
+            badge.number = count
+        }
+
+        // Listener for new product orders
+        ordersListener = FirebaseManager.addPendingOrdersCountListener { count ->
+            val badge = binding.bottomNavWorker.getOrCreateBadge(R.id.nav_worker_orders)
+            badge.isVisible = count > 0
+            badge.number = count
+        }
+    }
+
 
     private fun setupNavigationListener() {
         // Handle the back button click

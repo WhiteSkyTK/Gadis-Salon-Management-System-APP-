@@ -3,12 +3,14 @@ package com.rst.gadissalonmanagementsystemapp
 import android.os.Bundle
 import android.view.View
 import android.view.animation.AnimationUtils
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.NavHostFragment
+import com.google.firebase.firestore.ListenerRegistration
 import com.rst.gadissalonmanagementsystemapp.databinding.ActivityCustomerMainBinding
 
 class CustomerMainActivity : AppCompatActivity() {
@@ -17,11 +19,13 @@ class CustomerMainActivity : AppCompatActivity() {
     private lateinit var navController: NavController
     val mainViewModel: MainViewModel by viewModels()
     private var currentNavIndex = 0
+    private var notificationListener: ListenerRegistration? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityCustomerMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        enableEdgeToEdge()
 
         mainViewModel.loadCurrentUser()
         mainViewModel.loadAllHairstyles()
@@ -30,9 +34,36 @@ class CustomerMainActivity : AppCompatActivity() {
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         navController = navHostFragment.navController
 
-        // Call both setup functions
         setupBottomNavigation()
         setupUiVisibilityListener()
+        setupPullToRefresh()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        // Start listening for unread notifications
+        notificationListener = FirebaseManager.addUnreadNotificationsListener { unreadCount ->
+            binding.notificationDot.visibility = if (unreadCount > 0) View.VISIBLE else View.GONE
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        notificationListener?.remove()
+    }
+
+    private fun setupPullToRefresh() {
+        binding.swipeRefreshLayout.setOnRefreshListener {
+            // When the user pulls to refresh, reload all the core data
+            mainViewModel.loadCurrentUser()
+            mainViewModel.loadAllHairstyles()
+            // You can add other data reloads here (e.g., products)
+
+            // Hide the refreshing indicator after a short delay
+            binding.swipeRefreshLayout.postDelayed({
+                binding.swipeRefreshLayout.isRefreshing = false
+            }, 1500)
+        }
     }
 
     private fun setupUiVisibilityListener() {
@@ -70,24 +101,16 @@ class CustomerMainActivity : AppCompatActivity() {
 
         // --- LISTENER FOR UI CHANGES ---
         navController.addOnDestinationChangedListener { _, destination, _ ->
-            // Part 1: Handle Top Bar Appearance
             when (destination.id) {
-                R.id.productDetailFragment,
-                R.id.hairstyleDetailFragment,
-                R.id.customerEditProfileFragment,
-                R.id.orderDetailFragment,
-                R.id.purchaseConfirmationFragment,
-                R.id.bookingConfirmationFragment -> showDetailTopBar()
+                R.id.productDetailFragment, R.id.hairstyleDetailFragment,
+                R.id.bookingConfirmationFragment, R.id.customerEditProfileFragment,
+                R.id.orderDetailFragment, R.id.purchaseConfirmationFragment -> showDetailTopBar()
 
-                R.id.settingsFragment,
-                R.id.aboutUsFragment,
-                R.id.contactFragment,
-                R.id.locationFragment,
-                R.id.favoritesFragment,
-                R.id.cartFragment,
-                R.id.helpCenterFragment,
-                R.id.mySupportTicketsFragment,
-                R.id.notificationsFragment -> showProfileDetailTopBar()
+                R.id.settingsFragment, R.id.aboutUsFragment, R.id.contactFragment,
+                R.id.locationFragment, R.id.favoritesFragment, R.id.cartFragment,
+                R.id.notificationsFragment, R.id.helpCenterFragment,
+                R.id.mySupportTicketsFragment, R.id.faqFragment -> showProfileDetailTopBar()
+
                 else -> showHomeTopBar()
             }
 
@@ -146,19 +169,31 @@ class CustomerMainActivity : AppCompatActivity() {
     }
 
     private fun animateViewVisibility(view: View, show: Boolean) {
-        if (show && view.visibility == View.GONE) {
-            view.startAnimation(AnimationUtils.loadAnimation(this, R.anim.fade_in))
-            view.visibility = View.VISIBLE
-        } else if (!show && view.visibility == View.VISIBLE) {
-            view.startAnimation(AnimationUtils.loadAnimation(this, R.anim.fade_out))
-            view.visibility = View.GONE
+        // Use slide animations for the icon groups
+        val animationId = if (show) R.anim.slide_in_from_right else R.anim.slide_out_to_right
+
+        // Use fade for the back button for a cleaner look
+        val backButtonAnimationId = if (show) R.anim.fade_in else R.anim.fade_out
+
+        if (view.id == R.id.back_button_card) {
+            if ((show && view.visibility != View.VISIBLE) || (!show && view.visibility == View.VISIBLE)) {
+                view.startAnimation(AnimationUtils.loadAnimation(this, backButtonAnimationId))
+                view.visibility = if (show) View.VISIBLE else View.GONE
+            }
+        } else {
+            if ((show && view.visibility != View.VISIBLE) || (!show && view.visibility == View.VISIBLE)) {
+                view.startAnimation(AnimationUtils.loadAnimation(this, animationId))
+                view.visibility = if (show) View.VISIBLE else View.GONE
+            }
         }
     }
 
     private fun showHomeTopBar() {
         animateViewVisibility(binding.backButtonCard, false)
-        binding.bottomNavBar.visibility = View.VISIBLE // Bottom bar doesn't need animation
-        animateViewVisibility(binding.iconsCard, true)
+        binding.bottomNavBar.visibility = View.VISIBLE
+        // Animate the group of icons
+        animateViewVisibility(binding.homeIconsGroup, true)
+        // Animate the single icon away
         animateViewVisibility(binding.iconFavoriteMain, false)
 
         val params = binding.salonNameCard.layoutParams as ConstraintLayout.LayoutParams
@@ -169,7 +204,9 @@ class CustomerMainActivity : AppCompatActivity() {
     private fun showDetailTopBar() {
         animateViewVisibility(binding.backButtonCard, true)
         binding.bottomNavBar.visibility = View.GONE
-        animateViewVisibility(binding.iconsCard, false)
+        // Animate the group away
+        animateViewVisibility(binding.homeIconsGroup, false)
+        // Animate the single icon in
         animateViewVisibility(binding.iconFavoriteMain, true)
 
         val params = binding.salonNameCard.layoutParams as ConstraintLayout.LayoutParams
@@ -180,50 +217,13 @@ class CustomerMainActivity : AppCompatActivity() {
     private fun showProfileDetailTopBar() {
         animateViewVisibility(binding.backButtonCard, true)
         binding.bottomNavBar.visibility = View.GONE
-        animateViewVisibility(binding.iconsCard, true)
+        // Animate the group in
+        animateViewVisibility(binding.homeIconsGroup, true)
+        // Animate the single icon away
         animateViewVisibility(binding.iconFavoriteMain, false)
 
         val params = binding.salonNameCard.layoutParams as ConstraintLayout.LayoutParams
         params.horizontalBias = 0.5f
         binding.salonNameCard.layoutParams = params
     }
-
-    /*private fun showHomeTopBar() {
-        binding.backButtonCard.visibility = View.GONE
-        binding.bottomNavBar.visibility = View.VISIBLE
-        binding.iconFavorites.visibility = View.VISIBLE
-        binding.iconCart.visibility = View.VISIBLE
-        binding.iconNotifications.visibility = View.VISIBLE
-        binding.iconFavoriteMain.visibility = View.GONE
-
-        val params = binding.salonNameCard.layoutParams as ConstraintLayout.LayoutParams
-        params.horizontalBias = 0.05f
-        binding.salonNameCard.layoutParams = params
-    }
-
-    private fun showDetailTopBar() {
-        binding.backButtonCard.visibility = View.VISIBLE
-        binding.bottomNavBar.visibility = View.GONE
-        binding.iconFavorites.visibility = View.GONE
-        binding.iconCart.visibility = View.GONE
-        binding.iconNotifications.visibility = View.GONE
-        binding.iconFavoriteMain.visibility = View.VISIBLE
-        val params = binding.salonNameCard.layoutParams as ConstraintLayout.LayoutParams
-        params.horizontalBias = 0.5f
-        binding.salonNameCard.layoutParams = params
-    }
-
-    private fun showProfileDetailTopBar() {
-        binding.backButtonCard.visibility = View.VISIBLE
-        binding.bottomNavBar.visibility = View.GONE
-        binding.iconFavorites.visibility = View.VISIBLE
-        binding.iconCart.visibility = View.VISIBLE
-        binding.iconNotifications.visibility = View.VISIBLE
-        binding.iconFavoriteMain.visibility = View.GONE
-        val params = binding.salonNameCard.layoutParams as ConstraintLayout.LayoutParams
-        params.horizontalBias = 0.5f
-        binding.salonNameCard.layoutParams = params
-    }
-     */
 }
-

@@ -37,6 +37,12 @@ class NotificationsFragment : Fragment() {
                 adapter.updateData(notifications)
             }
         }
+
+        // --- THIS IS THE FIX ---
+        // As soon as the screen is visible, mark all notifications as read.
+        viewLifecycleOwner.lifecycleScope.launch {
+            FirebaseManager.markAllNotificationsAsRead()
+        }
     }
 
     override fun onStop() {
@@ -45,18 +51,9 @@ class NotificationsFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
-        adapter = NotificationsAdapter(
-            notifications = emptyList(),
-            onItemClick = { notification ->
-                // When a user taps a notification, mark it as read
-                if (!notification.isRead) {
-                    viewLifecycleOwner.lifecycleScope.launch {
-                        FirebaseManager.markNotificationAsRead(notification.id)
-                        // The real-time listener will automatically refresh the UI
-                    }
-                }
-            }
-        )
+        adapter = NotificationsAdapter(emptyList()) { notification ->
+            //TODO In the future, you could navigate to the specific booking or order here
+        }
         binding.notificationsRecyclerView.layoutManager = LinearLayoutManager(context)
         binding.notificationsRecyclerView.adapter = adapter
     }

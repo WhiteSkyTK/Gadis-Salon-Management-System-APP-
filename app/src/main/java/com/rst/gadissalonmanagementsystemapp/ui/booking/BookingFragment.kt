@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.firebase.firestore.ListenerRegistration
 import com.rst.gadissalonmanagementsystemapp.ui.booking.BookingAdapter
 import com.rst.gadissalonmanagementsystemapp.FirebaseManager
 import com.rst.gadissalonmanagementsystemapp.MainViewModel
@@ -20,6 +21,7 @@ class BookingFragment : Fragment() {
     private val binding get() = _binding!!
     private val mainViewModel: MainViewModel by activityViewModels()
     private lateinit var bookingAdapter: BookingAdapter
+    private var bookingsListener: ListenerRegistration? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentBookingBinding.inflate(inflater, container, false)
@@ -29,13 +31,23 @@ class BookingFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
+    }
+
+
+    override fun onStart() {
+        super.onStart()
+        // Start listening for live updates when the screen is visible
         listenForMyBookings()
     }
 
+    override fun onStop() {
+        super.onStop()
+        // Stop listening when the screen is not visible to prevent memory leaks
+        bookingsListener?.remove()
+    }
+
     private fun setupRecyclerView() {
-        // Create the adapter, passing an empty hairstyle list for now
         bookingAdapter = BookingAdapter(emptyList(), mainViewModel.allHairstyles.value ?: emptyList()) { booking ->
-            // This is what happens when a user clicks on a booking
             val action = BookingFragmentDirections.actionBookingFragmentToBookingDetailCustomerFragment(booking)
             findNavController().navigate(action)
         }
@@ -46,10 +58,10 @@ class BookingFragment : Fragment() {
     }
 
     private fun listenForMyBookings() {
-        // Start listening for real-time updates to the current user's bookings
-        FirebaseManager.addCurrentUserBookingsListener { myBookings ->
-            // When the data changes, update the adapter's list
-            bookingAdapter.updateData(myBookings)
+        bookingsListener = FirebaseManager.addCurrentUserBookingsListener { myBookings ->
+            if (view != null) { // Only update if the view is still alive
+                bookingAdapter.updateData(myBookings)
+            }
         }
     }
 

@@ -1,11 +1,13 @@
 package com.rst.gadissalonmanagementsystemapp.ui.chat
 
+import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.rst.gadissalonmanagementsystemapp.ChatMessage
 import com.rst.gadissalonmanagementsystemapp.R
@@ -15,14 +17,17 @@ import java.util.Date
 import java.util.Locale
 
 class ChatAdapter(
-    private var messages: List<ChatMessage>
+    // The adapter now internally manages a MutableList for safety
+    private val messages: MutableList<ChatMessage>
 ) : RecyclerView.Adapter<ChatAdapter.ViewHolder>() {
+
+    private val TAG = "ChatAdapter"
 
     inner class ViewHolder(private val binding: ItemChatMessageBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(message: ChatMessage) {
             binding.messageText.text = message.messageText
             val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
-            binding.timestampText.text = sdf.format(Date(message.timestamp))
+            binding.timestampText.text = message.timestamp?.let { sdf.format(it) } ?: "sending..."
 
             // Align the bubble
             if (message.isSentByUser) {
@@ -31,22 +36,20 @@ class ChatAdapter(
                 (binding.root as LinearLayout).gravity = Gravity.START
             }
 
-            // --- THIS IS THE NEW READ RECEIPT LOGIC ---
             if (message.isSentByUser) {
                 binding.readReceiptIcon.visibility = View.VISIBLE
+                Log.d(TAG, "Binding sent message. Status: ${message.status}")
                 when (message.status.uppercase()) {
                     "READ" -> {
                         binding.readReceiptIcon.setImageResource(R.drawable.ic_done_all)
                         binding.readReceiptIcon.setColorFilter(ContextCompat.getColor(itemView.context, R.color.colorPrimary2))
                     }
-                    else -> { // "SENT" or "DELIVERED"
+                    else -> { // "SENT"
                         binding.readReceiptIcon.setImageResource(R.drawable.ic_done)
-                        // Use the default secondary text color for the unread ticks
                         binding.readReceiptIcon.setColorFilter(ContextCompat.getColor(itemView.context, R.color.textColorSecondary))
                     }
                 }
             } else {
-                // If it's a received message, hide the icon.
                 binding.readReceiptIcon.visibility = View.GONE
             }
         }
@@ -64,7 +67,13 @@ class ChatAdapter(
     override fun getItemCount(): Int = messages.size
 
     fun updateData(newMessages: List<ChatMessage>) {
-        this.messages = newMessages
-        notifyDataSetChanged()
+        val diffCallback = ChatMessageDiffCallback(this.messages, newMessages)
+        val diffResult = DiffUtil.calculateDiff(diffCallback)
+
+        // Safely clear and update the mutable list
+        messages.clear()
+        messages.addAll(newMessages)
+
+        diffResult.dispatchUpdatesTo(this) // Efficiently update the UI
     }
 }

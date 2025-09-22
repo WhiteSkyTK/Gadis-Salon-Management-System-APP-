@@ -7,6 +7,7 @@ plugins {
     id("androidx.navigation.safeargs.kotlin")
     id("kotlin-parcelize")
     alias(libs.plugins.google.gms.google.services)
+    id("com.google.firebase.crashlytics")
 }
 
 val properties = Properties()
@@ -86,6 +87,7 @@ dependencies {
     implementation("com.google.firebase:firebase-appcheck-playintegrity:19.0.0")
     implementation("com.google.firebase:firebase-messaging-ktx:24.1.2")
     implementation("com.google.firebase:firebase-functions-ktx:21.2.1")
+    implementation("com.google.firebase:firebase-crashlytics-ktx:19.4.4")
     debugImplementation(libs.firebase.appcheck.debug)
     implementation(libs.google.firebase.appcheck.playintegrity)
 
@@ -110,4 +112,5 @@ dependencies {
 
     implementation(libs.coil)
     implementation(libs.places)
+    implementation("com.prolificinteractive:material-calendarview:1.4.3")
 }

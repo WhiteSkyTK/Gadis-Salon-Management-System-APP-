@@ -120,6 +120,7 @@
             android:text="Log Out"
             android:textColor="@color/status_red" />
 
+
         <!-- Version Number -->
         <TextView
             android:id="@+id/version_text"

@@ -48,19 +48,17 @@ class AdminMainActivity : AppCompatActivity() {
     }
 
     private fun logIdTokenClaims() {
-        val user = Firebase.auth.currentUser
-        user?.getIdToken(true) // Force refresh the token
+        Firebase.auth.currentUser?.getIdToken(true) // Force refresh
             ?.addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    val idTokenResult = task.result
-                    val claims = idTokenResult?.claims
-                    Log.d("TokenDebug", "--- User Token Claims ---")
+                    val claims = task.result?.claims
+                    Log.d("TokenDebug", "--- FRESH TOKEN CLAIMS ---")
                     claims?.forEach { (key, value) ->
                         Log.d("TokenDebug", "$key = $value")
                     }
-                    Log.d("TokenDebug", "-------------------------")
+                    Log.d("TokenDebug", "--------------------------")
                 } else {
-                    Log.e("TokenDebug", "Failed to get token", task.exception)
+                    Log.e("TokenDebug", "Failed to get fresh token", task.exception)
                 }
             }
     }

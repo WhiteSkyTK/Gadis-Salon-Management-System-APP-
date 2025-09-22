@@ -100,14 +100,18 @@ class ProfileFragment : Fragment(),  ProfilePictureBottomSheet.PictureOptionList
             findNavController().navigate(R.id.action_profileFragment_to_aboutUsFragment)
         }
         binding.logOutButton.setOnClickListener {
+            // 1. Sign out from Firebase
             Firebase.auth.signOut()
+
+            // 2. Clear the saved user role from the local cache
             val prefs = requireActivity().getSharedPreferences(Loading.PREFS_NAME, Context.MODE_PRIVATE)
             prefs.edit().remove(Loading.USER_ROLE_KEY).apply()
-            val intent = Intent(requireContext(), Loading::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            }
+
+            // 3. Go back to the Loading screen and clear all previous screens
+            val intent = Intent(requireContext(), Loading::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(intent)
-            requireActivity().finish()
+            requireActivity().finish() // Close the customer activity
         }
     }
 

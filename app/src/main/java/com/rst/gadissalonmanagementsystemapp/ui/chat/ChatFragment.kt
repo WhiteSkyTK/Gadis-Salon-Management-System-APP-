@@ -41,8 +41,9 @@ class ChatFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
-        // Create the adapter once with an empty list
-        chatAdapter = ChatAdapter(emptyList())
+        // --- THIS IS THE FIX ---
+        // We now pass a mutableListOf() instead of an emptyList()
+        chatAdapter = ChatAdapter(mutableListOf())
         binding.chatRecyclerView.apply {
             layoutManager = LinearLayoutManager(context).apply {
                 stackFromEnd = true
@@ -50,14 +51,16 @@ class ChatFragment : Fragment() {
             adapter = chatAdapter
         }
     }
-
     private fun listenForMessages(bookingId: String) {
-        // Start listening for real-time updates to this specific chat
         FirebaseManager.addChatMessagesListener(bookingId) { messages ->
-            val uid = Firebase.auth.currentUser?.uid ?: ""
-            messages.forEach { it.isSentByUser = (it.senderUid == uid) }
-            chatAdapter.updateData(messages) // We will add this to the adapter
-            binding.chatRecyclerView.scrollToPosition(messages.size - 1)
+            if (view != null) {
+                val uid = Firebase.auth.currentUser?.uid ?: ""
+                messages.forEach { it.isSentByUser = (it.senderUid == uid) }
+                chatAdapter.updateData(messages)
+                if (messages.isNotEmpty()) {
+                    binding.chatRecyclerView.scrollToPosition(messages.size - 1)
+                }
+            }
         }
     }
 
@@ -70,8 +73,7 @@ class ChatFragment : Fragment() {
                 bookingId = bookingId,
                 senderUid = currentUser.uid,
                 senderName = currentUser.displayName ?: "User",
-                messageText = messageText,
-                timestamp = System.currentTimeMillis()
+                messageText = messageText
             )
 
             viewLifecycleOwner.lifecycleScope.launch {

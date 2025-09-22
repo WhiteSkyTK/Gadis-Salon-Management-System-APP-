@@ -25,7 +25,6 @@ class WorkerSettingsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupThemeSwitch()
-        setupSignOutButton()
     }
 
     private fun setupThemeSwitch() {
@@ -36,19 +35,6 @@ class WorkerSettingsFragment : Fragment() {
             val newMode = if (isChecked) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
             AppCompatDelegate.setDefaultNightMode(newMode)
             prefs.edit().putInt("theme_mode", newMode).apply()
-        }
-    }
-
-    private fun setupSignOutButton() {
-        binding.signOutButton.setOnClickListener {
-            Firebase.auth.signOut()
-            val prefs = requireActivity().getSharedPreferences(Loading.PREFS_NAME, Context.MODE_PRIVATE)
-            prefs.edit().remove(Loading.USER_ROLE_KEY).apply()
-
-            val intent = Intent(requireContext(), Loading::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            startActivity(intent)
-            requireActivity().finish()
         }
     }
 

@@ -235,22 +235,12 @@ class AdminAddUserFragment : Fragment(), ProfilePictureBottomSheet.PictureOption
             val createResult = FirebaseManager.createUserByAdmin(name, email, phone, password, role, selectedImageUri?.toString() ?: "")
 
             if (createResult.isSuccess) {
-                val newUserId = createResult.getOrNull()!!
-
-                // Step 2: Immediately sign the admin back in to get their admin token
                 val reLoginResult = FirebaseManager.loginUser(adminEmail, adminPassword)
-
                 if (reLoginResult.isSuccess) {
-                    // Step 3: Now that the admin is logged in again, set the new user's role
-                    val roleResult = FirebaseManager.setRoleForUser(newUserId, role)
-                    if (roleResult.isSuccess) {
-                        Toast.makeText(context, "$role '$name' added successfully", Toast.LENGTH_SHORT).show()
-                        findNavController().popBackStack()
-                    } else {
-                        Toast.makeText(context, "User created, but failed to set role: ${roleResult.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
-                    }
+                    Toast.makeText(context, "$role '$name' added successfully", Toast.LENGTH_SHORT).show()
+                    findNavController().popBackStack()
                 } else {
-                    Toast.makeText(context, "Admin re-authentication failed. Please log out and back in.", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, "User created, but admin re-login failed. Please log out and back in.", Toast.LENGTH_LONG).show()
                 }
             } else {
                 Toast.makeText(context, "Error creating user: ${createResult.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()

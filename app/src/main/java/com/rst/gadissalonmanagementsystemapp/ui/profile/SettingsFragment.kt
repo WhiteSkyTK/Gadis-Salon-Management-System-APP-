@@ -26,7 +26,6 @@ class SettingsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         setupThemeSwitch()
-        setupSignOutButton()
     }
 
     private fun setupThemeSwitch() {
@@ -50,22 +49,6 @@ class SettingsFragment : Fragment() {
         }
     }
 
-    private fun setupSignOutButton() {
-        binding.signOutButton.setOnClickListener {
-            // Sign out from Firebase
-            Firebase.auth.signOut()
-
-            // Clear the saved login state from SharedPreferences
-            val prefs = requireActivity().getSharedPreferences(Loading.PREFS_NAME, Context.MODE_PRIVATE)
-            prefs.edit().remove(Loading.USER_ROLE_KEY).apply()
-
-            // Navigate back to the start of the app
-            val intent = Intent(requireContext(), Loading::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            startActivity(intent)
-            requireActivity().finish()
-        }
-    }
 
     override fun onDestroyView() {
         super.onDestroyView()

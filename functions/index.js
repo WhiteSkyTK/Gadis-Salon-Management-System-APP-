@@ -293,3 +293,117 @@ exports.autoCancelMissedBookings = onSchedule("every 24 hours", async (event) =>
     console.log(`Successfully updated ${missedBookings.size} bookings.`);
     return;
 });
+
+/**
+ * v2 Callable function that securely calculates and returns available
+ * time slots for a given stylist, date, and service duration.
+ */
+exports.getAvailableSlots = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "You must be logged in to check availability.");
+  }
+
+  const { stylistName, date, hairstyleId } = request.data;
+  const db = admin.firestore();
+
+  try {
+    // Step 1: Get all possible salon hours
+    const hoursDoc = await db.collection("app_content").doc("salon_hours").get();
+    const allSlots = hoursDoc.data().time_slots || [];
+
+    // Step 2: Get the duration of the requested hairstyle
+    const hairstyleDoc = await db.collection("hairstyles").doc(hairstyleId).get();
+    const duration = hairstyleDoc.data().durationHours || 1;
+
+    // Step 3: Get all existing bookings for that stylist on that day
+    const bookingsQuery = await db.collection("bookings")
+        .where("stylistName", "==", stylistName)
+        .where("date", "==", date)
+        .where("status", "==", "Confirmed")
+        .get();
+
+    const existingBookings = [];
+    bookingsQuery.forEach((doc) => existingBookings.push(doc.data()));
+
+    // Step 4: Calculate which slots are occupied
+    const occupiedSlots = new Set();
+    for (const booking of existingBookings) {
+      const bookedHairstyleDoc = await db.collection("hairstyles").where("name", "==", booking.serviceName).limit(1).get();
+      const bookedDuration = bookedHairstyleDoc.docs[0]?.data().durationHours || 1;
+      const startTimeHour = parseInt(booking.time.split(":")[0], 10);
+      for (let i = 0; i < bookedDuration; i++) {
+        occupiedSlots.add(`${String(startTimeHour + i).padStart(2, "0")}:00`);
+      }
+    }
+
+    // Step 5: Return only the slots that are not occupied
+    const availableSlots = allSlots.filter((slot) => !occupiedSlots.has(slot));
+
+    return { slots: availableSlots };
+  } catch (error) {
+    console.error("Error getting available slots:", error);
+    throw new HttpsError("internal", "Failed to get available slots.");
+  }
+});
+
+/**
+ * A scheduled function that runs automatically every hour to send
+ * reminders for appointments happening in the next hour.
+ */
+exports.sendBookingReminders = onSchedule("every 1 hours", async (event) => {
+    console.log("Running hourly check for upcoming booking reminders...");
+
+    const now = new Date();
+    const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
+    const db = admin.firestore();
+
+    // Find all confirmed bookings with a timestamp in the next hour.
+    const query = db.collection("bookings")
+        .where("timestamp", ">=", now)
+        .where("timestamp", "<=", oneHourFromNow)
+        .where("status", "==", "Confirmed");
+
+    const upcomingBookings = await query.get();
+
+    if (upcomingBookings.empty) {
+        console.log("No upcoming bookings to send reminders for.");
+        return;
+    }
+
+    const notificationPromises = [];
+    upcomingBookings.forEach(doc => {
+        const booking = doc.data();
+
+        // --- Create Notification for the Customer ---
+        const customerNotification = {
+            userId: booking.customerId,
+            title: "Appointment Reminder",
+            message: `Your appointment for ${booking.serviceName} with ${booking.stylistName} is in about an hour.`,
+            timestamp: Date.now(),
+            isRead: false,
+        };
+        const customerPromise = db.collection("users").doc(booking.customerId).collection("notifications").add(customerNotification);
+        notificationPromises.push(customerPromise);
+
+        // --- Create Notification for the Worker ---
+        const workerId = booking.stylistId;
+        if (workerId) {
+             const workerNotification = {
+                userId: workerId,
+                title: "Appointment Reminder",
+                message: `Your appointment with ${booking.customerName} for ${booking.serviceName} is in about an hour.`,
+                timestamp: Date.now(),
+                isRead: false,
+            };
+            const workerPromise = db.collection("users").doc(workerId).collection("notifications").add(workerNotification);
+            notificationPromises.push(workerPromise);
+        }
+        console.log(`Queued reminder for booking ${doc.id}`);
+    });
+
+    // Wait for all the notification writes to complete in parallel
+    await Promise.all(notificationPromises);
+    console.log(`Successfully sent reminders for ${upcomingBookings.size} bookings.`);
+
+    return;
+});

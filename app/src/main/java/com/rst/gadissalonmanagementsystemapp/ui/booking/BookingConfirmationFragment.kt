@@ -145,38 +145,47 @@ class BookingConfirmationFragment : Fragment() {
 
     private fun updateAvailableTimeSlots() {
         val date = selectedDate.takeIf { it.isNotBlank() } ?: return
-        Log.d(TAG, "Updating time slots for date: $date and stylist: ${selectedStylist?.name}")
+        val stylist = selectedStylist
+
+        Log.d(TAG, "Updating time slots for date: $date and stylist: ${stylist?.name}")
 
         viewLifecycleOwner.lifecycleScope.launch {
             val masterSlotsResult = FirebaseManager.getSalonTimeSlots()
-            if (!masterSlotsResult.isSuccess) return@launch
-
+            if (!masterSlotsResult.isSuccess) {
+                Toast.makeText(context, "Error fetching salon hours.", Toast.LENGTH_SHORT).show()
+                return@launch
+            }
             val masterSlotList = masterSlotsResult.getOrNull() ?: emptyList()
-            var availableSlots = masterSlotList.toMutableList()
+            var availableSlots: List<String>
 
+            // --- THIS IS THE NEW, SECURE LOGIC ---
+            if (stylist != null) {
+                // If a specific stylist is chosen, call our secure Cloud Function
+                val result = FirebaseManager.getAvailableSlots(stylist.name, date, args.hairstyle.id)
+                if (result.isSuccess) {
+                    availableSlots = result.getOrNull() ?: emptyList()
+                } else {
+                    Toast.makeText(context, "Could not fetch availability.", Toast.LENGTH_SHORT).show()
+                    availableSlots = emptyList() // Show no slots on error
+                }
+            } else {
+                // If "Any Available" is chosen, show all master slots for now
+                availableSlots = masterSlotList
+            }
+
+            // Filter for the 3-hour lead time if the selected date is today
             val todayDateString = SimpleDateFormat("dd MMM, yyyy", Locale.getDefault()).format(Date())
             if (date == todayDateString) {
                 val calendar = Calendar.getInstance()
                 val currentHour = calendar.get(Calendar.HOUR_OF_DAY)
 
-                // Remove all time slots that are too soon
-                availableSlots.removeAll { slot ->
+                (availableSlots as MutableList).removeAll { slot ->
                     val slotHour = slot.split(":")[0].toInt()
                     slotHour < currentHour + BOOKING_LEAD_TIME_HOURS
                 }
-                Log.d(TAG, "Today is selected. After lead-time filter, available slots: $availableSlots")
             }
 
-            if (selectedStylist != null) {
-                val bookingsResult = FirebaseManager.getBookingsForStylistOnDate(selectedStylist!!.name, date)
-                if (bookingsResult.isSuccess) {
-                    val existingBookings = bookingsResult.getOrNull() ?: emptyList()
-                    val occupiedSlots = getOccupiedSlots(existingBookings)
-                    availableSlots.removeAll(occupiedSlots)
-                }
-            }
-
-            binding.timeSlotRecyclerView.layoutManager = GridLayoutManager(context, 4)
+            Log.d(TAG, "Final available slots: $availableSlots")
             binding.timeSlotRecyclerView.adapter = TimeSlotAdapter(masterSlotList, availableSlots) { time ->
                 selectedTime = time
                 checkIfReadyToBook()

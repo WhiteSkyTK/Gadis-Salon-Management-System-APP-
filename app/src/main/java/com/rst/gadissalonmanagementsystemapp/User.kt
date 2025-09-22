@@ -12,6 +12,7 @@ data class User(
     val email: String = "",
     val phone: String = "",
     var imageUrl: String = "",
-    val role: String = "CUSTOMER"
+    val role: String = "CUSTOMER",
+    var fcmToken: String = ""
     // We don't need to parcelize favorites or cart
 ) : Parcelable

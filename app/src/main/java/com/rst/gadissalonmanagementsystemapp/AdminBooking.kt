@@ -8,6 +8,7 @@ data class AdminBooking(
     var id: String = "",
     val hairstyleId: String = "",
     val customerId: String = "",
+    val stylistId: String = "",
     val serviceName: String = "",
     val customerName: String = "",
     val stylistName: String = "",
