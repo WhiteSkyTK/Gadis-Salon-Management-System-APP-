@@ -1,5 +1,6 @@
 package com.rst.gadissalonmanagementsystemapp.ui.worker
 
+import android.app.AlertDialog
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -9,14 +10,17 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import coil.load
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.ListenerRegistration
+import com.rst.gadissalonmanagementsystemapp.AdminBooking
 import com.rst.gadissalonmanagementsystemapp.ChatMessage
 import com.rst.gadissalonmanagementsystemapp.FirebaseManager
+import com.rst.gadissalonmanagementsystemapp.FirebaseManager.updateBookingStatus
 import com.rst.gadissalonmanagementsystemapp.MainViewModel
 import com.rst.gadissalonmanagementsystemapp.R
 import com.rst.gadissalonmanagementsystemapp.User
@@ -61,21 +65,19 @@ class BookingDetailWorkerFragment : Fragment() {
         binding.bookingTimeDetail.text = "On: ${booking.date} at ${booking.time}"
 
         setupRecyclerView()
+        setupActionButtons(booking)
         binding.sendButton.setOnClickListener { sendMessage(booking.id) }
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            FirebaseManager.markMessagesAsRead(booking.id)
-        }
     }
 
 
     override fun onStart() {
         super.onStart()
+        // Start listening for messages when the screen becomes visible
         listenForMessages(args.booking.id)
 
-        // --- THIS IS THE FINAL, POLISHED LOGIC ---
+        // Also mark messages as read when the screen becomes visible
         viewLifecycleOwner.lifecycleScope.launch {
-            Log.d("WorkerChat", "Screen visible. Marking messages as read for booking: ${args.booking.id}")
             FirebaseManager.markMessagesAsRead(args.booking.id)
         }
     }
@@ -86,8 +88,6 @@ class BookingDetailWorkerFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
-        // --- THE FIX ---
-        // We now pass a mutableListOf() instead of an emptyList()
         chatAdapter = ChatAdapter(mutableListOf())
         val chatLayoutManager = LinearLayoutManager(context).apply { stackFromEnd = true }
         binding.chatRecyclerView.layoutManager = chatLayoutManager
@@ -95,13 +95,15 @@ class BookingDetailWorkerFragment : Fragment() {
     }
 
     private fun listenForMessages(bookingId: String) {
-        // We now store the returned listener in our class property
+        // This is now the ONLY place where the listener is created.
         chatListener = FirebaseManager.addChatMessagesListener(bookingId) { messages ->
-            // This check is crucial: only update the UI if the view still exists
             if (view != null) {
-                val uid = Firebase.auth.currentUser?.uid ?: ""
+                val uid = currentUser?.id ?: Firebase.auth.currentUser?.uid ?: ""
                 messages.forEach { it.isSentByUser = (it.senderUid == uid) }
-                (binding.chatRecyclerView.adapter as ChatAdapter).updateData(messages)
+                chatAdapter.updateData(messages)
+                if (messages.isNotEmpty()) {
+                    binding.chatRecyclerView.scrollToPosition(messages.size - 1)
+                }
             }
         }
     }
@@ -125,6 +127,42 @@ class BookingDetailWorkerFragment : Fragment() {
                 } else {
                     Toast.makeText(context, "Failed to send message.", Toast.LENGTH_SHORT).show()
                 }
+            }
+        }
+    }
+
+    private fun setupActionButtons(booking: AdminBooking) {
+        // Only show the action buttons if the booking is still 'Confirmed'
+        if (booking.status.equals("Confirmed", ignoreCase = true)) {
+            binding.actionButtonsLayout.visibility = View.VISIBLE
+        } else {
+            binding.actionButtonsLayout.visibility = View.GONE
+        }
+
+        binding.completeBookingButton.setOnClickListener {
+            updateBookingStatus(booking.id, "Completed", "Booking marked as complete!")
+        }
+
+        binding.cancelBookingButton.setOnClickListener {
+            AlertDialog.Builder(requireContext())
+                .setTitle("Cancel Booking")
+                .setMessage("Are you sure you want to cancel this appointment?")
+                .setPositiveButton("Yes, Cancel") { _, _ ->
+                    updateBookingStatus(booking.id, "Cancelled", "Booking has been cancelled.")
+                }
+                .setNegativeButton("No", null)
+                .show()
+        }
+    }
+
+    private fun updateBookingStatus(bookingId: String, newStatus: String, successMessage: String) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val result = FirebaseManager.updateBookingStatus(bookingId, newStatus)
+            if (result.isSuccess) {
+                Toast.makeText(context, successMessage, Toast.LENGTH_SHORT).show()
+                findNavController().popBackStack() // Go back to the schedule
+            } else {
+                Toast.makeText(context, "Failed to update status.", Toast.LENGTH_SHORT).show()
             }
         }
     }

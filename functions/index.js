@@ -410,3 +410,41 @@ exports.sendBookingReminders = onSchedule("every 1 hours", async (event) => {
 
     return;
 });
+
+
+/**
+ * A scheduled function that runs automatically every hour
+ * to mark past-due confirmed bookings as 'Completed'.
+ */
+exports.autoCompleteBookings = onSchedule("every 1 hours", async (event) => {
+    console.log("Running hourly check for completed bookings...");
+
+    const now = admin.firestore.Timestamp.now();
+    const db = admin.firestore();
+
+    // Find all bookings with a timestamp in the past
+    // that are still marked as 'Confirmed'.
+    const query = db.collection("bookings")
+        .where("timestamp", "<", now)
+        .where("status", "==", "Confirmed");
+
+    const pastBookings = await query.get();
+
+    if (pastBookings.empty) {
+        console.log("No past-due bookings found to complete.");
+        return;
+    }
+
+    // Create a batch write to update all of them at once for efficiency
+    const batch = db.batch();
+    pastBookings.forEach(doc => {
+        console.log(`Marking booking ${doc.id} as Completed.`);
+        batch.update(doc.ref, { status: "Completed" });
+    });
+
+    // Commit all the changes
+    await batch.commit();
+    console.log(`Successfully completed ${pastBookings.size} bookings.`);
+
+    return;
+});
