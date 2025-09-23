@@ -132,7 +132,7 @@ class BookingDetailWorkerFragment : Fragment() {
     }
 
     private fun setupActionButtons(booking: AdminBooking) {
-        // Only show the action buttons if the booking is still 'Confirmed'
+        //Only show the action buttons if the booking is still 'Confirmed'
         if (booking.status.equals("Confirmed", ignoreCase = true)) {
             binding.actionButtonsLayout.visibility = View.VISIBLE
         } else {
