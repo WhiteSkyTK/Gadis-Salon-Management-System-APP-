@@ -874,6 +874,12 @@ object FirebaseManager {
                     booking.id = doc.id // Manually set the correct document ID
                     booking
                 } ?: emptyList()
+
+                Log.d("FirebaseListener", "Listener triggered. Found ${bookingList.size} bookings for this user.")
+                if (bookingList.isNotEmpty()) {
+                    Log.d("FirebaseListener", "First booking status from Firestore: '${bookingList[0].status}'")
+                }
+
                 onUpdate(bookingList)
             }
     }

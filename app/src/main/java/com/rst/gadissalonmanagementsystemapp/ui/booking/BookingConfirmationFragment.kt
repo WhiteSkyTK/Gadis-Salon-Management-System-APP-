@@ -64,21 +64,6 @@ class BookingConfirmationFragment : Fragment() {
         }
     }
 
-
-/*
-    private fun loadInitialData() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            // First, fetch all hairstyle data so we have access to durations
-            val hairstyleResult = FirebaseManager.getAllHairstyles()
-            if (hairstyleResult.isSuccess) {
-                (activity as? CustomerMainActivity)?.mainViewModel?.allHairstyles?.value = hairstyleResult.getOrNull()
-            }
-            // Now fetch the stylists and build the UI
-            populateStylistChips(args.hairstyle.availableStylistIds)
-        }
-    }
-*/
-
     private fun populateStylistChips(availableStylistIds: List<String>) {
         viewLifecycleOwner.lifecycleScope.launch {
             Log.d(TAG, "Fetching ${availableStylistIds.size} specific stylists from Firebase...")
@@ -221,6 +206,11 @@ class BookingConfirmationFragment : Fragment() {
     }
 
     private fun confirmBooking() {
+        if (selectedDate.isEmpty() || selectedTime == null) {
+            Toast.makeText(context, "Please select a date and time.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         viewLifecycleOwner.lifecycleScope.launch {
             val userResult = FirebaseManager.getCurrentUser()
             if (!userResult.isSuccess || userResult.getOrNull() == null) {

@@ -1,6 +1,7 @@
 package com.rst.gadissalonmanagementsystemapp.ui.booking
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,7 +15,6 @@ import com.rst.gadissalonmanagementsystemapp.FirebaseManager
 import com.rst.gadissalonmanagementsystemapp.MainViewModel
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentBookingBinding
 
-
 class BookingFragment : Fragment() {
 
     private var _binding: FragmentBookingBinding? = null
@@ -22,6 +22,10 @@ class BookingFragment : Fragment() {
     private val mainViewModel: MainViewModel by activityViewModels()
     private lateinit var bookingAdapter: BookingAdapter
     private var bookingsListener: ListenerRegistration? = null
+
+    companion object {
+        private const val TAG = "BookingFragment"
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentBookingBinding.inflate(inflater, container, false)
@@ -59,7 +63,12 @@ class BookingFragment : Fragment() {
 
     private fun listenForMyBookings() {
         bookingsListener = FirebaseManager.addCurrentUserBookingsListener { myBookings ->
-            if (view != null) { // Only update if the view is still alive
+            if (view != null) {
+                // --- ADDED LOGS ---
+                Log.d(TAG, "Listener callback received with ${myBookings.size} bookings.")
+                if (myBookings.isNotEmpty()) {
+                    Log.d(TAG, "Updating adapter. First booking status is now '${myBookings[0].status}'")
+                }
                 bookingAdapter.updateData(myBookings)
             }
         }
