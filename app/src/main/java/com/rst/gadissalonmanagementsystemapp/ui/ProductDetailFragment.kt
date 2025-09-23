@@ -41,7 +41,7 @@ class ProductDetailFragment : Fragment() {
         val product = args.product
         val role = args.userRole
 
-        mainViewModel.setCurrentProduct(product)
+        mainViewModel.setCurrentFavoritableItem(product)
 
         // --- Populate Static Views ---
         binding.productImage.load(product.imageUrl)

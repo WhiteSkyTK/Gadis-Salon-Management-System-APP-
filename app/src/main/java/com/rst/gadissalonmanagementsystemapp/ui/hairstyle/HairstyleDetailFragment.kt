@@ -45,7 +45,7 @@ class HairstyleDetailFragment : Fragment() {
             variants = emptyList(), // We can provide an empty list for variants
             imageUrl = hairstyle.imageUrl
         )
-        mainViewModel.setCurrentProduct(tempProductForFavorite)
+        mainViewModel.setCurrentFavoritableItem(hairstyle)
 
         // Use the new Hairstyle data to populate the views
         binding.hairstyleImage.load(hairstyle.imageUrl)

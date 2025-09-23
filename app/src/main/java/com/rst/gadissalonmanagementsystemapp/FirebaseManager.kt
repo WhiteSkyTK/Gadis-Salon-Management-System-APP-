@@ -191,12 +191,18 @@ object FirebaseManager {
                     return@addSnapshotListener
                 }
 
-                // This is the new, more robust logic that checks the 'type' field
                 val favoritesList = snapshots?.documents?.mapNotNull { doc ->
-                    when (doc.getString("type")) {
-                        "PRODUCT" -> doc.toObject(Product::class.java)?.also { it.id = doc.id }
-                        "HAIRSTYLE" -> doc.toObject(Hairstyle::class.java)?.also { it.id = doc.id }
-                        else -> null // Ignore any documents with an unknown type
+                    when {
+                        // If the document ID starts with "hs_", it's a Hairstyle.
+                        doc.id.startsWith("hs_") -> {
+                            doc.toObject(Hairstyle::class.java)?.also { it.id = doc.id }
+                        }
+                        // If the document ID starts with "prod_", it's a Product.
+                        doc.id.startsWith("prod_") -> {
+                            doc.toObject(Product::class.java)?.also { it.id = doc.id }
+                        }
+                        // Otherwise, we ignore it.
+                        else -> null
                     }
                 } ?: emptyList()
 

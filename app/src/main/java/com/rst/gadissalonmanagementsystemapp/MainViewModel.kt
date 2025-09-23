@@ -11,11 +11,10 @@ import kotlinx.coroutines.launch
 class MainViewModel : ViewModel() {
 
     // Holds the product currently being viewed in a detail screen
-    private val _currentlyViewedProduct = MutableLiveData<Product?>()
+    private val _currentlyViewedItem = MutableLiveData<Favoritable?>()
 
-    // LiveData to observe the favorite status of the current product
-    private val _isCurrentProductFavorite = MutableLiveData<Boolean>()
-    val isCurrentProductFavorite: LiveData<Boolean> = _isCurrentProductFavorite
+    private val _isCurrentItemFavorite = MutableLiveData<Boolean>()
+    val isCurrentItemFavorite: LiveData<Boolean> = _isCurrentItemFavorite
 
     private val _currentUser = MutableLiveData<User?>()
     val currentUser: LiveData<User?> = _currentUser
@@ -23,12 +22,11 @@ class MainViewModel : ViewModel() {
     private val _allHairstyles = MutableLiveData<List<Hairstyle>>()
     val allHairstyles: LiveData<List<Hairstyle>> = _allHairstyles
 
-    fun setCurrentProduct(product: Product) {
-        _currentlyViewedProduct.value = product
-        // Asynchronously check if the product is a favorite
+    fun setCurrentFavoritableItem(item: Favoritable) {
+        _currentlyViewedItem.value = item
         viewModelScope.launch {
-            val result = FirebaseManager.isFavorite(product.id)
-            _isCurrentProductFavorite.value = result.getOrNull() == true
+            val result = FirebaseManager.isFavorite(item.id)
+            _isCurrentItemFavorite.value = result.getOrNull() == true
         }
     }
 
@@ -42,11 +40,16 @@ class MainViewModel : ViewModel() {
     }
 
     fun onFavoriteClicked() {
-        _currentlyViewedProduct.value?.let { product ->
+        _currentlyViewedItem.value?.let { item ->
             viewModelScope.launch {
-                val result = FirebaseManager.toggleFavorite(product)
+                // Check the type and call the correct function
+                val result = when (item) {
+                    is Product -> FirebaseManager.toggleFavorite(item)
+                    is Hairstyle -> FirebaseManager.toggleFavorite(item)
+                    else -> return@launch // Should not happen
+                }
                 if (result.isSuccess) {
-                    _isCurrentProductFavorite.value = result.getOrDefault(false)
+                    _isCurrentItemFavorite.value = result.getOrDefault(false)
                 }
             }
         }

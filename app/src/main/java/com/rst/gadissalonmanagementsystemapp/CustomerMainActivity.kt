@@ -99,7 +99,7 @@ class CustomerMainActivity : AppCompatActivity() {
         binding.iconFavoriteMain.setOnClickListener {
             mainViewModel.onFavoriteClicked()
         }
-        mainViewModel.isCurrentProductFavorite.observe(this) { isFavorite ->
+        mainViewModel.isCurrentItemFavorite.observe(this) { isFavorite ->
             val iconRes = if (isFavorite) R.drawable.ic_favorite_filled else R.drawable.ic_favorite_border
             binding.iconFavoriteMain.setImageResource(iconRes)
         }
