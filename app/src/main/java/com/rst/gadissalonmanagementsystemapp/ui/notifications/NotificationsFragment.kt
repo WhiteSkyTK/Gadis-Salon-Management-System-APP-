@@ -4,15 +4,15 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.firestore.ListenerRegistration
 import com.rst.gadissalonmanagementsystemapp.FirebaseManager
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentNotificationsBinding
 import kotlinx.coroutines.launch
-
-
 class NotificationsFragment : Fragment() {
 
     private var _binding: FragmentNotificationsBinding? = null
@@ -34,11 +34,17 @@ class NotificationsFragment : Fragment() {
         super.onStart()
         notificationListener = FirebaseManager.addUserNotificationsListener { notifications ->
             if (view != null) {
-                adapter.updateData(notifications)
+                if (notifications.isEmpty()) {
+                    binding.notificationsRecyclerView.visibility = View.GONE
+                    binding.emptyNotificationsText.visibility = View.VISIBLE
+                } else {
+                    binding.notificationsRecyclerView.visibility = View.VISIBLE
+                    binding.emptyNotificationsText.visibility = View.GONE
+                    adapter.updateData(notifications)
+                }
             }
         }
 
-        // --- THIS IS THE FIX ---
         // As soon as the screen is visible, mark all notifications as read.
         viewLifecycleOwner.lifecycleScope.launch {
             FirebaseManager.markAllNotificationsAsRead()
@@ -51,8 +57,42 @@ class NotificationsFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
+        // --- THIS IS THE FINAL, COMPLETED LOGIC ---
         adapter = NotificationsAdapter(emptyList()) { notification ->
-            //TODO In the future, you could navigate to the specific booking or order here
+            // Mark the single notification as read immediately for a responsive feel
+            if (!notification.isRead) {
+                lifecycleScope.launch { FirebaseManager.markNotificationAsRead(notification.id) }
+            }
+
+            // Decide where to navigate based on the notification's data
+            when {
+                notification.bookingId != null -> {
+                    lifecycleScope.launch {
+                        val result = FirebaseManager.getBooking(notification.bookingId)
+                        if (result.isSuccess && result.getOrNull() != null) {
+                            val action = NotificationsFragmentDirections.actionNotificationsFragmentToBookingDetailCustomerFragment(result.getOrNull()!!)
+                            findNavController().navigate(action)
+                        } else {
+                            Toast.makeText(context, "Booking not found.", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+                notification.orderId != null -> {
+                    lifecycleScope.launch {
+                        val result = FirebaseManager.getProductOrder(notification.orderId)
+                        if (result.isSuccess && result.getOrNull() != null) {
+                            val action = NotificationsFragmentDirections.actionNotificationsFragmentToOrderDetailFragment(result.getOrNull()!!)
+                            findNavController().navigate(action)
+                        } else {
+                            Toast.makeText(context, "Order not found.", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+                else -> {
+                    // Handle general notifications that don't link anywhere
+                    Toast.makeText(context, "This is a general notification.", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
         binding.notificationsRecyclerView.layoutManager = LinearLayoutManager(context)
         binding.notificationsRecyclerView.adapter = adapter

@@ -67,25 +67,30 @@ class CustomerMainActivity : AppCompatActivity() {
     }
 
     private fun setupUiVisibilityListener() {
+        // Create the NavOptions that will clear the back stack
+        val navOptions = NavOptions.Builder()
+            .setPopUpTo(navController.graph.startDestinationId, false)
+            .build()
+
         binding.iconFavorites.setOnClickListener {
             if (navController.currentDestination?.id == R.id.favoritesFragment) {
-                navController.navigateUp() // If already open, go back
+                navController.popBackStack() // If already open, go back to home
             } else {
-                navController.navigate(R.id.favoritesFragment)
+                navController.navigate(R.id.favoritesFragment, null, navOptions)
             }
         }
         binding.iconCart.setOnClickListener {
             if (navController.currentDestination?.id == R.id.cartFragment) {
-                navController.navigateUp()
+                navController.popBackStack()
             } else {
-                navController.navigate(R.id.cartFragment)
+                navController.navigate(R.id.cartFragment, null, navOptions)
             }
         }
         binding.iconNotifications.setOnClickListener {
             if (navController.currentDestination?.id == R.id.notificationsFragment) {
-                navController.navigateUp()
+                navController.popBackStack()
             } else {
-                navController.navigate(R.id.notificationsFragment)
+                navController.navigate(R.id.notificationsFragment, null, navOptions)
             }
         }
         binding.backButton.setOnClickListener { navController.navigateUp() }
@@ -102,14 +107,15 @@ class CustomerMainActivity : AppCompatActivity() {
         // --- LISTENER FOR UI CHANGES ---
         navController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {
-                R.id.productDetailFragment, R.id.hairstyleDetailFragment,
-                R.id.bookingConfirmationFragment, R.id.customerEditProfileFragment,
-                R.id.orderDetailFragment, R.id.purchaseConfirmationFragment -> showDetailTopBar()
+                R.id.productDetailFragment, R.id.hairstyleDetailFragment -> showDetailTopBar()
 
                 R.id.settingsFragment, R.id.aboutUsFragment, R.id.contactFragment,
-                R.id.locationFragment, R.id.favoritesFragment, R.id.cartFragment,
-                R.id.notificationsFragment, R.id.helpCenterFragment,
-                R.id.mySupportTicketsFragment, R.id.faqFragment -> showProfileDetailTopBar()
+                R.id.locationFragment, R.id.customerEditProfileFragment, R.id.orderDetailFragment,
+                R.id.purchaseConfirmationFragment, R.id.bookingConfirmationFragment,
+                R.id.helpCenterFragment, R.id.mySupportTicketsFragment,
+                R.id.faqFragment -> showSimpleDetailTopBar() // Use the new, simpler top bar
+
+                R.id.favoritesFragment, R.id.cartFragment, R.id.notificationsFragment -> showProfileDetailTopBar()
 
                 else -> showHomeTopBar()
             }
@@ -175,25 +181,22 @@ class CustomerMainActivity : AppCompatActivity() {
         // Use fade for the back button for a cleaner look
         val backButtonAnimationId = if (show) R.anim.fade_in else R.anim.fade_out
 
-        if (view.id == R.id.back_button_card) {
-            if ((show && view.visibility != View.VISIBLE) || (!show && view.visibility == View.VISIBLE)) {
-                view.startAnimation(AnimationUtils.loadAnimation(this, backButtonAnimationId))
-                view.visibility = if (show) View.VISIBLE else View.GONE
-            }
-        } else {
-            if ((show && view.visibility != View.VISIBLE) || (!show && view.visibility == View.VISIBLE)) {
-                view.startAnimation(AnimationUtils.loadAnimation(this, animationId))
-                view.visibility = if (show) View.VISIBLE else View.GONE
-            }
+        // Check the view's ID to apply the correct animation
+        val animToUse = when (view.id) {
+            R.id.back_button_card -> backButtonAnimationId
+            else -> animationId
+        }
+
+        if ((show && view.visibility != View.VISIBLE) || (!show && view.visibility == View.VISIBLE)) {
+            view.startAnimation(AnimationUtils.loadAnimation(this, animToUse))
+            view.visibility = if (show) View.VISIBLE else View.GONE
         }
     }
 
     private fun showHomeTopBar() {
         animateViewVisibility(binding.backButtonCard, false)
-        binding.bottomNavBar.visibility = View.VISIBLE
-        // Animate the group of icons
+        binding.bottomNavBar.visibility = View.VISIBLE // Corrected from bottom_nav_bar
         animateViewVisibility(binding.homeIconsGroup, true)
-        // Animate the single icon away
         animateViewVisibility(binding.iconFavoriteMain, false)
 
         val params = binding.salonNameCard.layoutParams as ConstraintLayout.LayoutParams
@@ -204,10 +207,20 @@ class CustomerMainActivity : AppCompatActivity() {
     private fun showDetailTopBar() {
         animateViewVisibility(binding.backButtonCard, true)
         binding.bottomNavBar.visibility = View.GONE
-        // Animate the group away
         animateViewVisibility(binding.homeIconsGroup, false)
-        // Animate the single icon in
         animateViewVisibility(binding.iconFavoriteMain, true)
+
+        val params = binding.salonNameCard.layoutParams as ConstraintLayout.LayoutParams
+        params.horizontalBias = 0.5f
+        binding.salonNameCard.layoutParams = params
+    }
+
+    private fun showSimpleDetailTopBar() {
+        animateViewVisibility(binding.backButtonCard, true)
+        binding.bottomNavBar.visibility = View.GONE
+        // Hide ALL right-side icons
+        animateViewVisibility(binding.homeIconsGroup, false)
+        animateViewVisibility(binding.iconFavoriteMain, false)
 
         val params = binding.salonNameCard.layoutParams as ConstraintLayout.LayoutParams
         params.horizontalBias = 0.5f
@@ -217,9 +230,7 @@ class CustomerMainActivity : AppCompatActivity() {
     private fun showProfileDetailTopBar() {
         animateViewVisibility(binding.backButtonCard, true)
         binding.bottomNavBar.visibility = View.GONE
-        // Animate the group in
         animateViewVisibility(binding.homeIconsGroup, true)
-        // Animate the single icon away
         animateViewVisibility(binding.iconFavoriteMain, false)
 
         val params = binding.salonNameCard.layoutParams as ConstraintLayout.LayoutParams

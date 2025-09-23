@@ -76,11 +76,20 @@ class CartFragment : Fragment() {
     }
 
     private fun listenForCartUpdates() {
-        // We now store the returned listener in our class property
-        cartListener = FirebaseManager.addCurrentUserCartListener { cartItems ->
-            // This check is crucial: only update the UI if the view still exists
+        FirebaseManager.addCurrentUserCartListener { cartItems ->
             if (view != null) {
-                cartAdapter.updateData(cartItems)
+                if (cartItems.isEmpty()) {
+                    binding.cartRecyclerView.visibility = View.GONE
+                    binding.emptyCartText.visibility = View.VISIBLE
+                    binding.summaryCard.visibility = View.GONE // Hide bottom bar
+                } else {
+                    binding.cartRecyclerView.visibility = View.VISIBLE
+                    binding.emptyCartText.visibility = View.GONE
+                    binding.summaryCard.visibility = View.VISIBLE // Show bottom bar
+                    cartAdapter.updateData(cartItems)
+                }
+
+                // Always update the total price
                 val totalPrice = cartItems.sumOf { it.price * it.quantity }
                 val format = NumberFormat.getCurrencyInstance(Locale("en", "ZA"))
                 binding.totalPrice.text = format.format(totalPrice)

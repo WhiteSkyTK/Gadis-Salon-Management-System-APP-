@@ -1,6 +1,7 @@
 package com.rst.gadissalonmanagementsystemapp.ui.favorites
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -61,10 +62,20 @@ class FavoritesFragment : Fragment() {
     }
 
     private fun listenForFavoriteUpdates() {
-        // Start listening for real-time updates to the current user's favorites
         FirebaseManager.addCurrentUserFavoritesListener { favoritesList ->
-            // When the data changes, update the adapter's list
-            favoritesAdapter.updateData(favoritesList)
+            if (view != null) {
+                // --- ADDED LOGS ---
+                Log.d("FavoritesFragment", "Listener callback received with ${favoritesList.size} items.")
+                if (favoritesList.isEmpty()) {
+                    binding.favoritesRecyclerView.visibility = View.GONE
+                    binding.emptyFavoritesText.visibility = View.VISIBLE
+                } else {
+                    binding.favoritesRecyclerView.visibility = View.VISIBLE
+                    binding.emptyFavoritesText.visibility = View.GONE
+                    Log.d("FavoritesFragment", "Passing ${favoritesList.size} items to the adapter.")
+                    favoritesAdapter.updateData(favoritesList)
+                }
+            }
         }
     }
 

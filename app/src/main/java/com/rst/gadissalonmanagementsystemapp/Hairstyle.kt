@@ -7,6 +7,7 @@ import kotlinx.parcelize.Parcelize
 data class Hairstyle(
     override var id: String = "",
     override val name: String = "",
+    override val type: String = "HAIRSTYLE",
     val description: String = "",
     val price: Double = 0.0,
     val durationHours: Int = 0,

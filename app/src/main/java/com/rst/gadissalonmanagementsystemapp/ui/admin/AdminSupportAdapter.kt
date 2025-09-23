@@ -11,7 +11,7 @@ import com.rst.gadissalonmanagementsystemapp.databinding.ItemAdminSupportTicketB
 
 class AdminSupportAdapter(
     private var messages: List<SupportMessage>,
-    private val onItemClick: (SupportMessage) -> Unit, // New parameter for item clicks
+    private val onItemClick: (SupportMessage) -> Unit,
     private val onStatusChange: (SupportMessage, String) -> Unit,
     private val onDelete: (SupportMessage) -> Unit
 ) : RecyclerView.Adapter<AdminSupportAdapter.ViewHolder>() {

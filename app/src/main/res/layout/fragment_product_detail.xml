@@ -154,24 +154,23 @@
 
         <Button
             android:id="@+id/add_to_cart_button"
+            style="@style/Gadis.Button.Secondary"
             android:layout_width="0dp"
             android:layout_height="60dp"
             android:layout_weight="1"
             android:layout_marginEnd="8dp"
             android:text="Add To Cart"
             app:strokeColor="@color/colorPrimary"
-            app:strokeWidth="2dp"
-            android:backgroundTint="@color/white"
-            android:textColor="@color/colorPrimary"/>
+            app:strokeWidth="2dp" />
 
         <Button
             android:id="@+id/buy_now_button"
+            style="@style/Gadis.Button.Primary"
             android:layout_width="0dp"
             android:layout_height="60dp"
             android:layout_weight="1"
             android:layout_marginStart="8dp"
-            android:text="Buy Now"
-            android:backgroundTint="@color/colorPrimary"/>
+            android:text="Buy Now" />
 
     </LinearLayout>
 

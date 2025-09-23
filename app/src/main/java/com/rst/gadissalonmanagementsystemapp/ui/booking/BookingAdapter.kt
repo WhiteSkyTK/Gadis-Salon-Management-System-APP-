@@ -1,6 +1,7 @@
 package com.rst.gadissalonmanagementsystemapp.ui.booking
 
 import android.graphics.drawable.GradientDrawable
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
@@ -59,6 +60,7 @@ class BookingAdapter(
     override fun getItemCount(): Int = bookings.size
 
     fun updateData(newBookings: List<AdminBooking>) {
+        Log.d("BookingAdapter", "updateData called with ${newBookings.size} items. Refreshing UI.")
         this.bookings = newBookings
         notifyDataSetChanged()
     }

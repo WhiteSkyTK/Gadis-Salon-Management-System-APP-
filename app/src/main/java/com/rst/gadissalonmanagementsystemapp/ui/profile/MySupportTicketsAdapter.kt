@@ -9,7 +9,10 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class MySupportTicketsAdapter(private val tickets: List<SupportMessage>) : RecyclerView.Adapter<MySupportTicketsAdapter.ViewHolder>() {
+class MySupportTicketsAdapter(
+    private var tickets: List<SupportMessage>,
+    private val onItemClick: (SupportMessage) -> Unit
+) : RecyclerView.Adapter<MySupportTicketsAdapter.ViewHolder>() {
 
     inner class ViewHolder(private val binding: ItemMySupportTicketBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(ticket: SupportMessage) {
@@ -18,6 +21,8 @@ class MySupportTicketsAdapter(private val tickets: List<SupportMessage>) : Recyc
             // Format the timestamp into a readable date
             val sdf = SimpleDateFormat("dd MMM, yyyy", Locale.getDefault())
             binding.timestampText.text = "Sent: ${sdf.format(Date(ticket.timestamp))}"
+
+            itemView.setOnClickListener { onItemClick(ticket) }
         }
     }
 
@@ -31,4 +36,9 @@ class MySupportTicketsAdapter(private val tickets: List<SupportMessage>) : Recyc
     }
 
     override fun getItemCount(): Int = tickets.size
+
+    fun updateData(newTickets: List<SupportMessage>) {
+        this.tickets = newTickets
+        notifyDataSetChanged()
+    }
 }

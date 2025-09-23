@@ -10,8 +10,8 @@
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/favorites_recycler_view"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:clipToPadding="false"
         android:padding="8dp"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
@@ -21,5 +21,17 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:itemCount="4"
         tools:listitem="@layout/item_favorite" />
+
+    <TextView
+        android:id="@+id/empty_favorites_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="You haven't added any favorites yet."
+        android:textSize="18sp"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

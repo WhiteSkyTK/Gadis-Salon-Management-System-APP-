@@ -58,11 +58,15 @@ class HomeFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             // --- Fetch Products ---
             val productsResult = FirebaseManager.getAllProducts()
+
+            if (!isAdded) return@launch
+
             if (productsResult.isSuccess) {
                 val productList = productsResult.getOrNull()?.take(4) ?: emptyList()
                 Log.d(TAG, "Successfully fetched ${productList.size} products.")
                 binding.recyclerViewProducts.adapter = HomeItemAdapter(productList) { product ->
-                    findNavController().navigate(HomeFragmentDirections.actionHomeFragmentToProductDetailFragment(product))
+                    val action = HomeFragmentDirections.actionHomeFragmentToProductDetailFragment(product, "CUSTOMER")
+                    findNavController().navigate(action)
                 }
             } else {
                 val error = productsResult.exceptionOrNull()?.message
@@ -72,6 +76,9 @@ class HomeFragment : Fragment() {
 
             // --- Fetch Hairstyles ---
             val hairstylesResult = FirebaseManager.getAllHairstyles()
+
+            if (!isAdded) return@launch
+
             if (hairstylesResult.isSuccess) {
                 val hairstyleList = hairstylesResult.getOrNull()?.take(4) ?: emptyList()
                 Log.d(TAG, "Successfully fetched ${hairstyleList.size} hairstyles.")

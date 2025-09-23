@@ -14,6 +14,8 @@ import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.GridLayoutManager
 import coil.load
 import com.google.android.material.chip.Chip
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import com.rst.gadissalonmanagementsystemapp.*
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentBookingConfirmationBinding
 import kotlinx.coroutines.launch
@@ -218,6 +220,13 @@ class BookingConfirmationFragment : Fragment() {
                 return@launch
             }
             val currentUser = userResult.getOrNull()!!
+
+            Log.d("BookingConfirm", "--- Preparing to Create Booking ---")
+            Log.d("BookingConfirm", "Current User UID from Auth: ${Firebase.auth.currentUser?.uid}")
+            Log.d("BookingConfirm", "CurrentUser ID from Firestore: ${currentUser.id}")
+            Log.d("BookingConfirm", "Booking will have customerId: ${currentUser.id}")
+            Log.d("BookingConfirm", "------------------------------------")
+
 
             val newBooking = AdminBooking(
                 hairstyleId = args.hairstyle.id,

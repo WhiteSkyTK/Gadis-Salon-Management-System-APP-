@@ -2,6 +2,7 @@ package com.rst.gadissalonmanagementsystemapp.ui.profile
 
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -32,8 +33,8 @@ class SettingsFragment : Fragment() {
         val prefs = requireActivity().getSharedPreferences(Loading.PREFS_NAME, Context.MODE_PRIVATE)
 
         // Set the switch to the correct initial state based on the current theme
-        val currentNightMode = AppCompatDelegate.getDefaultNightMode()
-        binding.darkModeSwitch.isChecked = currentNightMode == AppCompatDelegate.MODE_NIGHT_YES
+        val currentNightMode = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+        binding.darkModeSwitch.isChecked = currentNightMode == Configuration.UI_MODE_NIGHT_YES
 
         // Listen for changes
         binding.darkModeSwitch.setOnCheckedChangeListener { _, isChecked ->

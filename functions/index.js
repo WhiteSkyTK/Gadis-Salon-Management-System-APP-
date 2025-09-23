@@ -38,6 +38,8 @@ exports.onBookingStatusChange = onDocumentUpdated("bookings/{bookingId}", async 
     }
 
     const customerId = newData.customerId;
+
+    const bookingId = event.params.bookingId;
     if (!customerId) {
         console.error("Booking is missing a customerId!");
         return;
@@ -50,6 +52,7 @@ exports.onBookingStatusChange = onDocumentUpdated("bookings/{bookingId}", async 
         message: `Your appointment for ${newData.serviceName} has been ${newData.status.toLowerCase()}.`,
         timestamp: Date.now(),
         isRead: false,
+        bookingId: bookingId,
     };
     await admin.firestore().collection("users").doc(customerId).collection("notifications").add(notificationPayload);
 

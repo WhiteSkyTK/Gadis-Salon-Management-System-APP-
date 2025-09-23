@@ -49,5 +49,16 @@
         <item name="android:focusable">true</item>
     </style>
 
+    <style name="Gadis.Button.Primary" parent="Widget.Material3.Button">
+        <item name="android:backgroundTint">@color/colorPrimary</item>
+        <item name="android:textColor">@color/backgroundColor</item> <!-- Gets the background color, which is white/black -->
+    </style>
+
+    <!-- ADD THIS STYLE for your secondary, outlined buttons (like "Add to Cart") -->
+    <style name="Gadis.Button.Secondary" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="strokeColor">@color/colorPrimary</item>
+        <item name="android:textColor">@color/colorPrimary</item>
+    </style>
+
     <style name="Theme.GadisSalonManagementSystemAPP" parent="Base.Theme.GadisSalonManagementSystemAPP" />
 </resources>

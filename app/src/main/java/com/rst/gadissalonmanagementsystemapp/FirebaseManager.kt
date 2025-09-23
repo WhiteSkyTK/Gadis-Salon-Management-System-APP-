@@ -28,25 +28,27 @@ object FirebaseManager {
     // It returns a Result object: Success if it works, Failure with an error message if it doesn't.
     suspend fun registerUser(name: String, email: String, phone: String, password: String): Result<Unit> {
         return try {
-            // Step 1: Create the user in Firebase Authentication
             val authResult = auth.createUserWithEmailAndPassword(email, password).await()
-            val firebaseUser = authResult.user
+            val firebaseUser = authResult.user!!
 
-            if (firebaseUser != null) {
-                // Step 2: Create a User object with the details
-                val newUser = User(name = name, email = email, phone = phone)
+            // Create the User object and explicitly set its 'id' to the uid from Firebase Auth
+            val newUser = User(
+                id = firebaseUser.uid, // Use the unique ID from Firebase Auth
+                name = name,
+                email = email,
+                phone = phone
+            )
 
-                // Step 3: Save the User object to the "users" collection in Firestore
-                usersCollection.document(firebaseUser.uid).set(newUser).await()
-                Result.success(Unit) // Return success
-            } else {
-                Result.failure(Exception("Failed to create user account."))
-            }
+            // --- ADDED LOG ---
+            Log.d("FirebaseManager", "Registering new user in Firestore with ID: ${firebaseUser.uid}")
+            usersCollection.document(firebaseUser.uid).set(newUser).await()
+            Result.success(Unit)
         } catch (e: Exception) {
-            // Return failure with the specific error message from Firebase
+            Log.e("FirebaseManager", "Error during registration", e)
             Result.failure(e)
         }
     }
+
 
     // NEW LOGIN FUNCTION
     suspend fun loginUser(email: String, password: String): Result<String> {
@@ -178,26 +180,31 @@ object FirebaseManager {
     }
 
     // --- FAVORITES FUNCTIONS ---
-    fun addCurrentUserFavoritesListener(onUpdate: (List<Favoritable>) -> Unit) {
-        val uid = auth.currentUser?.uid ?: return onUpdate(emptyList())
+    fun addCurrentUserFavoritesListener(onUpdate: (List<Favoritable>) -> Unit): ListenerRegistration? {
+        val uid = auth.currentUser?.uid ?: return null
 
-        usersCollection.document(uid).collection("favorites")
+        return usersCollection.document(uid).collection("favorites")
             .addSnapshotListener { snapshots, error ->
                 if (error != null) {
-                    Log.w("FirebaseManager", "Favorites listener failed.", error)
+                    Log.e("FavoritesListener", "Listener failed.", error)
                     onUpdate(emptyList())
                     return@addSnapshotListener
                 }
 
-                // This is a smart way to handle a mixed list.
-                // We try to convert each document to a Hairstyle first, and if that fails,
-                // we try to convert it to a Product.
+                // This is the new, more robust logic that checks the 'type' field
                 val favoritesList = snapshots?.documents?.mapNotNull { doc ->
-                    // First, try to map to a Hairstyle
-                    doc.toObject(Hairstyle::class.java)?.also { it.id = doc.id }
-                    // If that returns null, try to map to a Product
-                        ?: doc.toObject(Product::class.java)?.also { it.id = doc.id }
+                    when (doc.getString("type")) {
+                        "PRODUCT" -> doc.toObject(Product::class.java)?.also { it.id = doc.id }
+                        "HAIRSTYLE" -> doc.toObject(Hairstyle::class.java)?.also { it.id = doc.id }
+                        else -> null // Ignore any documents with an unknown type
+                    }
                 } ?: emptyList()
+
+                Log.d("FavoritesListener", "Listener triggered. Found ${favoritesList.size} favorite items.")
+                if (favoritesList.isNotEmpty()) {
+                    val firstItem = favoritesList[0]
+                    Log.d("FavoritesListener", "First item identified as a ${firstItem.javaClass.simpleName} with name: ${firstItem.name}")
+                }
 
                 onUpdate(favoritesList)
             }
@@ -361,10 +368,16 @@ object FirebaseManager {
     // --- ADD THIS FUNCTION to get a single user's details ---
     suspend fun getUser(uid: String): Result<User?> {
         return try {
+            Log.d("FirebaseManager", "Fetching user document for UID: $uid")
             val document = usersCollection.document(uid).get().await()
             val user = document.toObject(User::class.java)
+            // Manually set the ID to be the document's ID, which is always correct
+            user?.id = document.id
+            // --- ADDED LOG ---
+            Log.d("FirebaseManager", "User fetched. ID from Firestore document is now: ${user?.id}")
             Result.success(user)
         } catch (e: Exception) {
+            Log.e("FirebaseManager", "Error fetching user with UID: $uid", e)
             Result.failure(e)
         }
     }
@@ -571,23 +584,19 @@ object FirebaseManager {
         }
     }
 
-    // Toggles a product in the current user's 'favorites' subcollection
     suspend fun toggleFavorite(product: Product): Result<Boolean> {
         val userId = auth.currentUser?.uid ?: return Result.failure(Exception("User not logged in"))
         return try {
             val favoriteDoc = usersCollection.document(userId).collection("favorites").document(product.id)
             val document = favoriteDoc.get().await()
-
             if (document.exists()) {
                 favoriteDoc.delete().await()
-                Result.success(false) // No longer a favorite
+                Result.success(false)
             } else {
                 favoriteDoc.set(product).await()
-                Result.success(true) // Is now a favorite
+                Result.success(true)
             }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+        } catch (e: Exception) { Result.failure(e) }
     }
 
     fun addFaqListener(onUpdate: (List<FaqItem>) -> Unit) {
@@ -632,25 +641,19 @@ object FirebaseManager {
         }
     }
 
-    // --- ADD THIS NEW FUNCTION for toggling favorite hairstyles ---
     suspend fun toggleFavorite(hairstyle: Hairstyle): Result<Boolean> {
         val userId = auth.currentUser?.uid ?: return Result.failure(Exception("User not logged in"))
         return try {
             val favoriteDoc = usersCollection.document(userId).collection("favorites").document(hairstyle.id)
             val document = favoriteDoc.get().await()
-
             if (document.exists()) {
-                // It's already a favorite, so remove it
                 favoriteDoc.delete().await()
-                Result.success(false) // No longer a favorite
+                Result.success(false)
             } else {
-                // It's not a favorite, so add it
                 favoriteDoc.set(hairstyle).await()
-                Result.success(true) // Is now a favorite
+                Result.success(true)
             }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+        } catch (e: Exception) { Result.failure(e) }
     }
 
     // --- WORKER FUNCTIONS ---
@@ -675,10 +678,11 @@ object FirebaseManager {
         }
     }
 
-    fun addCurrentUserSupportMessagesListener(onUpdate: (List<SupportMessage>) -> Unit) {
-        val uid = auth.currentUser?.uid ?: return onUpdate(emptyList())
+    // This now correctly returns a ListenerRegistration?
+    fun addCurrentUserSupportMessagesListener(onUpdate: (List<SupportMessage>) -> Unit): ListenerRegistration? {
+        val uid = auth.currentUser?.uid ?: return null
 
-        firestore.collection("support_messages")
+        return firestore.collection("support_messages")
             .whereEqualTo("senderUid", uid)
             .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
             .addSnapshotListener { snapshots, error ->
@@ -686,10 +690,9 @@ object FirebaseManager {
                     Log.w("FirebaseManager", "Current User Messages listener failed.", error)
                     return@addSnapshotListener
                 }
-                // Map the Firestore documents to a list of SupportMessage objects
                 val messageList = snapshots?.map { doc ->
                     val message = doc.toObject(SupportMessage::class.java)
-                    message.id = doc.id // Manually set the correct document ID
+                    message.id = doc.id
                     message
                 } ?: emptyList()
                 onUpdate(messageList)
@@ -1088,5 +1091,53 @@ object FirebaseManager {
                 }
                 onUpdate(snapshots?.size() ?: 0)
             }
+    }
+
+    // Listens for real-time updates to the reply thread of a support ticket
+    fun addSupportTicketRepliesListener(ticketId: String, onUpdate: (List<ChatMessage>) -> Unit): ListenerRegistration {
+        return firestore.collection("support_messages").document(ticketId).collection("replies")
+            .orderBy("timestamp")
+            .addSnapshotListener { snapshots, error ->
+                if (error != null) { return@addSnapshotListener }
+                val messages = snapshots?.toObjects(ChatMessage::class.java) ?: emptyList()
+                onUpdate(messages)
+            }
+    }
+
+    // Sends a new reply to a support ticket
+    suspend fun sendSupportReply(ticketId: String, message: ChatMessage): Result<Unit> {
+        return try {
+            firestore.collection("support_messages").document(ticketId).collection("replies")
+                .add(message).await()
+            Result.success(Unit)
+        } catch (e: Exception) { Result.failure(e) }
+    }
+
+    /**
+     * Fetches a single booking document by its unique ID.
+     */
+    suspend fun getBooking(bookingId: String): Result<AdminBooking?> {
+        return try {
+            val document = firestore.collection("bookings").document(bookingId).get().await()
+            val booking = document.toObject(AdminBooking::class.java)
+            // Manually set the ID, as it's the document's path
+            booking?.id = document.id
+            Result.success(booking)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Fetches a single product order document by its unique ID.
+     */
+    suspend fun getProductOrder(orderId: String): Result<ProductOrder?> {
+        return try {
+            val document = firestore.collection("product_orders").document(orderId).get().await()
+            val order = document.toObject(ProductOrder::class.java)
+            Result.success(order)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }

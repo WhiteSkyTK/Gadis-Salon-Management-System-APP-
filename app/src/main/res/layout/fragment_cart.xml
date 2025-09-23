@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/backgroundGrey"
-    tools:context=".ui.cart.CartFragment">>
+    tools:context=".ui.cart.CartFragment">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/cart_recycler_view"
@@ -22,54 +22,64 @@
         tools:itemCount="2"
         tools:listitem="@layout/item_favorite"/>
 
-    <com.google.android.material.card.MaterialCardView
-    android:id="@+id/summary_card"
-    android:layout_width="0dp"
-    android:layout_height="wrap_content"
-    app:cardCornerRadius="0dp"
-    app:layout_constraintBottom_toBottomOf="parent"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintEnd_toEndOf="parent">
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
+    <TextView
+        android:id="@+id/empty_cart_text"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:padding="16dp">
+        android:text="Your shopping cart is empty."
+        android:textSize="18sp"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
-        <TextView
-            android:id="@+id/total_label"
-            android:layout_width="wrap_content"
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/summary_card"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Total"
-            android:textSize="18sp"
-            android:textColor="@color/textColorSecondary"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"/>
+            android:padding="16dp">
 
-        <TextView
-            android:id="@+id/total_price"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="R105"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:textColor="@color/textColorPrimary"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/total_label"/>
+            <TextView
+                android:id="@+id/total_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Total"
+                android:textSize="18sp"
+                android:textColor="@color/textColorSecondary"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"/>
 
-        <Button
-            android:id="@+id/buy_now_button_cart"
-            android:layout_width="wrap_content"
-            android:layout_height="60dp"
-            android:text="Buy Now"
-            android:paddingStart="40dp"
-            android:paddingEnd="40dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"/>
+            <TextView
+                android:id="@+id/total_price"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="R0"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="@color/textColorPrimary"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/total_label"/>
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            <Button
+                android:id="@+id/buy_now_button_cart"
+                android:layout_width="wrap_content"
+                android:layout_height="60dp"
+                android:text="Buy Now"
+                android:paddingStart="40dp"
+                android:paddingEnd="40dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"/>
 
-</com.google.android.material.card.MaterialCardView>
-
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </com.google.android.material.card.MaterialCardView>
 </androidx.constraintlayout.widget.ConstraintLayout>
