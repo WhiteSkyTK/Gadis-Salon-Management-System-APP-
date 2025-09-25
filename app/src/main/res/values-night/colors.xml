@@ -9,6 +9,10 @@
     <color name="inputFieldBackgroundColor">#2C2C2C</color>
     <color name="cardBackgroundColor">#1E1E1E</color>
     <color name="card_background_highlight">#2C2C2E </color>
+    <color name="chatBubbleSentColor">@color/colorPrimary2</color>
+    <color name="chatBubbleReceivedColor">@color/inputFieldBackgroundColor</color> <!-- The dark grey you already have -->
+    <color name="chatReadReceiptColor">#FFFFFF</color>      <!-- A light cyan, the official Material Design "read" color -->
+    <color name="white_transparent_70">#B3FFFFFF</color>
 
     <color name="white">#FFFFFFFF</color>
     <color name="black">#FF000000</color>

@@ -115,7 +115,7 @@ class CustomerMainActivity : AppCompatActivity() {
                 R.id.helpCenterFragment, R.id.mySupportTicketsFragment,
                 R.id.faqFragment -> showSimpleDetailTopBar() // Use the new, simpler top bar
 
-                R.id.favoritesFragment, R.id.cartFragment, R.id.notificationsFragment -> showProfileDetailTopBar()
+                R.id.favoritesFragment, R.id.bookingDetailCustomerFragment, R.id.cartFragment, R.id.notificationsFragment -> showProfileDetailTopBar()
 
                 else -> showHomeTopBar()
             }

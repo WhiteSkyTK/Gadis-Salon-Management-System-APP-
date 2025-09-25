@@ -13,8 +13,7 @@ import com.rst.gadissalonmanagementsystemapp.ChatMessage
 import com.rst.gadissalonmanagementsystemapp.R
 import com.rst.gadissalonmanagementsystemapp.databinding.ItemChatMessageBinding
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.util.*
 
 class ChatAdapter(
     // The adapter now internally manages a MutableList for safety
@@ -37,16 +36,29 @@ class ChatAdapter(
             }
 
             if (message.isSentByUser) {
+                // Sent messages: Apply the 'sent' bubble and use white text.
+                binding.messageBubble.setBackgroundResource(R.drawable.chat_bubble_sent)
+                binding.messageText.setTextColor(ContextCompat.getColor(itemView.context, R.color.white))
+                binding.timestampText.setTextColor(ContextCompat.getColor(itemView.context, R.color.white_transparent_70))
+            } else {
+                // Received messages: Apply the 'received' bubble and use the theme's primary text color.
+                binding.messageBubble.setBackgroundResource(R.drawable.chat_bubble_received)
+                binding.messageText.setTextColor(ContextCompat.getColor(itemView.context, R.color.textColorPrimary))
+                binding.timestampText.setTextColor(ContextCompat.getColor(itemView.context, R.color.textColorSecondary))
+            }
+
+            // Read receipt logic now uses the new theme-aware color
+            if (message.isSentByUser) {
                 binding.readReceiptIcon.visibility = View.VISIBLE
-                Log.d(TAG, "Binding sent message. Status: ${message.status}")
                 when (message.status.uppercase()) {
                     "READ" -> {
                         binding.readReceiptIcon.setImageResource(R.drawable.ic_done_all)
-                        binding.readReceiptIcon.setColorFilter(ContextCompat.getColor(itemView.context, R.color.colorPrimary2))
+                        // Use the new dedicated color for read receipts
+                        binding.readReceiptIcon.setColorFilter(ContextCompat.getColor(itemView.context, R.color.chatReadReceiptColor))
                     }
                     else -> { // "SENT"
                         binding.readReceiptIcon.setImageResource(R.drawable.ic_done)
-                        binding.readReceiptIcon.setColorFilter(ContextCompat.getColor(itemView.context, R.color.textColorSecondary))
+                        binding.readReceiptIcon.setColorFilter(ContextCompat.getColor(itemView.context, R.color.white))
                     }
                 }
             } else {

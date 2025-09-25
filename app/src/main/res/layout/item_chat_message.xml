@@ -13,9 +13,9 @@
 
     <!-- This is the main bubble container -->
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/message_bubble"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@drawable/chat_bubble_background"
         android:paddingStart="12dp"
         android:paddingTop="8dp"
         android:paddingEnd="12dp"
@@ -37,8 +37,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:textColor="#B3FFFFFF"
             android:textSize="12sp"
+            android:textColor="#B3FFFFFF"
             app:layout_constraintEnd_toStartOf="@id/read_receipt_icon"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toBottomOf="@id/message_text"

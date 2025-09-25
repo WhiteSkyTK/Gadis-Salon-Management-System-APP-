@@ -9,6 +9,10 @@
     <color name="inputFieldBackgroundColor">#EEEEEE</color>
     <color name="cardBackgroundColor">#FFFFFF</color>
     <color name="card_background_highlight">#E8EAF6 </color>
+    <color name="chatBubbleSentColor">@color/colorPrimary2</color>
+    <color name="chatBubbleReceivedColor">@color/backgroundColor</color> <!-- Plain white for high contrast -->
+    <color name="chatReadReceiptColor">@color/white</color>      <!-- Purple ticks look great on a white background -->
+    <color name="white_transparent_70">#B3FFFFFF</color>
 
     <color name="white">#FFFFFFFF</color>
     <color name="black">#FF000000</color>
