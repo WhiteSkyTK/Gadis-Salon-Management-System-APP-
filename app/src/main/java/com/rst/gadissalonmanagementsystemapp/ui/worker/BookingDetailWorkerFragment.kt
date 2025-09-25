@@ -64,6 +64,11 @@ class BookingDetailWorkerFragment : Fragment() {
         binding.customerNameDetail.text = "Customer: ${booking.customerName}"
         binding.bookingTimeDetail.text = "On: ${booking.date} at ${booking.time}"
 
+        if (!booking.status.equals("Confirmed", ignoreCase = true)) {
+            binding.inputLayout.visibility = View.GONE
+            binding.actionButtonsLayout.visibility = View.GONE // Also hide the action buttons
+        }
+
         setupRecyclerView()
         setupActionButtons(booking)
         binding.sendButton.setOnClickListener { sendMessage(booking.id) }
@@ -88,7 +93,10 @@ class BookingDetailWorkerFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
+        // --- THIS IS THE FIX ---
+        // We apply the same change here for consistency and stability.
         chatAdapter = ChatAdapter(mutableListOf())
+
         val chatLayoutManager = LinearLayoutManager(context).apply { stackFromEnd = true }
         binding.chatRecyclerView.layoutManager = chatLayoutManager
         binding.chatRecyclerView.adapter = chatAdapter

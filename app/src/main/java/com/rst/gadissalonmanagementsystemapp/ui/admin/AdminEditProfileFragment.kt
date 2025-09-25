@@ -76,6 +76,7 @@ class AdminEditProfileFragment : Fragment(), ProfilePictureBottomSheet.PictureOp
                 currentUserData = result.getOrNull()
                 binding.nameInput.setText(currentUserData?.name)
                 binding.phoneInput.setText(currentUserData?.phone)
+                binding.emailText.text = currentUserData?.email
                 binding.profileImageEdit.load(currentUserData?.imageUrl) {
                     placeholder(R.drawable.ic_profile)
                     error(R.drawable.ic_profile)
