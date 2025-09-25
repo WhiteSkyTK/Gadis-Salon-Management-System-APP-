@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.firestore.ListenerRegistration
 import com.rst.gadissalonmanagementsystemapp.*
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentPurchaseConfirmationBinding
-import com.rst.gadissalonmanagementsystemapp.ui.cart.CartAdapter
+import com.rst.gadissalonmanagementsystemapp.ui.orders.OrderDetailAdapter
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -66,7 +66,7 @@ class PurchaseConfirmationFragment : Fragment() {
                     quantity = 1,
                     imageUrl = productToShow.imageUrl
                 ))
-                binding.summaryRecyclerView.adapter = CartAdapter(itemsToPurchase, { _, _ -> }, { _ -> })
+                binding.summaryRecyclerView.adapter = OrderDetailAdapter(itemsToPurchase)
             }
         } else {
             // Case 2: User is checking out with their full cart
@@ -75,7 +75,7 @@ class PurchaseConfirmationFragment : Fragment() {
                 // Check if the view is still alive before updating
                 if (view != null) {
                     itemsToPurchase = cartItems
-                    binding.summaryRecyclerView.adapter = CartAdapter(itemsToPurchase, { _, _ -> }, { _ -> })
+                    binding.summaryRecyclerView.adapter = OrderDetailAdapter(itemsToPurchase)
                 }
             }
         }
