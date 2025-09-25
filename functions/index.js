@@ -448,3 +448,67 @@ exports.autoCompleteBookings = onSchedule("every 1 hours", async (event) => {
 
     return;
 });
+
+/**
+ * v2 Cloud Function that sends a notification when a new reply is added
+ * to a support ticket.
+ */
+exports.onNewSupportReply = onDocumentCreated("support_messages/{ticketId}/replies/{replyId}", async (event) => {
+    const reply = event.data.data();
+    const ticketId = event.params.ticketId;
+    const db = admin.firestore();
+
+    try {
+        // Step 1: Get the original support ticket to find out who the customer is.
+        const ticketDoc = await db.collection("support_messages").doc(ticketId).get();
+        const ticket = ticketDoc.data();
+        if (!ticket) {
+            console.log("Original ticket not found.");
+            return;
+        }
+
+        const senderUid = reply.senderUid;
+        const customerUid = ticket.senderUid;
+
+        // Step 2: Determine who the recipient of the notification should be.
+        let recipientUid;
+        if (senderUid === customerUid) {
+            // If the customer sent the reply, notify all admins.
+            // For now, we'll just log this. A future version could notify a specific admin.
+            console.log("Customer replied to a ticket. No admin notification is set up yet.");
+            return;
+        } else {
+            // If the admin sent the reply, notify the customer.
+            recipientUid = customerUid;
+        }
+
+        // Step 3: Create the in-app notification for the recipient.
+        const notificationPayload = {
+            userId: recipientUid,
+            title: `New Reply from ${reply.senderName}`,
+            message: reply.messageText,
+            timestamp: Date.now(),
+            isRead: false,
+            // We can link this notification directly to the support ticket
+            ticketId: ticketId,
+        };
+        await db.collection("users").doc(recipientUid).collection("notifications").add(notificationPayload);
+
+        // Step 4: Send the push notification.
+        const recipientDoc = await db.collection("users").doc(recipientUid).get();
+        const fcmToken = recipientDoc.data()?.fcmToken;
+
+        if (fcmToken) {
+            const pushPayload = {
+                notification: {
+                    title: notificationPayload.title,
+                    body: notificationPayload.message
+                }
+            };
+            await admin.messaging().sendToDevice(fcmToken, pushPayload);
+            console.log(`Push notification sent for ticket reply to user: ${recipientUid}`);
+        }
+    } catch (error) {
+        console.error("Error in onNewSupportReply function:", error);
+    }
+});
