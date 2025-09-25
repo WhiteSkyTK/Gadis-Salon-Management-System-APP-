@@ -451,7 +451,7 @@ exports.autoCompleteBookings = onSchedule("every 1 hours", async (event) => {
 
 /**
  * v2 Cloud Function that sends a notification when a new reply is added
- * to a support ticket.
+ * to a support ticket. new
  */
 exports.onNewSupportReply = onDocumentCreated("support_messages/{ticketId}/replies/{replyId}", async (event) => {
     const reply = event.data.data();
