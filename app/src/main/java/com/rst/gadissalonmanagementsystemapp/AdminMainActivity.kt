@@ -95,6 +95,9 @@ class AdminMainActivity : AppCompatActivity() {
         // Listen for screen changes
         navController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {
+                R.id.adminEditHairstyleFragment,
+                R.id.adminEditProductFragment,
+                R.id.adminEditProfileFragment,
                 R.id.adminAddProductFragment,
                 R.id.adminAddHairstyleFragment,
                 R.id.adminAddUserFragment,
@@ -104,6 +107,7 @@ class AdminMainActivity : AppCompatActivity() {
                 R.id.adminReplyMessageFragment,
                 R.id.adminComposeMessageFragment,
                 R.id.adminEditUserFragment,
+                R.id.adminFaqFragment,
                 R.id.adminSupportFragment -> {
                     binding.bottomNavCardAdmin.visibility = View.GONE
                     binding.backButtonAdmin.visibility = View.VISIBLE

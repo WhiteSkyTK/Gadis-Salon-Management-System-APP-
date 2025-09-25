@@ -71,13 +71,15 @@ class BookingDetailCustomerFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
-        // --- THE FIX ---
-        // We now pass a mutableListOf() instead of an emptyList()
+        // --- THIS IS THE FIX ---
+        // We now pass a mutableListOf() which the adapter can correctly modify.
         chatAdapter = ChatAdapter(mutableListOf())
+
         val chatLayoutManager = LinearLayoutManager(context).apply { stackFromEnd = true }
         binding.chatRecyclerView.layoutManager = chatLayoutManager
         binding.chatRecyclerView.adapter = chatAdapter
     }
+
     private fun listenForMessages(bookingId: String) {
         // This is now the ONLY place where the listener is created.
         chatListener = FirebaseManager.addChatMessagesListener(bookingId) { messages ->

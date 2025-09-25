@@ -23,9 +23,9 @@
               <option name="connection">
                 <ConnectionSetting>
                   <option name="appId" value="com.rst.gadissalonmanagementsystemapp" />
-                  <option name="mobileSdkAppId" value="1:556140710994:android:0565226823b0851545638b" />
-                  <option name="projectId" value="gadis-salon-management-system" />
-                  <option name="projectNumber" value="556140710994" />
+                  <option name="mobileSdkAppId" value="1:1067418184764:android:0996fb5433d99ec5836739" />
+                  <option name="projectId" value="gdsm-6a8d0" />
+                  <option name="projectNumber" value="1067418184764" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

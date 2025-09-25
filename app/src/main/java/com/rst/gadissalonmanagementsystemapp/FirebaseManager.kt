@@ -553,6 +553,35 @@ object FirebaseManager {
         }
     }
 
+    /**
+     * Deletes a product from Firestore and its associated image from Firebase Storage.
+     */
+    suspend fun deleteProduct(product: Product): Result<Unit> {
+        return try {
+            // First, delete the document from Firestore
+            firestore.collection("products").document(product.id).delete().await()
+            // Then, delete the associated image from Storage
+            if (product.imageUrl.isNotBlank()) {
+                storage.getReferenceFromUrl(product.imageUrl).delete().await()
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Updates an existing product document in Firestore.
+     */
+    suspend fun updateProduct(product: Product): Result<Unit> {
+        return try {
+            firestore.collection("products").document(product.id).set(product).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     // Adds a product to the current user's 'cart' subcollection
     suspend fun addToCart(product: Product, variant: ProductVariant): Result<Unit> {
         val uid = auth.currentUser?.uid ?: return Result.failure(Exception("User not logged in"))
@@ -708,8 +737,16 @@ object FirebaseManager {
 
 
     // Listens for real-time updates to the products collection
-    fun addProductsListener(onUpdate: (List<Product>) -> Unit) {
-        firestore.collection("products")
+    fun addProductsListener(onUpdate: (List<Product>) -> Unit): ListenerRegistration? {
+        val user = auth.currentUser
+        if (user == null) {
+            Log.w("FirebaseManager", "No user logged in, cannot fetch products.")
+            onUpdate(emptyList())
+            return null
+        }
+
+        // Return the ListenerRegistration object so the fragment can manage its lifecycle
+        return firestore.collection("products")
             .addSnapshotListener { snapshots, error ->
                 if (error != null) {
                     Log.w("FirebaseManager", "Products listener failed.", error)
@@ -723,6 +760,81 @@ object FirebaseManager {
                 } ?: emptyList()
                 onUpdate(productList)
             }
+    }
+
+    /**
+     * Deletes a hairstyle from Firestore and its associated image from Firebase Storage.
+     */
+    suspend fun deleteHairstyle(hairstyle: Hairstyle): Result<Unit> {
+        return try {
+            // First, delete the document from Firestore
+            firestore.collection("hairstyles").document(hairstyle.id).delete().await()
+            // Then, if it has an image, delete it from Storage
+            if (hairstyle.imageUrl.isNotBlank()) {
+                storage.getReferenceFromUrl(hairstyle.imageUrl).delete().await()
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Listens for real-time updates to the hairstyles collection.
+     * @return A ListenerRegistration that can be removed to stop listening.
+     */
+    fun addHairstylesListener(onUpdate: (List<Hairstyle>) -> Unit): ListenerRegistration? {
+        // We check if a user is logged in. This is a good practice for security,
+        // although the rules currently allow anyone to read.
+        val user = auth.currentUser
+        if (user == null) {
+            Log.w("FirebaseManager", "No user logged in, cannot listen for hairstyles.")
+            onUpdate(emptyList())
+            return null
+        }
+
+        // Return the ListenerRegistration object so the fragment can manage its lifecycle
+        return firestore.collection("hairstyles")
+            .addSnapshotListener { snapshots, error ->
+                if (error != null) {
+                    Log.w("FirebaseManager", "Hairstyles listener failed.", error)
+                    return@addSnapshotListener
+                }
+
+                // Map the Firestore documents to our Hairstyle data class,
+                // ensuring the document ID is correctly assigned.
+                val hairstyleList = snapshots?.map { doc ->
+                    val hairstyle = doc.toObject(Hairstyle::class.java)
+                    hairstyle.id = doc.id
+                    hairstyle
+                } ?: emptyList()
+
+                // Send the updated list back to the fragment
+                onUpdate(hairstyleList)
+            }
+    }
+
+    // Updates the status of a specific support ticket
+    suspend fun updateSupportTicketStatus(ticketId: String, newStatus: String): Result<Unit> {
+        return try {
+            firestore.collection("support_messages").document(ticketId)
+                .update("status", newStatus).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Updates an existing hairstyle document in Firestore.
+     */
+    suspend fun updateHairstyle(hairstyle: Hairstyle): Result<Unit> {
+        return try {
+            firestore.collection("hairstyles").document(hairstyle.id).set(hairstyle).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
     // This is the final, corrected version of the function.

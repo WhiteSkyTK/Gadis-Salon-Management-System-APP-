@@ -8,15 +8,20 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.firebase.firestore.ListenerRegistration
 import com.rst.gadissalonmanagementsystemapp.FirebaseManager
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentAdminListBinding
 import kotlinx.coroutines.launch
+
 
 class AdminProductsListFragment : Fragment() {
     private var _binding: FragmentAdminListBinding? = null
     private val binding get() = _binding!!
     private val TAG = "AdminProductsList"
+    private lateinit var adapter: AdminProductAdapter
+    private var productsListener: ListenerRegistration? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentAdminListBinding.inflate(inflater, container, false)
@@ -25,19 +30,51 @@ class AdminProductsListFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.adminRecyclerView.layoutManager = LinearLayoutManager(context)
+        setupRecyclerView()
+    }
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            Log.d(TAG, "Fetching products from Firebase...")
-            val result = FirebaseManager.getAllProducts()
-            if (result.isSuccess) {
-                val productList = result.getOrNull() ?: emptyList()
-                Log.d(TAG, "Successfully fetched ${productList.size} products.")
-                binding.adminRecyclerView.adapter = AdminProductAdapter(productList)
-            } else {
-                val error = result.exceptionOrNull()?.message
-                Log.e(TAG, "Error fetching products: $error")
-                Toast.makeText(context, "Error: $error", Toast.LENGTH_SHORT).show()
+    override fun onStart() {
+        super.onStart()
+        // Start listening for live updates when the screen is visible
+        listenForProductUpdates()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // Stop the listener when the screen is not visible to prevent memory leaks
+        productsListener?.remove()
+    }
+
+    private fun setupRecyclerView() {
+        adapter = AdminProductAdapter(
+            items = emptyList(),
+            onEditClick = { product ->
+                // Navigate to the edit screen, passing the selected product
+                val action = AdminProductsFragmentDirections.actionAdminProductsFragmentToAdminEditProductFragment(product)
+                findNavController().navigate(action)
+            },
+            onDeleteClick = { product ->
+                // Call the FirebaseManager to delete the product
+                viewLifecycleOwner.lifecycleScope.launch {
+                    val result = FirebaseManager.deleteProduct(product)
+                    if (result.isSuccess) {
+                        Toast.makeText(context, "${product.name} deleted.", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(context, "Error deleting product.", Toast.LENGTH_SHORT).show()
+                    }
+                    // The real-time listener will handle refreshing the UI automatically
+                }
+            }
+        )
+        binding.adminRecyclerView.layoutManager = LinearLayoutManager(context)
+        binding.adminRecyclerView.adapter = adapter
+    }
+
+    private fun listenForProductUpdates() {
+        // Use the new real-time listener
+        productsListener = FirebaseManager.addProductsListener { productList ->
+            if (view != null) { // Ensure the fragment's view is still available
+                adapter.updateData(productList)
             }
         }
     }

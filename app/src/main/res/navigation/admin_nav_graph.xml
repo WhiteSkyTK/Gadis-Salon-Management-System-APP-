@@ -32,7 +32,31 @@
         <action
             android:id="@+id/action_adminProductsFragment_to_adminAddHairstyleFragment"
             app:destination="@id/adminAddHairstyleFragment" />
+        <action
+            android:id="@+id/action_adminProductsFragment_to_adminEditProductFragment"
+            app:destination="@id/adminEditProductFragment" />
+        <action
+            android:id="@+id/action_adminProductsFragment_to_adminEditHairstyleFragment"
+            app:destination="@id/adminEditHairstyleFragment" />
 
+    </fragment>
+
+    <fragment
+        android:id="@+id/adminEditHairstyleFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.admin.AdminEditHairstyleFragment"
+        android:label="Edit Hairstyle">
+        <argument
+            android:name="hairstyle"
+            app:argType="com.rst.gadissalonmanagementsystemapp.Hairstyle" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/adminEditProductFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.admin.AdminEditProductFragment"
+        android:label="Edit Product">
+        <argument
+            android:name="product"
+            app:argType="com.rst.gadissalonmanagementsystemapp.Product" />
     </fragment>
 
     <fragment

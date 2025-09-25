@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp">
@@ -13,17 +12,15 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Add New Product"
+            android:text="Edit Product"
             android:textSize="22sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="16dp"/>
+            android:textStyle="bold" />
 
         <ImageView
             android:id="@+id/product_image_preview"
             android:layout_width="150dp"
             android:layout_height="150dp"
             android:layout_gravity="center_horizontal"
-
             android:scaleType="centerCrop"
             android:src="@drawable/ic_add_a_photo" />
 
@@ -59,13 +56,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Add Variant" />
-
         <Button
-            android:id="@+id/save_product_button"
+            android:id="@+id/save_changes_button"
             android:layout_width="match_parent"
             android:layout_height="60dp"
             android:layout_marginTop="24dp"
-            android:text="Save Product" />
-
+            android:text="Save Changes" />
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

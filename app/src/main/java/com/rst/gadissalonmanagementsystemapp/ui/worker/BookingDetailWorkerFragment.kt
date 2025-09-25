@@ -88,7 +88,10 @@ class BookingDetailWorkerFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
+        // --- THIS IS THE FIX ---
+        // We apply the same change here for consistency and stability.
         chatAdapter = ChatAdapter(mutableListOf())
+
         val chatLayoutManager = LinearLayoutManager(context).apply { stackFromEnd = true }
         binding.chatRecyclerView.layoutManager = chatLayoutManager
         binding.chatRecyclerView.adapter = chatAdapter
