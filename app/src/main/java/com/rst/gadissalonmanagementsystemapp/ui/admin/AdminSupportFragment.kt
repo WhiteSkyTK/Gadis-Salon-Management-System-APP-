@@ -44,7 +44,7 @@ class AdminSupportFragment : Fragment() {
         supportAdapter = AdminSupportAdapter(
             messages = emptyList(),
             onItemClick = { message ->
-                val action = AdminSupportFragmentDirections.actionAdminSupportFragmentToAdminReplyMessageFragment(message)
+                val action = AdminSupportFragmentDirections.actionAdminSupportFragmentToAdminTicketDetailFragment(message)
                 findNavController().navigate(action)
             },
             onStatusChange = { message, newStatus ->

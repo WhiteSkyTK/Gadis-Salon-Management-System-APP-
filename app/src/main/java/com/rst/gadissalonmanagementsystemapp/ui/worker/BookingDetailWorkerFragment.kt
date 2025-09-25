@@ -64,6 +64,11 @@ class BookingDetailWorkerFragment : Fragment() {
         binding.customerNameDetail.text = "Customer: ${booking.customerName}"
         binding.bookingTimeDetail.text = "On: ${booking.date} at ${booking.time}"
 
+        if (!booking.status.equals("Confirmed", ignoreCase = true)) {
+            binding.inputLayout.visibility = View.GONE
+            binding.actionButtonsLayout.visibility = View.GONE // Also hide the action buttons
+        }
+
         setupRecyclerView()
         setupActionButtons(booking)
         binding.sendButton.setOnClickListener { sendMessage(booking.id) }

@@ -172,8 +172,8 @@
         tools:layout="@layout/fragment_admin_support">
 
         <action
-            android:id="@+id/action_adminSupportFragment_to_adminReplyMessageFragment"
-            app:destination="@id/adminReplyMessageFragment" />
+            android:id="@+id/action_adminSupportFragment_to_adminTicketDetailFragment"
+            app:destination="@id/adminTicketDetailFragment" />
         <action
             android:id="@+id/action_adminSupportFragment_to_adminComposeMessageFragment"
             app:destination="@id/adminComposeMessageFragment" />
@@ -187,12 +187,11 @@
         tools:layout="@layout/fragment_contact" />
 
     <fragment
-        android:id="@+id/adminReplyMessageFragment"
-        android:name="com.rst.gadissalonmanagementsystemapp.ui.admin.AdminReplyMessageFragment"
-        android:label="Reply to Message"
-        tools:layout="@layout/fragment_admin_reply_message">
+        android:id="@+id/adminTicketDetailFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.admin.AdminTicketDetailFragment"
+        android:label="Support Ticket">
         <argument
-            android:name="supportMessage"
+            android:name="ticket"
             app:argType="com.rst.gadissalonmanagementsystemapp.SupportMessage" />
     </fragment>
 </navigation>

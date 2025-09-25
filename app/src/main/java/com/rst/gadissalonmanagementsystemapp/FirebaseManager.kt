@@ -826,6 +826,34 @@ object FirebaseManager {
     }
 
     /**
+     * Updates all unread replies in a support ticket to "Read".
+     */
+    suspend fun markSupportRepliesAsRead(ticketId: String): Result<Unit> {
+        val uid = auth.currentUser?.uid ?: return Result.failure(Exception("Not logged in"))
+        return try {
+            val repliesRef = firestore.collection("support_messages").document(ticketId).collection("replies")
+            val query: Query = repliesRef.whereNotEqualTo("senderUid", uid).whereEqualTo("status", "SENT")
+
+            // --- THIS IS THE FIX ---
+            // 1. First, get the list of unread documents outside the transaction.
+            val unreadDocsSnapshot = query.get().await()
+
+            firestore.runTransaction { transaction ->
+                // 2. Now, loop through the results you already fetched.
+                for (document in unreadDocsSnapshot.documents) {
+                    // 3. Perform only the 'update' operations inside the transaction.
+                    transaction.update(document.reference, "status", "READ")
+                }
+                null // Transactions must return a result.
+            }.await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e("FirebaseManager", "Error marking support replies as read", e)
+            Result.failure(e)
+        }
+    }
+
+    /**
      * Updates an existing hairstyle document in Firestore.
      */
     suspend fun updateHairstyle(hairstyle: Hairstyle): Result<Unit> {

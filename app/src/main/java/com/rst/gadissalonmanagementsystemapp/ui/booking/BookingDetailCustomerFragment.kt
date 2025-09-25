@@ -50,6 +50,10 @@ class BookingDetailCustomerFragment : Fragment() {
         binding.stylistNameDetail.text = "With: ${booking.stylistName}"
         binding.bookingTimeDetail.text = "On: ${booking.date} at ${booking.time}"
 
+        if (!booking.status.equals("Confirmed", ignoreCase = true)) {
+            binding.inputLayout.visibility = View.GONE
+        }
+
         setupRecyclerView()
         binding.sendButton.setOnClickListener { sendMessage(booking.id) }
     }

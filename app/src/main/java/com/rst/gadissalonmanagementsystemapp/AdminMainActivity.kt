@@ -104,7 +104,7 @@ class AdminMainActivity : AppCompatActivity() {
                 R.id.adminSettingsFragment,
                 R.id.adminLocationFragment,
                 R.id.adminAboutUsFragment,
-                R.id.adminReplyMessageFragment,
+                R.id.adminTicketDetailFragment,
                 R.id.adminComposeMessageFragment,
                 R.id.adminEditUserFragment,
                 R.id.adminFaqFragment,
