@@ -1,5 +1,3 @@
-// index.js
-
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { onDocumentCreated, onDocumentUpdated } = require("firebase-functions/v2/firestore");
 const { defineString } = require("firebase-functions/params");
@@ -512,3 +510,131 @@ exports.onNewSupportReply = onDocumentCreated("support_messages/{ticketId}/repli
         console.error("Error in onNewSupportReply function:", error);
     }
 });
+
+/**
+ * Triggers when a new chat message is created. If the sender is a customer,
+ * it increments an unread counter on the parent booking for the worker.
+ */
+exports.onNewChatMessageForWorker = onDocumentCreated("bookings/{bookingId}/messages/{messageId}", async (event) => {
+    const message = event.data.data();
+    const bookingRef = admin.firestore().collection("bookings").doc(event.params.bookingId);
+
+    const bookingDoc = await bookingRef.get();
+    const booking = bookingDoc.data();
+
+    // Only proceed if the sender is the customer
+    if (booking && message.senderUid === booking.customerId) {
+        console.log(`Customer sent new message for booking ${event.params.bookingId}. Incrementing worker unread count.`);
+        // Atomically increment the counter on the booking document
+        return bookingRef.update({
+            workerUnreadCount: admin.firestore.FieldValue.increment(1)
+        });
+    }
+    return null;
+});
+
+/**
+ * Triggers when a product order's status is updated. If the new status is
+ * 'Ready for Pickup', it deducts the item quantities from the main product stock.
+ * It also sends a low-stock notification to admins if necessary.
+ */
+exports.onOrderReadyForPickup = onDocumentUpdated("product_orders/{orderId}", async (event) => {
+    const newData = event.data.after.data();
+    const oldData = event.data.before.data();
+    const db = admin.firestore();
+
+    // Only run if the status changed specifically to 'Ready for Pickup'
+    if (newData.status !== "Ready for Pickup" || oldData.status === "Ready for Pickup") {
+        return null;
+    }
+
+    console.log(`Processing stock for order ${event.params.orderId}`);
+    const items = newData.items;
+
+    // Use a transaction for each item to safely update stock
+    for (const item of items) {
+        const productRef = db.collection("products").doc(item.productId);
+
+        try {
+            await db.runTransaction(async (transaction) => {
+                const productDoc = await transaction.get(productRef);
+                if (!productDoc.exists) {
+                    throw `${item.productId} not found!`;
+                }
+
+                const productData = productDoc.data();
+                const variants = productData.variants;
+                let stockUpdated = false;
+
+                const updatedVariants = variants.map(variant => {
+                    if (variant.size === item.size) {
+                        const newStock = variant.stock - item.quantity;
+                        stockUpdated = true;
+
+                        // Check for low stock (threshold is 5)
+                        if (newStock <= 5 && variant.stock > 5) {
+                            console.log(`LOW STOCK ALERT for ${productData.name} (${variant.size})`);
+                            // This is where you would call a function to notify admins
+                            notifyAdminsOfLowStock(productData, variant, newStock);
+                        }
+
+                        return { ...variant, stock: newStock };
+                    }
+                    return variant;
+                });
+
+                if (stockUpdated) {
+                    transaction.update(productRef, { variants: updatedVariants });
+                }
+            });
+        } catch (e) {
+            console.error("Stock update transaction failed:", e);
+        }
+    }
+    return null;
+});
+
+// --- HELPER FUNCTION FOR LOW-STOCK NOTIFICATIONS ---
+/**
+ * Finds all admin users and sends them a low-stock alert.
+ * @param {object} productData The data of the product that is low on stock.
+ * @param {object} variant The specific product variant that is low.
+ * @param {number} newStock The new stock level.
+ */
+async function notifyAdminsOfLowStock(productData, variant, newStock) {
+    const db = admin.firestore();
+    const usersRef = db.collection("users");
+    const adminQuery = await usersRef.where("role", "==", "ADMIN").get();
+
+    if (adminQuery.empty) {
+        console.log("No admins found to notify.");
+        return;
+    }
+
+    const notificationPayload = {
+        title: "Low Stock Alert!",
+        message: `${productData.name} (${variant.size}) is running low. Only ${newStock} left in stock.`,
+        timestamp: Date.now(),
+        isRead: false,
+        // In the future, you could add a productId here to link directly to the product
+    };
+
+    // Send a notification to each admin
+    for (const adminDoc of adminQuery.docs) {
+        const adminUser = adminDoc.data();
+        // 1. Create the in-app notification
+        await db.collection("users").doc(adminUser.id).collection("notifications").add(notificationPayload);
+
+        // 2. Send the push notification if they have a token
+        if (adminUser.fcmToken) {
+            const pushPayload = {
+                notification: {
+                    title: notificationPayload.title,
+                    body: notificationPayload.message,
+                },
+            };
+            await admin.messaging().sendToDevice(adminUser.fcmToken, pushPayload);
+        }
+    }
+    console.log(`Sent low-stock alerts to ${adminQuery.size} admins.`);
+}
