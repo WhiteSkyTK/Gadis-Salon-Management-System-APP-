@@ -46,6 +46,7 @@ class LocationFragment : Fragment(), OnMapReadyCallback {
     private fun loadLocationFromFirebase() {
         viewLifecycleOwner.lifecycleScope.launch {
             val result = FirebaseManager.getSalonLocation()
+            if (view == null) return@launch
             if (result.isSuccess) {
                 val location = result.getOrNull() ?: SalonLocation() // Use default if not found
                 updateMapAndUI(location)

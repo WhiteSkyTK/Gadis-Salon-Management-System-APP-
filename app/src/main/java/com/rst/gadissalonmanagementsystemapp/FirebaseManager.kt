@@ -216,19 +216,32 @@ object FirebaseManager {
             }
     }
 
-    fun addBookingsListener(onUpdate: (List<AdminBooking>) -> Unit) {
-        firestore.collection("bookings")
+    fun addBookingsListener(onUpdate: (List<AdminBooking>) -> Unit): ListenerRegistration? {
+        // We add a security check here. In a real app, you might also check
+        // if the user is an admin on the client-side, but the Firestore rules provide the real security.
+        val user = auth.currentUser
+        if (user == null) {
+            Log.w("FirebaseManager", "No user logged in, cannot listen for all bookings.")
+            onUpdate(emptyList())
+            return null
+        }
+
+        // --- THIS IS THE FIX ---
+        // We now correctly return the ListenerRegistration object.
+        return firestore.collection("bookings")
             .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
             .addSnapshotListener { snapshots, error ->
                 if (error != null) {
-                    Log.w("FirebaseManager", "Bookings listener failed.", error)
+                    Log.w("FirebaseManager", "All bookings listener failed.", error)
                     return@addSnapshotListener
                 }
+
                 val bookingList = snapshots?.map { doc ->
                     val booking = doc.toObject(AdminBooking::class.java)
                     booking.id = doc.id
                     booking
                 } ?: emptyList()
+
                 onUpdate(bookingList)
             }
     }
@@ -892,9 +905,25 @@ object FirebaseManager {
                 onUpdate(bookingList)
             }
     }
+    suspend fun resetWorkerUnreadCount(bookingId: String): Result<Unit> {
+        return try {
+            firestore.collection("bookings").document(bookingId)
+                .update("workerUnreadCount", 0).await()
+            Result.success(Unit)
+        } catch (e: Exception) { Result.failure(e) }
+    }
 
-    fun addPendingBookingsListener(onUpdate: (List<AdminBooking>) -> Unit) {
-        firestore.collection("bookings")
+    fun addPendingBookingsListener(onUpdate: (List<AdminBooking>) -> Unit): ListenerRegistration? {
+        val user = auth.currentUser
+        if (user == null) {
+            Log.w("FirebaseManager", "No user logged in, cannot listen for pending bookings.")
+            onUpdate(emptyList())
+            return null
+        }
+
+        // --- THIS IS THE FIX ---
+        // We now correctly return the ListenerRegistration object.
+        return firestore.collection("bookings")
             .whereEqualTo("status", "Pending")
             .addSnapshotListener { snapshots, error ->
                 if (error != null) {
@@ -934,12 +963,25 @@ object FirebaseManager {
         }
     }
 
-    fun addPendingOrdersListener(onUpdate: (List<ProductOrder>) -> Unit) {
-        firestore.collection("product_orders")
+    /**
+     * Listens for the COUNT of pending product orders.
+     */
+    fun addPendingOrdersListener(onUpdate: (List<ProductOrder>) -> Unit): ListenerRegistration? {
+        if (auth.currentUser == null) {
+            onUpdate(emptyList())
+            return null
+        }
+
+        // --- THIS IS THE FIX ---
+        // We now correctly return the ListenerRegistration object.
+        return firestore.collection("product_orders")
             .whereEqualTo("status", "Pending Pickup")
             .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
             .addSnapshotListener { snapshots, error ->
-                if (error != null) { return@addSnapshotListener }
+                if (error != null) {
+                    Log.w("FirebaseManager", "Pending orders listener failed.", error)
+                    return@addSnapshotListener
+                }
                 val orderList = snapshots?.toObjects(ProductOrder::class.java) ?: emptyList()
                 onUpdate(orderList)
             }
@@ -1239,6 +1281,37 @@ object FirebaseManager {
             }
     }
 
+    /**
+     * Listens for real-time updates to the entire 'product_orders' collection.
+     * Intended for admin use.
+     * @return A ListenerRegistration that can be removed to stop listening.
+     */
+    fun addAllProductOrdersListener(onUpdate: (List<ProductOrder>) -> Unit): ListenerRegistration? {
+        // We add a security check here. In a real app, you might also check
+        // if the user is an admin on the client-side, but the Firestore rules provide the real security.
+        if (auth.currentUser == null) {
+            Log.w("FirebaseManager", "No user logged in, cannot fetch all orders.")
+            onUpdate(emptyList())
+            return null
+        }
+
+        return firestore.collection("product_orders")
+            .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshots, error ->
+                if (error != null) {
+                    Log.w("FirebaseManager", "All orders listener failed.", error)
+                    return@addSnapshotListener
+                }
+
+                // Map the Firestore documents to our ProductOrder data class.
+                // We don't need to manually set the ID here since we create it in the app.
+                val orderList = snapshots?.toObjects(ProductOrder::class.java) ?: emptyList()
+
+                // Send the updated list back to the fragment
+                onUpdate(orderList)
+            }
+    }
+
     // Listens for real-time updates to the reply thread of a support ticket
     fun addSupportTicketRepliesListener(ticketId: String, onUpdate: (List<ChatMessage>) -> Unit): ListenerRegistration {
         return firestore.collection("support_messages").document(ticketId).collection("replies")
@@ -1285,5 +1358,26 @@ object FirebaseManager {
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    /**
+     * Listens for the total count of unread chat messages for the current worker
+     * across all their confirmed bookings.
+     */
+    fun addWorkerUnreadMessageListener(onUpdate: (Int) -> Unit): ListenerRegistration? {
+        val uid = auth.currentUser?.uid ?: return null
+
+        return firestore.collection("bookings")
+            .whereEqualTo("stylistId", uid)
+            .whereEqualTo("status", "Confirmed")
+            .whereGreaterThan("workerUnreadCount", 0) // Only get bookings that HAVE unread messages
+            .addSnapshotListener { snapshots, error ->
+                if (error != null) {
+                    onUpdate(0)
+                    return@addSnapshotListener
+                }
+                // The size of the result is the number of conversations with unread messages.
+                onUpdate(snapshots?.size() ?: 0)
+            }
     }
 }

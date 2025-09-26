@@ -1,4 +1,4 @@
-package com.rst.gadissalonmanagementsystemapp.ui.worker
+package com.rst.gadissalonmanagementsystemapp.ui.admin
 
 import android.view.LayoutInflater
 import android.view.View
@@ -7,26 +7,26 @@ import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import com.rst.gadissalonmanagementsystemapp.ProductOrder
 import com.rst.gadissalonmanagementsystemapp.R
-import com.rst.gadissalonmanagementsystemapp.databinding.ItemWorkerOrderBinding
+import com.rst.gadissalonmanagementsystemapp.databinding.ItemAdminOrderBinding
 import java.text.NumberFormat
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
-class WorkerOrdersAdapter(
-    private var orders: MutableList<ProductOrder>,
-    private val onItemClick: (ProductOrder) -> Unit, // <-- Add this
-    private val onMarkAsReady: (ProductOrder) -> Unit
-) : RecyclerView.Adapter<WorkerOrdersAdapter.ViewHolder>() {
+class AdminOrdersAdapter(private var orders: List<ProductOrder>) : RecyclerView.Adapter<AdminOrdersAdapter.ViewHolder>() {
 
-    inner class ViewHolder(private val binding: ItemWorkerOrderBinding) : RecyclerView.ViewHolder(binding.root) {
+    inner class ViewHolder(private val binding: ItemAdminOrderBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(order: ProductOrder) {
-            binding.customerNameText.text = "Order for: ${order.customerName}"
-            val totalItems = order.items.sumOf { it.quantity }
+            binding.customerNameValue.text = order.customerName
+            val sdf = SimpleDateFormat("dd MMM, yyyy", Locale.getDefault())
+            binding.orderDateValue.text = sdf.format(Date(order.timestamp))
             val format = NumberFormat.getCurrencyInstance(Locale("en", "ZA"))
-            binding.itemCountText.text = "$totalItems items • Total: ${format.format(order.totalPrice)}"
+            binding.totalPriceValue.text = "Total: ${format.format(order.totalPrice)}"
+            binding.orderStatusAdmin.text = order.status
 
             // --- Logic to display up to 3 product images ---
             val imageViews = listOf(binding.itemImage1, binding.itemImage2, binding.itemImage3)
-            // Hide all images initially
+            // Hide all images initially to handle orders with fewer than 3 items
             imageViews.forEach { it.visibility = View.GONE }
 
             // Show and load images for the first few items in the order
@@ -37,18 +37,11 @@ class WorkerOrdersAdapter(
                     error(R.drawable.ic_placeholder_image)
                 }
             }
-
-            // Set the click listener for the button
-            binding.markReadyButton.setOnClickListener {
-                onMarkAsReady(order)
-            }
-
-            itemView.setOnClickListener { onItemClick(order) }
         }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val binding = ItemWorkerOrderBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val binding = ItemAdminOrderBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return ViewHolder(binding)
     }
 
@@ -56,13 +49,10 @@ class WorkerOrdersAdapter(
         holder.bind(orders[position])
     }
 
-    override fun getItemCount(): Int {
-        return orders.size
-    }
+    override fun getItemCount(): Int = orders.size
 
     fun updateData(newOrders: List<ProductOrder>) {
-        orders.clear()
-        orders.addAll(newOrders)
-        notifyDataSetChanged() // Tells the RecyclerView to redraw itself
+        this.orders = newOrders
+        notifyDataSetChanged()
     }
 }

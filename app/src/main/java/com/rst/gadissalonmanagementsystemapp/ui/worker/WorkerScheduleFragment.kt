@@ -5,6 +5,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
@@ -12,10 +13,12 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.firestore.ListenerRegistration
 import com.prolificinteractive.materialcalendarview.CalendarDay
+import com.prolificinteractive.materialcalendarview.CalendarMode
 import com.rst.gadissalonmanagementsystemapp.AdminBooking
 import com.rst.gadissalonmanagementsystemapp.FirebaseManager
 import com.rst.gadissalonmanagementsystemapp.Hairstyle
 import com.rst.gadissalonmanagementsystemapp.MainViewModel
+import com.rst.gadissalonmanagementsystemapp.R
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentWorkerScheduleBinding
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -41,6 +44,30 @@ class WorkerScheduleFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         setupRecyclerView()
+        setupCalendar()
+    }
+
+    private fun setupCalendar() {
+        binding.calendarViewWorker.setHeaderTextAppearance(R.style.Gadis_Calendar_HeaderText)
+        binding.calendarViewWorker.setWeekDayTextAppearance(R.style.Gadis_Calendar_WeekDayText)
+        binding.calendarViewWorker.setDateTextAppearance(R.style.Gadis_Calendar_DateText)
+        binding.calendarViewWorker.setLeftArrowMask(ContextCompat.getDrawable(requireContext(), R.drawable.ic_calendar_arrow_left))
+        binding.calendarViewWorker.setRightArrowMask(ContextCompat.getDrawable(requireContext(), R.drawable.ic_calendar_arrow_right))
+        binding.calendarViewWorker.selectedDate = CalendarDay.today()
+
+        var isMonthView = true // Start in month view
+        binding.toggleCalendarButton.setOnClickListener {
+            isMonthView = !isMonthView
+            val newMode = if (isMonthView) CalendarMode.MONTHS else CalendarMode.WEEKS
+            binding.calendarViewWorker.state().edit().setCalendarDisplayMode(newMode).commit()
+
+            // Animate the arrow icon
+            val rotation = if (isMonthView) 180f else 0f
+            binding.toggleCalendarButton.animate().rotation(rotation).setDuration(300).start()
+        }
+
+        // Initially, the calendar is expanded, so the arrow should point up.
+        binding.toggleCalendarButton.rotation = 180f
 
         binding.calendarViewWorker.setOnDateChangedListener { widget, date, selected ->
             val selectedDateStr = SimpleDateFormat("dd MMM, yyyy", Locale.getDefault()).format(date.date)
@@ -95,6 +122,7 @@ class WorkerScheduleFragment : Fragment() {
                 }
             } catch (e: Exception) { /* Ignore parse errors */ }
         }
+        binding.calendarViewWorker.removeDecorators()
         binding.calendarViewWorker.addDecorator(EventDayDecorator(eventDates))
     }
 

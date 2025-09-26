@@ -7,17 +7,24 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.firebase.firestore.ListenerRegistration
 import com.rst.gadissalonmanagementsystemapp.AdminBooking
 import com.rst.gadissalonmanagementsystemapp.FirebaseManager
+import com.rst.gadissalonmanagementsystemapp.MainViewModel
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentWorkerBookingsBinding
 import kotlinx.coroutines.launch
+
 
 class WorkerBookingsFragment : Fragment() {
     private var _binding: FragmentWorkerBookingsBinding? = null
     private val binding get() = _binding!!
     private lateinit var adapter: WorkerBookingAdapter
+    private val mainViewModel: MainViewModel by activityViewModels()
+    private var bookingsListener: ListenerRegistration? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentWorkerBookingsBinding.inflate(inflater, container, false)
@@ -27,17 +34,31 @@ class WorkerBookingsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
+    }
+
+    override fun onStart() {
+        super.onStart()
         listenForPendingBookings()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        bookingsListener?.remove()
     }
 
     private fun setupRecyclerView() {
         adapter = WorkerBookingAdapter(
             bookings = mutableListOf(),
+            allHairstyles = mainViewModel.allHairstyles.value ?: emptyList(),
             onAccept = { booking ->
                 acceptBooking(booking)
             },
             onDecline = { booking ->
                 declineBooking(booking)
+            },
+            onItemClick = { booking ->
+                val action = WorkerBookingsFragmentDirections.actionNavWorkerBookingsToBookingDetailWorkerFragment(booking)
+                findNavController().navigate(action)
             }
         )
         binding.workerBookingsRecyclerView.layoutManager = LinearLayoutManager(context)
@@ -45,9 +66,11 @@ class WorkerBookingsFragment : Fragment() {
     }
 
     private fun listenForPendingBookings() {
-        FirebaseManager.addPendingBookingsListener { pendingBookings ->
-            Log.d("WorkerBookings", "Live update: Found ${pendingBookings.size} pending bookings.")
-            adapter.updateData(pendingBookings)
+        bookingsListener = FirebaseManager.addPendingBookingsListener { pendingBookings ->
+            if (view != null) {
+                Log.d("WorkerBookings", "Live update: Found ${pendingBookings.size} pending bookings.")
+                adapter.updateData(pendingBookings)
+            }
         }
     }
 

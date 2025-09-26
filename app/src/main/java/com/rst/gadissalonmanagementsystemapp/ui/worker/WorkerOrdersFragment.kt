@@ -8,7 +8,9 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.firebase.firestore.ListenerRegistration
 import com.rst.gadissalonmanagementsystemapp.FirebaseManager
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentWorkerOrdersBinding
 import kotlinx.coroutines.launch
@@ -17,6 +19,7 @@ class WorkerOrdersFragment : Fragment() {
     private var _binding: FragmentWorkerOrdersBinding? = null
     private val binding get() = _binding!!
     private lateinit var ordersAdapter: WorkerOrdersAdapter
+    private var ordersListener: ListenerRegistration? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentWorkerOrdersBinding.inflate(inflater, container, false)
@@ -27,14 +30,28 @@ class WorkerOrdersFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         setupRecyclerView()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        // Start listening for real-time updates when the screen is visible
         listenForPendingOrders()
     }
 
+    override fun onStop() {
+        super.onStop()
+        // Stop listening when the screen is not visible to prevent crashes
+        ordersListener?.remove()
+    }
+
     private fun setupRecyclerView() {
-        // Create the adapter once with an empty list
         ordersAdapter = WorkerOrdersAdapter(
             orders = mutableListOf(),
-            // --- THIS IS THE FIX: Provide the click logic ---
+            onItemClick = { order ->
+                // This is what happens when a worker clicks on an order
+                val action = WorkerOrdersFragmentDirections.actionWorkerOrdersFragmentToWorkerOrderDetailFragment(order)
+                findNavController().navigate(action)
+            },
             onMarkAsReady = { order ->
                 markOrderAsReady(order.id)
             }
@@ -43,12 +60,14 @@ class WorkerOrdersFragment : Fragment() {
         binding.workerOrdersRecyclerView.adapter = ordersAdapter
     }
 
+
     private fun listenForPendingOrders() {
-        // Listen for real-time updates to pending product orders
-        FirebaseManager.addPendingOrdersListener { orders ->
-            Log.d("WorkerOrdersFragment", "Live update: Found ${orders.size} pending orders.")
-            // Update the adapter's data
-            (binding.workerOrdersRecyclerView.adapter as? WorkerOrdersAdapter)?.updateData(orders)
+        // We now store the returned listener in our class property
+        ordersListener = FirebaseManager.addPendingOrdersListener { orders ->
+            if (view != null) { // Only update if the view still exists
+                Log.d("WorkerOrdersFragment", "Live update: Found ${orders.size} pending orders.")
+                ordersAdapter.updateData(orders)
+            }
         }
     }
 

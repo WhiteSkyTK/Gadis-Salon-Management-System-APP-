@@ -1,72 +1,89 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp">
+    android:layout_marginStart="8dp"
+    android:layout_marginTop="4dp"
+    android:layout_marginEnd="8dp"
+    android:layout_marginBottom="4dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="12dp">
+        android:layout_height="wrap_content">
 
-        <ImageView
+        <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/user_image"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:src="@drawable/ic_profile"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            app:shapeAppearanceOverlay="@style/CircleImageView"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            tools:src="@drawable/ic_profile" />
 
         <TextView
             android:id="@+id/user_name"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Tokollo (TK)"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="8dp"
             android:textStyle="bold"
-            android:layout_marginStart="12dp"
+            android:textSize="16sp"
+            app:layout_constraintVertical_chainStyle="packed"
             app:layout_constraintStart_toEndOf="@id/user_image"
-            app:layout_constraintTop_toTopOf="@id/user_image"
-            app:layout_constraintEnd_toStartOf="@id/edit_button"/>
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/user_email"
+            app:layout_constraintEnd_toStartOf="@+id/buttons_layout"
+            tools:text="Tokollo Nonyane" />
 
         <TextView
             android:id="@+id/user_email"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="tk@rstinnovations.dev"
+            android:textSize="14sp"
             app:layout_constraintStart_toStartOf="@id/user_name"
             app:layout_constraintTop_toBottomOf="@id/user_name"
-            app:layout_constraintEnd_toEndOf="@id/user_name"/>
+            app:layout_constraintBottom_toTopOf="@id/user_role_chip"
+            app:layout_constraintEnd_toEndOf="@id/user_name"
+            tools:text="tk@rstinnovations.dev" />
 
         <com.google.android.material.chip.Chip
             android:id="@+id/user_role_chip"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Admin"
-            app:layout_constraintStart_toStartOf="@id/user_email"
-            app:layout_constraintTop_toBottomOf="@id/user_email" />
-
-        <ImageButton
-            android:id="@+id/edit_button"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_edit"
+            app:layout_constraintStart_toStartOf="@id/user_name"
+            app:layout_constraintTop_toBottomOf="@id/user_email"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/delete_button"
-            app:layout_constraintTop_toTopOf="parent" />
+            tools:text="Admin" />
 
-        <ImageButton
-            android:id="@+id/delete_button"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_delete"
-            app:layout_constraintBottom_toBottomOf="parent"
+        <LinearLayout
+            android:id="@+id/buttons_layout"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:tint="@color/status_red" />
+            app:layout_constraintBottom_toBottomOf="parent">
+
+            <ImageButton
+                android:id="@+id/edit_button"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="center_vertical"
+                android:src="@drawable/ic_edit"
+                android:background="?attr/selectableItemBackgroundBorderless" />
+
+            <ImageButton
+                android:id="@+id/delete_button"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="center_vertical"
+                android:src="@drawable/ic_delete"
+                app:tint="@color/status_red"
+                android:background="?attr/selectableItemBackgroundBorderless" />
+        </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

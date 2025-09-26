@@ -4,12 +4,14 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.firestore
 import com.rst.gadissalonmanagementsystemapp.databinding.ActivityAdminMainBinding
 
@@ -17,6 +19,8 @@ class AdminMainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityAdminMainBinding
     private lateinit var navController: NavController
+    private var notificationListener: ListenerRegistration? = null
+    private val mainViewModel: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,6 +37,7 @@ class AdminMainActivity : AppCompatActivity() {
         }
 
         logIdTokenClaims()
+        mainViewModel.loadAllHairstyles()
 
         // Find the NavController
         val navHostFragment = supportFragmentManager

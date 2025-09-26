@@ -1,80 +1,90 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp">
+    android:layout_marginStart="8dp"
+    android:layout_marginTop="4dp"
+    android:layout_marginEnd="8dp"
+    android:layout_marginBottom="4dp">
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="16dp">
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/hairstyle_image_admin"
+            android:layout_width="100dp"
+            android:layout_height="0dp"
+            android:scaleType="centerCrop"
+            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            tools:src="@drawable/ic_placeholder_image" />
 
         <TextView
             android:id="@+id/service_name"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Butterfly Locs"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginEnd="8dp"
+            android:textColor="@color/textColorPrimary"
+            android:textSize="16sp"
             android:textStyle="bold"
-            android:textSize="18sp"
+            app:layout_constraintVertical_chainStyle="packed"
+            app:layout_constraintStart_toEndOf="@id/hairstyle_image_admin"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/booking_status_admin"/>
+            app:layout_constraintBottom_toTopOf="@id/customer_name_value"
+            app:layout_constraintEnd_toStartOf="@+id/booking_status_admin"
+            tools:text="Butterfly Locs" />
 
-        <TextView
-            android:id="@+id/customer_name_label"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Customer: "
-            android:layout_marginTop="8dp"
-            app:layout_constraintTop_toBottomOf="@id/service_name"
-            app:layout_constraintStart_toStartOf="parent"/>
         <TextView
             android:id="@+id/customer_name_value"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Sagwadi M."
-            android:textStyle="bold"
-            app:layout_constraintStart_toEndOf="@id/customer_name_label"
-            app:layout_constraintBaseline_toBaselineOf="@id/customer_name_label"/>
+            android:textSize="14sp"
+            app:layout_constraintStart_toStartOf="@id/service_name"
+            app:layout_constraintTop_toBottomOf="@id/service_name"
+            app:layout_constraintBottom_toTopOf="@id/stylist_name_value"
+            app:layout_constraintEnd_toEndOf="@id/service_name"
+            tools:text="Customer: Sagwadi M." />
 
         <TextView
-            android:id="@+id/stylist_name_label"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Stylist: "
-            app:layout_constraintTop_toBottomOf="@id/customer_name_label"
-            app:layout_constraintStart_toStartOf="parent"/>
-        <TextView
             android:id="@+id/stylist_name_value"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Rinae M."
-            android:textStyle="bold"
-            app:layout_constraintStart_toEndOf="@id/stylist_name_label"
-            app:layout_constraintBaseline_toBaselineOf="@id/stylist_name_label"/>
+            android:textSize="14sp"
+            app:layout_constraintStart_toStartOf="@id/service_name"
+            app:layout_constraintTop_toBottomOf="@id/customer_name_value"
+            app:layout_constraintBottom_toTopOf="@id/booking_date_admin"
+            app:layout_constraintEnd_toEndOf="@id/service_name"
+            tools:text="Stylist: Rinae M." />
 
         <TextView
             android:id="@+id/booking_date_admin"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="06 Aug 2025, 14:00"
-            android:layout_marginTop="8dp"
-            app:layout_constraintTop_toBottomOf="@id/stylist_name_label"
-            app:layout_constraintStart_toStartOf="parent"/>
+            android:layout_marginBottom="12dp"
+            android:textColor="@color/textColorSecondary"
+            android:textSize="12sp"
+            app:layout_constraintStart_toStartOf="@id/service_name"
+            app:layout_constraintTop_toBottomOf="@id/stylist_name_value"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@id/service_name"
+            tools:text="25 Sep, 2025 at 14:00" />
 
-        <TextView
+        <com.google.android.material.chip.Chip
             android:id="@+id/booking_status_admin"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Confirmed"
-            android:background="@drawable/status_background"
-            android:textColor="@color/white"
-            android:paddingStart="10dp"
-            android:paddingEnd="10dp"
-            android:paddingTop="4dp"
-            android:paddingBottom="4dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginEnd="16dp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"/>
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="Confirmed" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>
