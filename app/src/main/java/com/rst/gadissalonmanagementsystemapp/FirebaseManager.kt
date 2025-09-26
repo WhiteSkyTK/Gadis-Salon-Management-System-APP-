@@ -226,7 +226,8 @@ object FirebaseManager {
             return null
         }
 
-        // --- THIS IS THE FIX ---
+
+
         // We now correctly return the ListenerRegistration object.
         return firestore.collection("bookings")
             .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
@@ -1379,5 +1380,20 @@ object FirebaseManager {
                 // The size of the result is the number of conversations with unread messages.
                 onUpdate(snapshots?.size() ?: 0)
             }
+    }
+
+    /**
+     * Updates the FCM (Firebase Cloud Messaging) token for a specific user.
+     * This is crucial for sending push notifications.
+     */
+    suspend fun updateUserFCMToken(uid: String, token: String): Result<Unit> {
+        return try {
+            // Find the user's document by their UID and update the 'fcmToken' field.
+            usersCollection.document(uid).update("fcmToken", token).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e("FirebaseManager", "Error updating FCM token", e)
+            Result.failure(e)
+        }
     }
 }

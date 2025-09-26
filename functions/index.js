@@ -28,14 +28,13 @@ const transporter = nodemailer.createTransport({
 exports.onBookingStatusChange = onDocumentUpdated("bookings/{bookingId}", async (event) => {
     const newData = event.data.after.data();
     const oldData = event.data.before.data();
+    const customerId = newData.customerId;
 
     // Only trigger if the status has actually changed
     if (newData.status === oldData.status) {
         console.log("Status unchanged, no notification sent.");
         return;
     }
-
-    const customerId = newData.customerId;
 
     const bookingId = event.params.bookingId;
     if (!customerId) {
@@ -60,12 +59,12 @@ exports.onBookingStatusChange = onDocumentUpdated("bookings/{bookingId}", async 
     if (fcmToken) {
         const pushPayload = {
             notification: {
-                title: notificationPayload.title,
-                body: notificationPayload.message,
+                title: `Booking ${newData.status}`,
+                body: `Your appointment for ${newData.serviceName} has been ${newData.status.toLowerCase()}.`,
+                sound: "default" // <-- ADD THIS LINE
             },
         };
         await admin.messaging().sendToDevice(fcmToken, pushPayload);
-        console.log("Push notification sent to customer:", customerId);
     }
 });
 
@@ -113,10 +112,16 @@ exports.onNewChatMessage = onDocumentCreated("bookings/{bookingId}/messages/{mes
     const fcmToken = recipientDoc.data()?.fcmToken;
 
     if (fcmToken) {
-        const pushPayload = { notification: { title: notificationPayload.title, body: notificationPayload.message } };
-        await admin.messaging().sendToDevice(fcmToken, pushPayload);
-    }
-});
+            const pushPayload = {
+                notification: {
+                    title: `New Message from ${message.senderName}`,
+                    body: message.messageText,
+                    sound: "default" // <-- ADD THIS LINE
+                }
+            };
+            await admin.messaging().sendToDevice(fcmToken, pushPayload);
+        }
+    });
 
 
 /**
@@ -149,12 +154,17 @@ exports.sendSupportPushNotification = onDocumentCreated("support_messages/{messa
     });
 
     if (tokens.length > 0) {
-        console.log("Sending push notification to admin tokens:", tokens);
-        return admin.messaging().sendToDevice(tokens, payload);
-    }
-    console.log("No admin tokens found to send notification.");
-    return;
-});
+            const payload = {
+                notification: {
+                    title: `New Support Message from ${message.senderName}`,
+                    body: message.message,
+                    sound: "default" // <-- ADD THIS LINE
+                },
+            };
+            return admin.messaging().sendToDevice(tokens, payload);
+        }
+        return null;
+    });
 
 /**
  * v2 Cloud Function to send an email notification when a new support
