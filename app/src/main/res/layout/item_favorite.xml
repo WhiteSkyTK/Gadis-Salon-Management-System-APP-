@@ -6,74 +6,79 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginStart="16dp"
+    android:layout_marginTop="8dp"
     android:layout_marginEnd="16dp"
-    android:layout_marginBottom="12dp"
+    android:layout_marginBottom="8dp"
     app:cardCornerRadius="16dp"
     app:cardElevation="4dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="12dp">
+        android:layout_height="wrap_content">
 
         <ImageView
             android:id="@+id/item_image"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:background="@color/inputFieldBackgroundColor"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
             android:scaleType="centerCrop"
-            android:src="@drawable/ic_placeholder_image"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"/>
+            app:layout_constraintBottom_toBottomOf="parent"
+            tools:src="@drawable/ic_placeholder_image" />
 
         <TextView
             android:id="@+id/item_name"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:text="Eco Style Gel"
+            android:layout_marginEnd="8dp"
             android:textColor="@color/textColorPrimary"
-            android:textSize="18sp"
+            android:textSize="16sp"
             android:textStyle="bold"
-            app:layout_constraintEnd_toStartOf="@id/frame_buttons"
+            app:layout_constraintVertical_chainStyle="packed"
             app:layout_constraintStart_toEndOf="@id/item_image"
-            app:layout_constraintTop_toTopOf="@id/item_image" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/item_price"
+            app:layout_constraintEnd_toStartOf="@+id/frame_buttons"
+            tools:text="Eco Style Gel" />
 
         <TextView
             android:id="@+id/item_price"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="R50"
             android:textColor="@color/colorPrimary"
-            android:textSize="16sp"
+            android:textSize="14sp"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="@id/item_name"
-            app:layout_constraintBottom_toBottomOf="@id/item_image"/>
+            app:layout_constraintTop_toBottomOf="@id/item_name"
+            app:layout_constraintBottom_toTopOf="@id/item_size"
+            tools:text="R50" />
 
         <TextView
             android:id="@+id/item_size"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="50ML"
             android:textColor="@color/textColorSecondary"
-            android:textSize="14sp"
-            app:layout_constraintBottom_toBottomOf="@id/item_price"
-            app:layout_constraintStart_toEndOf="@id/item_price" />
+            android:textSize="12sp"
+            app:layout_constraintStart_toStartOf="@id/item_name"
+            app:layout_constraintTop_toBottomOf="@id/item_price"
+            app:layout_constraintBottom_toBottomOf="parent"
+            tools:text="50ML" />
 
+        <!-- This FrameLayout now correctly holds BOTH action buttons -->
         <FrameLayout
             android:id="@+id/frame_buttons"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toStartOf="@id/unfavorite_button"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent">
 
             <ImageButton
                 android:id="@+id/add_to_cart_button"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:padding="8dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:padding="12dp"
                 android:src="@drawable/ic_shopping_cart"
                 android:visibility="gone"
                 tools:visibility="visible"
@@ -81,24 +86,25 @@
 
             <ImageButton
                 android:id="@+id/book_now_button"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:padding="8dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:padding="12dp"
                 android:src="@drawable/ic_booking"
                 android:visibility="gone"
                 tools:visibility="gone"
                 android:background="?attr/selectableItemBackgroundBorderless"/>
-
         </FrameLayout>
 
         <ImageButton
             android:id="@+id/unfavorite_button"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:padding="8dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:padding="12dp"
             android:src="@drawable/ic_favorite_filled"
             android:background="?attr/selectableItemBackgroundBorderless"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/frame_buttons"/>
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

@@ -60,5 +60,25 @@
         <item name="android:textColor">@color/colorPrimary</item>
     </style>
 
+    <style name="Gadis.Calendar" parent="Theme.AppCompat.Light">
+        <!-- This points to our custom text appearance styles below -->
+        <item name="mcv_dateTextAppearance">@style/Gadis.Calendar.DateText</item>
+        <item name="mcv_weekDayTextAppearance">@style/Gadis.Calendar.WeekDayText</item>
+        <item name="mcv_headerTextAppearance">@style/Gadis.Calendar.HeaderText</item>
+    </style>
+
+    <!-- Style for the individual date numbers -->
+    <style name="Gadis.Calendar.DateText" parent="TextAppearance.MaterialComponents.Body2">
+        <item name="android:textColor">@color/textColorPrimary</item>
+    </style>
+    <!-- Style for the weekday labels (S, M, T, etc.) -->
+    <style name="Gadis.Calendar.WeekDayText" parent="TextAppearance.MaterialComponents.Caption">
+        <item name="android:textColor">@color/textColorSecondary</item>
+    </style>
+    <!-- Style for the month/year header -->
+    <style name="Gadis.Calendar.HeaderText" parent="TextAppearance.MaterialComponents.Headline6">
+        <item name="android:textColor">@color/colorPrimary2</item>
+    </style>
+
     <style name="Theme.GadisSalonManagementSystemAPP" parent="Base.Theme.GadisSalonManagementSystemAPP" />
 </resources>

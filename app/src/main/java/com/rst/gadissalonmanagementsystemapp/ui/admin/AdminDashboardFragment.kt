@@ -1,6 +1,7 @@
 package com.rst.gadissalonmanagementsystemapp.ui.admin
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,6 +18,7 @@ class AdminDashboardFragment : Fragment() {
 
     private var _binding: FragmentAdminDashboardBinding? = null
     private val binding get() = _binding!!
+    private val TAG = "AdminDashboard"
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -36,9 +38,12 @@ class AdminDashboardFragment : Fragment() {
 
     private fun setupDashboardStats() {
         viewLifecycleOwner.lifecycleScope.launch {
+            Log.d(TAG, "Fetching dashboard stats from Firebase...")
 
             // --- Fetch Users ---
             val userResult = FirebaseManager.getAllUsers()
+            if (!isAdded) return@launch
+
             if (userResult.isSuccess) {
                 val allUsers = userResult.getOrNull() ?: emptyList()
                 // Count customers
@@ -53,11 +58,27 @@ class AdminDashboardFragment : Fragment() {
 
             // --- Fetch Bookings ---
             val bookingResult = FirebaseManager.getAllBookings()
+            if (!isAdded) return@launch
+
             if (bookingResult.isSuccess) {
                 val allBookings = bookingResult.getOrNull() ?: emptyList()
                 binding.bookingsCountText.text = allBookings.size.toString()
             } else {
                 Toast.makeText(context, "Error fetching bookings: ${bookingResult.exceptionOrNull()?.message}", Toast.LENGTH_SHORT).show()
+            }
+
+            val productResult = FirebaseManager.getAllProducts()
+            if (!isAdded) return@launch
+
+            if (productResult.isSuccess) {
+                val allProducts = productResult.getOrNull() ?: emptyList()
+                // Sum up the stock from every variant of every product
+                val totalStock = allProducts.sumOf { product ->
+                    product.variants.sumOf { variant -> variant.stock }
+                }
+                binding.totalStockCountText.text = totalStock.toString()
+            } else {
+                binding.totalStockCountText.text = "N/A"
             }
         }
     }

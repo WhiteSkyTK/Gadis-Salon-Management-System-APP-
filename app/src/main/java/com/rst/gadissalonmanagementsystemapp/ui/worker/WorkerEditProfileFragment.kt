@@ -76,6 +76,7 @@ class WorkerEditProfileFragment : Fragment(), ProfilePictureBottomSheet.PictureO
             val result = FirebaseManager.getUser(uid)
             if (result.isSuccess) {
                 val user = result.getOrNull()
+                binding.emailText.text = user?.email
                 binding.nameInput.setText(user?.name)
                 binding.phoneInput.setText(user?.phone)
                 binding.profileImageEdit.load(user?.imageUrl) {

@@ -73,6 +73,11 @@ class BookingDetailWorkerFragment : Fragment() {
         setupActionButtons(booking)
         binding.sendButton.setOnClickListener { sendMessage(booking.id) }
 
+        if (booking.workerUnreadCount > 0) {
+            viewLifecycleOwner.lifecycleScope.launch {
+                FirebaseManager.resetWorkerUnreadCount(booking.id)
+            }
+        }
     }
 
 
@@ -115,6 +120,8 @@ class BookingDetailWorkerFragment : Fragment() {
             }
         }
     }
+
+
 
     private fun sendMessage(bookingId: String) {
         val messageText = binding.messageInput.text.toString().trim()

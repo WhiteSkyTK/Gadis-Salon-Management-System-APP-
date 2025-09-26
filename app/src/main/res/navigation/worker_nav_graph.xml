@@ -10,7 +10,15 @@
         android:id="@+id/nav_worker_bookings"
         android:name="com.rst.gadissalonmanagementsystemapp.ui.worker.WorkerBookingsFragment"
         android:label="New Bookings"
-        tools:layout="@layout/fragment_worker_bookings" />
+        tools:layout="@layout/fragment_worker_bookings" >
+
+        <!-- ADD THIS ACTION -->
+        <action
+            android:id="@+id/action_nav_worker_bookings_to_bookingDetailWorkerFragment"
+            app:destination="@id/bookingDetailWorkerFragment" />
+
+    </fragment>
+
     <fragment
         android:id="@+id/nav_worker_schedule"
         android:name="com.rst.gadissalonmanagementsystemapp.ui.worker.WorkerScheduleFragment"
@@ -57,11 +65,27 @@
             android:name="booking"
             app:argType="com.rst.gadissalonmanagementsystemapp.AdminBooking" />
     </fragment>
+
     <fragment
         android:id="@+id/nav_worker_orders"
         android:name="com.rst.gadissalonmanagementsystemapp.ui.worker.WorkerOrdersFragment"
         android:label="Product Orders"
-        tools:layout="@layout/fragment_worker_orders" />
+        tools:layout="@layout/fragment_worker_orders" >
+        <action
+            android:id="@+id/action_workerOrdersFragment_to_workerOrderDetailFragment"
+            app:destination="@id/workerOrderDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/workerOrderDetailFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.worker.WorkerOrderDetailFragment"
+        android:label="Order Details">
+        <argument
+            android:name="order"
+            app:argType="com.rst.gadissalonmanagementsystemapp.ProductOrder" />
+    </fragment>
+
+
     <fragment
         android:id="@+id/nav_worker_profile"
         android:name="com.rst.gadissalonmanagementsystemapp.ui.worker.WorkerProfileFragment"
