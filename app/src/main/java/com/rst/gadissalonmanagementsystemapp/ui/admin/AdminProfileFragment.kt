@@ -98,6 +98,7 @@ class AdminProfileFragment : Fragment(), ProfilePictureBottomSheet.PictureOption
                 val adminUser = result.getOrNull()
                 binding.userNameAdmin.text = adminUser?.name ?: "Admin"
                 binding.userPhoneAdmin.text = adminUser?.phone ?: "No phone number"
+                binding.userEmailAdmin.text = adminUser?.email
                 binding.profileImageAdmin.load(adminUser?.imageUrl) {
                     placeholder(R.drawable.ic_profile)
                     error(R.drawable.ic_profile)

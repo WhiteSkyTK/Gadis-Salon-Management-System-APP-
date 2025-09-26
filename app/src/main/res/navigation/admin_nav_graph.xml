@@ -32,7 +32,31 @@
         <action
             android:id="@+id/action_adminProductsFragment_to_adminAddHairstyleFragment"
             app:destination="@id/adminAddHairstyleFragment" />
+        <action
+            android:id="@+id/action_adminProductsFragment_to_adminEditProductFragment"
+            app:destination="@id/adminEditProductFragment" />
+        <action
+            android:id="@+id/action_adminProductsFragment_to_adminEditHairstyleFragment"
+            app:destination="@id/adminEditHairstyleFragment" />
 
+    </fragment>
+
+    <fragment
+        android:id="@+id/adminEditHairstyleFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.admin.AdminEditHairstyleFragment"
+        android:label="Edit Hairstyle">
+        <argument
+            android:name="hairstyle"
+            app:argType="com.rst.gadissalonmanagementsystemapp.Hairstyle" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/adminEditProductFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.admin.AdminEditProductFragment"
+        android:label="Edit Product">
+        <argument
+            android:name="product"
+            app:argType="com.rst.gadissalonmanagementsystemapp.Product" />
     </fragment>
 
     <fragment
@@ -60,9 +84,9 @@
 
     <fragment
         android:id="@+id/nav_admin_bookings"
-        android:name="com.rst.gadissalonmanagementsystemapp.ui.admin.AdminBookingsFragment"
-        android:label="AdminBookingsFragment"
-        tools:layout="@layout/fragment_admin_bookings" />
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.admin.AdminSalesFragment"
+        android:label="Sales"
+        tools:layout="@layout/fragment_admin_sales" />
 
     <fragment
         android:id="@+id/adminAddProductFragment"
@@ -148,8 +172,8 @@
         tools:layout="@layout/fragment_admin_support">
 
         <action
-            android:id="@+id/action_adminSupportFragment_to_adminReplyMessageFragment"
-            app:destination="@id/adminReplyMessageFragment" />
+            android:id="@+id/action_adminSupportFragment_to_adminTicketDetailFragment"
+            app:destination="@id/adminTicketDetailFragment" />
         <action
             android:id="@+id/action_adminSupportFragment_to_adminComposeMessageFragment"
             app:destination="@id/adminComposeMessageFragment" />
@@ -163,12 +187,11 @@
         tools:layout="@layout/fragment_contact" />
 
     <fragment
-        android:id="@+id/adminReplyMessageFragment"
-        android:name="com.rst.gadissalonmanagementsystemapp.ui.admin.AdminReplyMessageFragment"
-        android:label="Reply to Message"
-        tools:layout="@layout/fragment_admin_reply_message">
+        android:id="@+id/adminTicketDetailFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.admin.AdminTicketDetailFragment"
+        android:label="Support Ticket">
         <argument
-            android:name="supportMessage"
+            android:name="ticket"
             app:argType="com.rst.gadissalonmanagementsystemapp.SupportMessage" />
     </fragment>
 </navigation>

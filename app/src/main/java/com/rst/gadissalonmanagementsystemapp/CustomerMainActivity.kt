@@ -112,7 +112,7 @@ class CustomerMainActivity : AppCompatActivity() {
                 R.id.settingsFragment, R.id.aboutUsFragment, R.id.contactFragment,
                 R.id.locationFragment, R.id.customerEditProfileFragment, R.id.orderDetailFragment,
                 R.id.purchaseConfirmationFragment, R.id.bookingConfirmationFragment,
-                R.id.helpCenterFragment, R.id.mySupportTicketsFragment,
+                R.id.helpCenterFragment, R.id.mySupportTicketsFragment, R.id.ticketDetailFragment,
                 R.id.faqFragment -> showSimpleDetailTopBar() // Use the new, simpler top bar
 
                 R.id.favoritesFragment, R.id.bookingDetailCustomerFragment, R.id.cartFragment, R.id.notificationsFragment -> showProfileDetailTopBar()

@@ -4,12 +4,15 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.firestore.ListenerRegistration
 import com.rst.gadissalonmanagementsystemapp.FirebaseManager
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentCustomerOrdersBinding
+import kotlinx.coroutines.launch
 
 class CustomerOrdersFragment : Fragment() {
     private var _binding: FragmentCustomerOrdersBinding? = null
@@ -44,12 +47,24 @@ class CustomerOrdersFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
-        ordersAdapter = CustomerOrdersAdapter(emptyList()) { order ->
-            // This is the new click logic
-            val action = CustomerOrdersFragmentDirections.actionCustomerOrdersFragmentToOrderDetailFragment(order)
-            findNavController().navigate(action)
-        }
-
+        ordersAdapter = CustomerOrdersAdapter(
+            orders = emptyList(),
+            onItemClick = { order ->
+                val action = CustomerOrdersFragmentDirections.actionCustomerOrdersFragmentToOrderDetailFragment(order)
+                findNavController().navigate(action)
+            },
+            onActionClick = { order, newStatus ->
+                // This is what happens when the "I Have Arrived" button is clicked
+                viewLifecycleOwner.lifecycleScope.launch {
+                    val result = FirebaseManager.updateProductOrderStatus(order.id, newStatus)
+                    if (result.isSuccess) {
+                        Toast.makeText(context, "Thank you! Order completed.", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(context, "Failed to update order status.", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        )
         binding.customerOrdersRecyclerView.layoutManager = LinearLayoutManager(context)
         binding.customerOrdersRecyclerView.adapter = ordersAdapter
     }

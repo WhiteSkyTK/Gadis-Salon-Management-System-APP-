@@ -4,30 +4,73 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp">
+    android:layout_marginStart="8dp"
+    android:layout_marginTop="4dp"
+    android:layout_marginEnd="8dp"
+    android:layout_marginBottom="4dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="16dp">
 
+        <!-- This horizontal layout will hold the product image previews -->
+        <LinearLayout
+            android:id="@+id/image_preview_layout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/item_image_1"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:background="@color/inputFieldBackgroundColor"
+                android:visibility="gone"
+                app:shapeAppearanceOverlay="@style/CircleImageView"
+                tools:visibility="visible"/>
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/item_image_2"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_marginStart="-16dp"
+                android:background="@color/inputFieldBackgroundColor"
+                android:visibility="gone"
+                app:shapeAppearanceOverlay="@style/CircleImageView"
+                tools:visibility="visible"/>
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/item_image_3"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_marginStart="-16dp"
+                android:background="@color/inputFieldBackgroundColor"
+                android:visibility="gone"
+                app:shapeAppearanceOverlay="@style/CircleImageView"
+                tools:visibility="visible"/>
+        </LinearLayout>
+
         <TextView
             android:id="@+id/order_id_text"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
             android:textStyle="bold"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintStart_toEndOf="@id/image_preview_layout"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toStartOf="@id/status_chip"
             tools:text="Order #8c5088e6" />
 
         <TextView
             android:id="@+id/order_date_text"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintStart_toStartOf="@id/order_id_text"
             app:layout_constraintTop_toBottomOf="@id/order_id_text"
+            app:layout_constraintEnd_toEndOf="@id/order_id_text"
             tools:text="Placed on: 19 Sep, 2025" />
 
         <TextView
@@ -36,8 +79,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:textStyle="bold"
-            android:textSize="16sp"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintStart_toStartOf="@id/order_id_text"
             app:layout_constraintTop_toBottomOf="@id/order_date_text"
             tools:text="Total: R135.00"/>
 
@@ -54,12 +96,12 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:text="Notify on Arrival"
+            android:text="I Have Arrived"
             android:visibility="gone"
             tools:visibility="visible"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/total_price_text"/>
+            app:layout_constraintTop_toBottomOf="@id/image_preview_layout"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

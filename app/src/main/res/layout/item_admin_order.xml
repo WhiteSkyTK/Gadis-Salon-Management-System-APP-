@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="8dp"
+    android:layout_marginTop="4dp"
+    android:layout_marginEnd="8dp"
+    android:layout_marginBottom="4dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp">
+
+        <!-- This horizontal layout will hold the product image previews -->
+        <LinearLayout
+            android:id="@+id/image_preview_layout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <!-- We will show up to 3 images, stacked like a deck of cards -->
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/item_image_1"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:background="@color/inputFieldBackgroundColor"
+                android:visibility="gone"
+                app:shapeAppearanceOverlay="@style/CircleImageView"
+                tools:visibility="visible"/>
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/item_image_2"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_marginStart="-16dp"
+                android:background="@color/inputFieldBackgroundColor"
+                android:visibility="gone"
+                app:shapeAppearanceOverlay="@style/CircleImageView"
+                tools:visibility="visible"/>
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/item_image_3"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_marginStart="-16dp"
+                android:background="@color/inputFieldBackgroundColor"
+                android:visibility="gone"
+                app:shapeAppearanceOverlay="@style/CircleImageView"
+                tools:visibility="visible"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/customer_name_value"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="4dp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toEndOf="@id/image_preview_layout"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/order_status_admin"
+            tools:text="Tokollo Nonyane" />
+
+        <TextView
+            android:id="@+id/order_date_value"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="@id/customer_name_value"
+            app:layout_constraintTop_toBottomOf="@id/customer_name_value"
+            app:layout_constraintEnd_toEndOf="@id/customer_name_value"
+            tools:text="25 Sep, 2025" />
+
+        <TextView
+            android:id="@+id/total_price_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="@id/customer_name_value"
+            app:layout_constraintTop_toBottomOf="@id/order_date_value"
+            tools:text="Total: R250.00"/>
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/order_status_admin"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="Pending Pickup" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>

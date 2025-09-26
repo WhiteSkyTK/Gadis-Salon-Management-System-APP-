@@ -4,7 +4,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp">
+    android:layout_marginStart="8dp"
+    android:layout_marginTop="4dp"
+    android:layout_marginEnd="8dp"
+    android:layout_marginBottom="4dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -19,16 +22,57 @@
             android:textSize="18sp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/mark_ready_button"
             tools:text="Order for: Sagwadi M." />
 
         <TextView
             android:id="@+id/item_count_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/customer_name_text"
-            tools:text="3 items" />
+            tools:text="3 items • Total: R150.00" />
+
+        <!-- This horizontal layout will hold the product image previews -->
+        <LinearLayout
+            android:id="@+id/image_preview_layout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/item_count_text">
+
+            <!-- We will show up to 3 images -->
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/item_image_1"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@color/inputFieldBackgroundColor"
+                app:shapeAppearanceOverlay="@style/CircleImageView"
+                android:visibility="gone"
+                tools:visibility="visible"/>
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/item_image_2"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="-12dp"
+                android:background="@color/inputFieldBackgroundColor"
+                app:shapeAppearanceOverlay="@style/CircleImageView"
+                android:visibility="gone"
+                tools:visibility="visible"/>
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/item_image_3"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="-12dp"
+                android:background="@color/inputFieldBackgroundColor"
+                app:shapeAppearanceOverlay="@style/CircleImageView"
+                android:visibility="gone"
+                tools:visibility="visible"/>
+        </LinearLayout>
 
         <Button
             android:id="@+id/mark_ready_button"
@@ -37,8 +81,7 @@
             android:layout_height="wrap_content"
             android:text="Mark as Ready"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"/>
+            app:layout_constraintTop_toTopOf="parent"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

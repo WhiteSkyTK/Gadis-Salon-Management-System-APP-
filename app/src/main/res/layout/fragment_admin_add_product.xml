@@ -10,12 +10,20 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Add New Product"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp"/>
+
         <ImageView
             android:id="@+id/product_image_preview"
             android:layout_width="150dp"
             android:layout_height="150dp"
             android:layout_gravity="center_horizontal"
-            android:background="@color/inputFieldBackgroundColor"
+
             android:scaleType="centerCrop"
             android:src="@drawable/ic_add_a_photo" />
 

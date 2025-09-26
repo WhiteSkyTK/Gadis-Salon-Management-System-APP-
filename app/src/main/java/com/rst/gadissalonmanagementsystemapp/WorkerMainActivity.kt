@@ -3,6 +3,7 @@ package com.rst.gadissalonmanagementsystemapp
 import android.os.Bundle
 import android.view.View
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
@@ -14,16 +15,19 @@ class WorkerMainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityWorkerMainBinding
     private lateinit var navController: NavController
-
+    private val mainViewModel: MainViewModel by viewModels()
     private var bookingsListener: ListenerRegistration? = null
     private var ordersListener: ListenerRegistration? = null
-
+    private var messagesListener: ListenerRegistration? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityWorkerMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         enableEdgeToEdge()
+
+        // Tell the ViewModel to load the master list of hairstyles
+        mainViewModel.loadAllHairstyles()
 
         // 1. Find the NavController from the NavHostFragment in the worker's layout
         val navHostFragment = supportFragmentManager
@@ -48,6 +52,7 @@ class WorkerMainActivity : AppCompatActivity() {
         // When the activity stops, remove the listeners to save resources and prevent memory leaks
         bookingsListener?.remove()
         ordersListener?.remove()
+        messagesListener?.remove()
     }
 
     private fun listenForNotifications() {
@@ -64,8 +69,14 @@ class WorkerMainActivity : AppCompatActivity() {
             badge.isVisible = count > 0
             badge.number = count
         }
-    }
 
+        messagesListener = FirebaseManager.addWorkerUnreadMessageListener { count ->
+            val badge = binding.bottomNavWorker.getOrCreateBadge(R.id.nav_worker_schedule)
+            badge.isVisible = count > 0
+            // We just show a dot, not a number, for unread messages.
+            // This is a common pattern in chat apps.
+        }
+    }
 
     private fun setupNavigationListener() {
         // Handle the back button click
@@ -84,6 +95,8 @@ class WorkerMainActivity : AppCompatActivity() {
                 destination.id == R.id.workerMySupportTicketsFragment ||
                 destination.id == R.id.workerFaqFragment ||
                 destination.id == R.id.productDetailFragment ||
+                destination.id == R.id.workerOrderDetailFragment ||
+                destination.id == R.id.bookingDetailWorkerFragment ||
                 destination.id == R.id.workerContactFragment) {
 
                 binding.bottomNavCardWorker.visibility = View.GONE

@@ -43,6 +43,10 @@ class TicketDetailFragment : Fragment() {
             binding.replyInputLayout.visibility = View.GONE
         }
 
+        if (ticket.status.equals("Closed", ignoreCase = true)) {
+            binding.replyInputLayout.visibility = View.GONE
+        }
+
         setupRecyclerView()
         binding.sendReplyButton.setOnClickListener {
             sendReply(ticket.id)
@@ -52,6 +56,10 @@ class TicketDetailFragment : Fragment() {
     override fun onStart() {
         super.onStart()
         listenForReplies(args.ticket.id)
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            FirebaseManager.markSupportRepliesAsRead(args.ticket.id)
+        }
     }
 
     override fun onStop() {
