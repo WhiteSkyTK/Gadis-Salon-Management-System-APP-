@@ -8,35 +8,36 @@ plugins {
     id("kotlin-parcelize")
     alias(libs.plugins.google.gms.google.services)
     id("com.google.firebase.crashlytics")
+    id("kotlin-kapt")
 }
 
-val properties = Properties()
+
+// Load secrets from local.properties
+val localProperties = Properties()
 val localPropertiesFile = rootProject.file("local.properties")
 if (localPropertiesFile.exists()) {
-    properties.load(FileInputStream(localPropertiesFile))
+    localProperties.load(FileInputStream(localPropertiesFile))
 }
-val mapsApiKey = properties.getProperty("MAPS_API_KEY")
-val keyStorePassword = properties.getProperty("KEYSTORE_PASSWORD")
-val KeyAlias = properties.getProperty("KEY_ALIAS")
-val KeyPassword = properties.getProperty("KEY_PASSWORD")
+val mapsApiKey = localProperties.getProperty("MAPS_API_KEY")
 
 android {
     namespace = "com.rst.gadissalonmanagementsystemapp"
     compileSdk = 36
 
     signingConfigs {
-        create("release") {
-            // Get the path to your keystore file
-            val keystoreFile = rootProject.file("release-keystore.jks")
-            if (keystoreFile.exists()) {
-                storeFile = keystoreFile
-                storePassword = keyStorePassword
-                keyAlias = KeyAlias
-                keyPassword = KeyPassword
+        // Only configure the release signing if the properties exist
+        if (localProperties.getProperty("RELEASE_STORE_FILE") != null) {
+            create("release") {
+                storeFile = file(localProperties.getProperty("RELEASE_STORE_FILE"))
+                storePassword = localProperties.getProperty("KEYSTORE_PASSWORD")
+                keyAlias = localProperties.getProperty("KEY_ALIAS")
+                keyPassword = localProperties.getProperty("KEY_PASSWORD")
             }
         }
     }
-
+    buildFeatures {
+        buildConfig = true
+    }
     defaultConfig {
         applicationId = "com.rst.gadissalonmanagementsystemapp"
         minSdk = 24
@@ -60,7 +61,10 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("release")
+
+            if (localProperties.getProperty("RELEASE_STORE_FILE") != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
     compileOptions {
