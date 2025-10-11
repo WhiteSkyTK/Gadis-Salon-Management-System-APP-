@@ -102,8 +102,11 @@ class AdminTicketDetailFragment : Fragment() {
                 senderName = "Admin Support",
                 messageText = messageText
             )
+            val allParticipants = (args.ticket.participantUids + currentAdmin.uid).distinct()
+
             viewLifecycleOwner.lifecycleScope.launch {
-                FirebaseManager.sendSupportReply(ticketId, replyMessage)
+                // Pass the full list of participants to the updated function.
+                FirebaseManager.sendSupportReply(ticketId, replyMessage, allParticipants)
                 binding.replyInput.setText("")
             }
         }

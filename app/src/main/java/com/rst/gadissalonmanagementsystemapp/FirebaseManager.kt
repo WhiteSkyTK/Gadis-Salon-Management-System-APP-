@@ -10,6 +10,7 @@ import com.google.firebase.firestore.firestore
 import com.google.firebase.storage.storage
 import com.google.firebase.app
 import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
 import com.google.firebase.functions.functions
@@ -496,8 +497,12 @@ object FirebaseManager {
     // Saves a new support message to the 'support_messages' collection
     suspend fun sendSupportMessage(message: SupportMessage): Result<Unit> {
         return try {
-            Log.d("FirebaseManager", "Sending support message...")
-            firestore.collection("support_messages").add(message).await()
+            Log.d("FirebaseManager", "Sending support message and setting participants...")
+            // Ensure the participants list is initialized with the sender's UID
+            val ticketWithParticipants = message.copy(
+                participantUids = listOf(message.senderUid)
+            )
+            firestore.collection("support_messages").add(ticketWithParticipants).await()
             Result.success(Unit)
         } catch (e: Exception) {
             Log.e("FirebaseManager", "Error sending support message", e)
@@ -732,7 +737,7 @@ object FirebaseManager {
         val uid = auth.currentUser?.uid ?: return null
 
         return firestore.collection("support_messages")
-            .whereEqualTo("senderUid", uid)
+            .whereArrayContains("participantUids", uid) // <-- THE FIX
             .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
             .addSnapshotListener { snapshots, error ->
                 if (error != null) {
@@ -1325,12 +1330,27 @@ object FirebaseManager {
     }
 
     // Sends a new reply to a support ticket
-    suspend fun sendSupportReply(ticketId: String, message: ChatMessage): Result<Unit> {
+    suspend fun sendSupportReply(ticketId: String, reply: ChatMessage, allParticipantIds: List<String>): Result<Unit> {
         return try {
-            firestore.collection("support_messages").document(ticketId).collection("replies")
-                .add(message).await()
+            val db = Firebase.firestore
+            val ticketRef = db.collection("support_messages").document(ticketId)
+            val repliesRef = ticketRef.collection("replies")
+
+            // Use a batch write to perform both actions atomically (all or nothing)
+            db.runBatch { batch ->
+                // 1. Add the new reply message to the subcollection
+                batch.set(repliesRef.document(), reply)
+
+                // 2. Update the parent ticket to include all participants
+                // FieldValue.arrayUnion safely adds items without creating duplicates.
+                batch.update(ticketRef, "participantUids", FieldValue.arrayUnion(*allParticipantIds.toTypedArray()))
+            }.await()
+
             Result.success(Unit)
-        } catch (e: Exception) { Result.failure(e) }
+        } catch (e: Exception) {
+            Log.e("FirebaseManager", "Error sending reply and updating participants", e)
+            Result.failure(e)
+        }
     }
 
     /**
