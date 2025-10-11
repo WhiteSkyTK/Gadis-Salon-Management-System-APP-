@@ -20,7 +20,7 @@ class MySupportTicketsAdapter(
             binding.statusChip.text = ticket.status
             // Format the timestamp into a readable date
             val sdf = SimpleDateFormat("dd MMM, yyyy", Locale.getDefault())
-            binding.timestampText.text = "Sent: ${sdf.format(Date(ticket.timestamp))}"
+            binding.timestampText.text = "Sent: ${ticket.timestamp?.toDate()?.let { sdf.format(it) } ?: ""}"
 
             itemView.setOnClickListener { onItemClick(ticket) }
         }
