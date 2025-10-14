@@ -65,6 +65,12 @@ class ProductDetailFragment : Fragment() {
         val chipGroup = binding.sizeChipGroup
         chipGroup.removeAllViews()
 
+        if (product.variants.isEmpty()) {
+            // Handle case where a product might have no variants
+            binding.bottomBar.visibility = View.GONE // Hide buy/cart buttons
+            return
+        }
+
         product.variants.forEach { variant ->
             val chip = layoutInflater.inflate(R.layout.chip_stylist, chipGroup, false) as Chip
             chip.text = variant.size
@@ -80,8 +86,10 @@ class ProductDetailFragment : Fragment() {
             }
         }
 
-        (chipGroup.getChildAt(0) as? Chip)?.let {
-            it.isChecked = true
+        // 1. Programmatically find the first chip.
+        (chipGroup.getChildAt(0) as? Chip)?.let { firstChip ->
+            // 2. Set its checked state to true. This will now trigger the listener above.
+            firstChip.isChecked = true
         }
     }
 
@@ -120,12 +128,16 @@ class ProductDetailFragment : Fragment() {
         }
 
         binding.buyNowButton.setOnClickListener {
-            if (selectedVariant != null) {
-                val action = ProductDetailFragmentDirections.actionProductDetailFragmentToPurchaseConfirmationFragment(product)
-                findNavController().navigate(action)
-            } else {
+            if (selectedVariant == null) {
                 Toast.makeText(context, "Please select a size", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
             }
+
+            val action = ProductDetailFragmentDirections.actionProductDetailFragmentToPurchaseConfirmationFragment(
+                selectedVariant = selectedVariant!!,
+                product = product
+            )
+            findNavController().navigate(action)
         }
     }
 

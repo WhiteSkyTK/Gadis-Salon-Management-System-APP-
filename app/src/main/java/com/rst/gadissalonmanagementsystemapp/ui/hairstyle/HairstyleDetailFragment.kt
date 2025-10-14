@@ -1,5 +1,6 @@
 package com.rst.gadissalonmanagementsystemapp.ui.hairstyle
 
+import android.graphics.Paint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -17,6 +18,7 @@ import com.rst.gadissalonmanagementsystemapp.Product
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.Locale
+import kotlin.random.Random
 
 class HairstyleDetailFragment : Fragment() {
 
@@ -36,24 +38,29 @@ class HairstyleDetailFragment : Fragment() {
 
         // Get the hairstyle object from the arguments
         val hairstyle = args.hairstyle // We are reusing the 'Product' data class
-
-        // Now we need to pass a temporary Product to the ViewModel for the favorite logic to work
-        val tempProductForFavorite = Product(
-            id = hairstyle.id,
-            name = hairstyle.name,
-            reviews = "", // We can provide an empty string for reviews
-            variants = emptyList(), // We can provide an empty list for variants
-            imageUrl = hairstyle.imageUrl
-        )
         mainViewModel.setCurrentFavoritableItem(hairstyle)
 
         // Use the new Hairstyle data to populate the views
         binding.hairstyleImage.load(hairstyle.imageUrl)
         binding.hairstyleNameDetail.text = hairstyle.name
         binding.hairstyleDescription.text = hairstyle.description
-        val format = NumberFormat.getCurrencyInstance(Locale("en", "ZA"))
-        binding.hairstylePrice.text = format.format(hairstyle.price)
         binding.hairstyleDuration.text = "Duration: ${hairstyle.durationHours} hours"
+
+        val format = NumberFormat.getCurrencyInstance(Locale("en", "ZA"))
+        val originalPrice = hairstyle.price
+
+        // Calculate a random "old" price that is 30% to 70% higher
+        val priceIncreasePercentage = Random.nextDouble(0.30, 0.71)
+        val oldPrice = originalPrice * (1 + priceIncreasePercentage)
+
+        // Set the actual price
+        binding.hairstylePrice.text = format.format(originalPrice)
+
+        // Set the "old" price, apply the strikethrough, and make it visible
+        binding.hairstylePriceOld.text = format.format(oldPrice)
+        binding.hairstylePriceOld.paintFlags = binding.hairstylePriceOld.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
+        binding.hairstylePriceOld.visibility = View.VISIBLE
+
 
         binding.bookNowButton.setOnClickListener {
             // This correctly navigates to the confirmation screen

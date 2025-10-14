@@ -63,6 +63,42 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.card.MaterialCardView>
 
+    <!-- ADD THIS NEW CARD FOR THE CANCELLATION REASON -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cancellation_reason_card"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:visibility="gone"
+        app:cardBackgroundColor="@color/colorErrorContainer"
+        app:layout_constraintTop_toBottomOf="@id/details_card"
+        app:layout_constraintStart_toStartOf="@id/details_card"
+        app:layout_constraintEnd_toEndOf="@id/details_card"
+        tools:visibility="visible">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:gravity="center_vertical">
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_info"
+                app:tint="@color/colorOnErrorContainer" />
+            <TextView
+                android:id="@+id/cancellation_reason_text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="12dp"
+                android:textColor="@color/colorOnErrorContainer"
+                android:textSize="16sp"
+                tools:text="Reason for cancellation: Stylist was unavailable." />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
     <!-- Chat History -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/chat_recycler_view"

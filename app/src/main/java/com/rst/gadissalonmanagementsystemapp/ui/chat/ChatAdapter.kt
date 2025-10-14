@@ -25,26 +25,26 @@ class ChatAdapter(
     inner class ViewHolder(private val binding: ItemChatMessageBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(message: ChatMessage) {
             binding.messageText.text = message.messageText
+            binding.senderNameText.text = message.senderName
+
             val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
             binding.timestampText.text = message.timestamp?.let { sdf.format(it) } ?: "sending..."
 
             // Align the bubble
             if (message.isSentByUser) {
                 (binding.root as LinearLayout).gravity = Gravity.END
-            } else {
-                (binding.root as LinearLayout).gravity = Gravity.START
-            }
-
-            if (message.isSentByUser) {
-                // Sent messages: Apply the 'sent' bubble and use white text.
                 binding.messageBubble.setBackgroundResource(R.drawable.chat_bubble_sent)
                 binding.messageText.setTextColor(ContextCompat.getColor(itemView.context, R.color.white))
                 binding.timestampText.setTextColor(ContextCompat.getColor(itemView.context, R.color.white_transparent_70))
+                // Set sender name color for sent messages
+                binding.senderNameText.setTextColor(ContextCompat.getColor(itemView.context, R.color.white_transparent_70))
             } else {
-                // Received messages: Apply the 'received' bubble and use the theme's primary text color.
+                (binding.root as LinearLayout).gravity = Gravity.START
                 binding.messageBubble.setBackgroundResource(R.drawable.chat_bubble_received)
                 binding.messageText.setTextColor(ContextCompat.getColor(itemView.context, R.color.textColorPrimary))
                 binding.timestampText.setTextColor(ContextCompat.getColor(itemView.context, R.color.textColorSecondary))
+                // Set sender name color for received messages
+                binding.senderNameText.setTextColor(ContextCompat.getColor(itemView.context, R.color.textColorSecondary))
             }
 
             // Read receipt logic now uses the new theme-aware color
@@ -53,10 +53,9 @@ class ChatAdapter(
                 when (message.status.uppercase()) {
                     "READ" -> {
                         binding.readReceiptIcon.setImageResource(R.drawable.ic_done_all)
-                        // Use the new dedicated color for read receipts
                         binding.readReceiptIcon.setColorFilter(ContextCompat.getColor(itemView.context, R.color.chatReadReceiptColor))
                     }
-                    else -> { // "SENT"
+                    else -> { // "SENT" or "DELIVERED"
                         binding.readReceiptIcon.setImageResource(R.drawable.ic_done)
                         binding.readReceiptIcon.setColorFilter(ContextCompat.getColor(itemView.context, R.color.white))
                     }

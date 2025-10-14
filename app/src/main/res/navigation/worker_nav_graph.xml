@@ -155,7 +155,22 @@
         android:id="@+id/workerMySupportTicketsFragment"
         android:name="com.rst.gadissalonmanagementsystemapp.ui.profile.MySupportTicketsFragment"
         android:label="My Support Tickets"
-        tools:layout="@layout/fragment_my_support_tickets" />
+        tools:layout="@layout/fragment_my_support_tickets" >
+        <!-- ADD THIS ACTION to define the path to the details screen -->
+        <action
+            android:id="@+id/action_workerMySupportTicketsFragment_to_ticketDetailFragment"
+            app:destination="@id/ticketDetailFragment" />
+    </fragment>
+
+    <!-- ADD THIS FRAGMENT DEFINITION (copied from your main nav graph) -->
+    <fragment
+        android:id="@+id/ticketDetailFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.profile.TicketDetailFragment"
+        android:label="Support Ticket">
+        <argument
+            android:name="ticket"
+            app:argType="com.rst.gadissalonmanagementsystemapp.SupportMessage" />
+    </fragment>
 
     <!-- THIS IS THE NEW DESTINATION that was missing -->
     <fragment

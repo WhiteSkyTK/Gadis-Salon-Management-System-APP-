@@ -117,4 +117,5 @@ dependencies {
     implementation(libs.coil)
     implementation(libs.places)
     implementation("com.prolificinteractive:material-calendarview:1.4.3")
+    implementation("com.facebook.shimmer:shimmer:0.5.0")
 }

@@ -78,6 +78,15 @@ class TicketDetailFragment : Fragment() {
         repliesListener = FirebaseManager.addSupportTicketRepliesListener(ticketId) { replies ->
             if (view != null) {
                 val uid = Firebase.auth.currentUser?.uid ?: ""
+
+                // --- NEW: AUTO-READ LOGIC ---
+                // If the list is not empty and the last message is from someone else, mark as read.
+                if (replies.isNotEmpty() && replies.last().senderUid != uid) {
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        FirebaseManager.markSupportRepliesAsRead(ticketId)
+                    }
+                }
+
                 replies.forEach { it.isSentByUser = (it.senderUid == uid) }
                 chatAdapter.updateData(replies)
                 if (replies.isNotEmpty()) {

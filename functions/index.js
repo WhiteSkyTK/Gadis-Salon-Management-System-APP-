@@ -124,6 +124,8 @@ exports.onNewChatMessage = onDocumentCreated("bookings/{bookingId}/messages/{mes
     });
 
 
+
+
 /**
  * v2 Cloud Function to send a push notification to all admins
  * when a new support message is created.
@@ -203,64 +205,37 @@ exports.sendSupportEmail = onDocumentCreated("support_messages/{messageId}", asy
 });
 
 /**
- * v2 Callable function that allows an admin to set a custom role
- * on another user's account.
+ * v2 Callable function that allows an admin to set a custom role.
+ * UPDATED with { cors: true }
  */
-
-exports.setUserRole = onCall(async(request) => {
-    // This is the new, alternative way to check for an admin.
-    // It's safer from auto-formatting errors.
-
+exports.setUserRole = onCall({ cors: true }, async (request) => {
     if (!request.auth || !request.auth.token || request.auth.token.admin !== true) {
-        throw new HttpsError(
-            "permission-denied",
-            "Request not authorized. User must be an admin to set roles.",
-        );
+        throw new HttpsError("permission-denied", "Request not authorized. User must be an admin to set roles.");
     }
-
-    const {
-        userId,
-        role
-    } = request.data;
-    const lowerCaseRole = role.toLowerCase();
-    const upperCaseRole = role.toUpperCase();
-
+    const { userId, role } = request.data;
     try {
-        // Set custom claims for auth role
-        await admin.auth().setCustomUserClaims(userId, {
-            [lowerCaseRole]: true
-        });
-
-        // Update the role in Firestore for easy querying
-        await admin.firestore().collection("users").doc(userId).update({
-            role: upperCaseRole,
-        });
-
-        return {
-            message: `Success! User ${userId} has been made a ${upperCaseRole}.`,
-        };
+        const lowerCaseRole = role.toLowerCase();
+        await admin.auth().setCustomUserClaims(userId, { [lowerCaseRole]: true, admin: role === 'ADMIN' });
+        await admin.firestore().collection("users").doc(userId).update({ role: role.toUpperCase() });
+        return { message: `Success! User ${userId} has been made a ${role.toUpperCase()}.` };
     } catch (error) {
         console.error("Error setting user role:", error);
         throw new HttpsError("internal", error.message);
     }
 });
 
+
 /**
- * v2 Callable function that allows an admin to delete a user
- * from both Authentication and Firestore.
+ * v2 Callable function that allows an admin to delete a user.
+ * UPDATED with { cors: true }
  */
-exports.deleteUser = onCall(async (request) => {
+exports.deleteUser = onCall({ cors: true }, async (request) => {
     if (!request.auth || !request.auth.token || request.auth.token.admin !== true) {
-        throw new HttpsError(
-            "permission-denied",
-            "Request not authorized. User must be an admin.",
-        );
+        throw new HttpsError("permission-denied", "Request not authorized. User must be an admin.");
     }
-    const userId = request.data.userId;
+    const { userId } = request.data;
     try {
-        // Delete from Firebase Authentication
         await admin.auth().deleteUser(userId);
-        // Delete from Firestore
         await admin.firestore().collection("users").doc(userId).delete();
         return { message: `Successfully deleted user ${userId}.` };
     } catch (error) {
@@ -306,13 +281,13 @@ exports.autoCancelMissedBookings = onSchedule("every 24 hours", async (event) =>
 });
 
 /**
- * v2 Callable function that securely calculates and returns available
- * time slots for a given stylist, date, and service duration.
+ * v2 Callable function that securely calculates available slots.
+ * UPDATED with { cors: true }
  */
-exports.getAvailableSlots = onCall(async (request) => {
-  if (!request.auth) {
-    throw new HttpsError("unauthenticated", "You must be logged in to check availability.");
-  }
+exports.getAvailableSlots = onCall({ cors: true }, async (request) => {
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", "You must be logged in to check availability.");
+    }
 
   const { stylistName, date, hairstyleId } = request.data;
   const db = admin.firestore();
@@ -648,3 +623,154 @@ async function notifyAdminsOfLowStock(productData, variant, newStock) {
     }
     console.log(`Sent low-stock alerts to ${adminQuery.size} admins.`);
 }
+
+/**
+ * v2 Callable function that allows an admin to create a new user.
+ * This is the new function that was missing.
+ */
+exports.createUserByAdmin = onCall({ cors: true }, async (request) => {
+    if (!request.auth || !request.auth.token || request.auth.token.admin !== true) {
+        throw new HttpsError("permission-denied", "Request not authorized. User must be an admin.");
+    }
+    const { email, password, name, phone, role } = request.data;
+    try {
+        const userRecord = await admin.auth().createUser({ email, password, displayName: name });
+        const userId = userRecord.uid;
+        const lowerCaseRole = role.toLowerCase();
+        await admin.auth().setCustomUserClaims(userId, { [lowerCaseRole]: true, admin: role === 'ADMIN' });
+        await admin.firestore().collection("users").doc(userId).set({
+            id: userId, name, email, phone, role: role.toUpperCase(), imageUrl: "",
+        });
+        return { message: `Successfully created user ${name} with role ${role}.` };
+    } catch (error) {
+        console.error("Error in createUserByAdmin:", error);
+        throw new HttpsError("internal", error.message);
+    }
+});
+
+
+/**
+ * A scheduled function that runs automatically every 24 hours to find
+ * old orders that were never picked up and return their stock.
+ */
+exports.autoAbandonOldOrders = onSchedule("every 24 hours", async (event) => {
+    console.log("Running daily check for abandoned product orders...");
+    const db = admin.firestore();
+
+    // Calculate the timestamp for 7 days ago
+    const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+
+    // Query for all orders that are "Ready for Pickup" and are older than 7 days
+    const oldOrdersQuery = db.collection("product_orders")
+        .where("status", "==", "Ready for Pickup")
+        .where("timestamp", "<=", sevenDaysAgo);
+
+    const oldOrdersSnapshot = await oldOrdersQuery.get();
+
+    if (oldOrdersSnapshot.empty) {
+        console.log("No abandoned orders found.");
+        return null;
+    }
+
+    console.log(`Found ${oldOrdersSnapshot.size} abandoned orders to process.`);
+
+    // Use a batch write to update all the order statuses at once
+    const batch = db.batch();
+
+    // Loop through each abandoned order to process its stock
+    for (const orderDoc of oldOrdersSnapshot.docs) {
+        const order = orderDoc.data();
+
+        // 1. Mark the order as 'Abandoned' in the batch
+        batch.update(orderDoc.ref, { status: "Abandoned" });
+        console.log(`Marking order ${orderDoc.id} as Abandoned.`);
+
+        // 2. Return the stock for each item in the order using secure transactions
+        for (const item of order.items) {
+            const productRef = db.collection("products").doc(item.productId);
+            try {
+                await db.runTransaction(async (transaction) => {
+                    const productDoc = await transaction.get(productRef);
+                    if (!productDoc.exists) {
+                        throw `Product ${item.productId} not found!`;
+                    }
+
+                    const productData = productDoc.data();
+                    const variants = productData.variants;
+
+                    const updatedVariants = variants.map(variant => {
+                        if (variant.size === item.size) {
+                            // Safely add the stock back
+                            const newStock = (variant.stock || 0) + item.quantity;
+                            console.log(`Returning ${item.quantity} units to ${productData.name} (${variant.size}). New stock: ${newStock}`);
+                            return { ...variant, stock: newStock };
+                        }
+                        return variant;
+                    });
+
+                    transaction.update(productRef, { variants: updatedVariants });
+                });
+            } catch (e) {
+                console.error(`Failed to return stock for item ${item.productId} in order ${orderDoc.id}:`, e);
+                // We continue even if one item fails, to process the rest
+            }
+        }
+    }
+
+    // 3. Commit all the status updates for the orders
+    await batch.commit();
+    console.log("Finished processing abandoned orders.");
+    return null;
+});
+
+/**
+ * Triggers when a product order's status is updated. If the new status is
+ * 'Cancelled', it securely returns the item quantities to the main product stock.
+ */
+exports.onOrderCancelled = onDocumentUpdated("product_orders/{orderId}", async (event) => {
+    const newData = event.data.after.data();
+    const oldData = event.data.before.data();
+    const db = admin.firestore();
+
+    // Only run if the status changed specifically TO 'Cancelled'
+    if (newData.status !== "Cancelled" || oldData.status === "Cancelled") {
+        return null;
+    }
+
+    console.log(`Processing stock return for cancelled order ${event.params.orderId}`);
+    const items = newData.items;
+    if (!items || items.length === 0) {
+        console.log("No items found in the order to return.");
+        return null;
+    }
+
+    // Loop through each item in the cancelled order to return its stock
+    for (const item of items) {
+        const productRef = db.collection("products").doc(item.productId);
+        try {
+            await db.runTransaction(async (transaction) => {
+                const productDoc = await transaction.get(productRef);
+                if (!productDoc.exists) {
+                    throw `Product ${item.productId} not found!`;
+                }
+
+                const productData = productDoc.data();
+                const variants = productData.variants;
+
+                const updatedVariants = variants.map(variant => {
+                    if (variant.size === item.size) {
+                        const newStock = (variant.stock || 0) + item.quantity;
+                        console.log(`Returning ${item.quantity} units to ${productData.name} (${variant.size}). New stock: ${newStock}`);
+                        return { ...variant, stock: newStock };
+                    }
+                    return variant;
+                });
+
+                transaction.update(productRef, { variants: updatedVariants });
+            });
+        } catch (e) {
+            console.error(`Failed to return stock for item ${item.productId} in cancelled order ${event.params.orderId}:`, e);
+        }
+    }
+    return null;
+});

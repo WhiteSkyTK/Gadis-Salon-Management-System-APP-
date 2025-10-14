@@ -35,7 +35,8 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintVertical_bias="1.0"
-                    app:shapeAppearanceOverlay="@style/CircleImageView" />
+                    app:shapeAppearanceOverlay="@style/CircleImageView"
+                    android:scaleType="centerCrop" />
 
                 <TextView
                     android:id="@+id/user_name_admin"

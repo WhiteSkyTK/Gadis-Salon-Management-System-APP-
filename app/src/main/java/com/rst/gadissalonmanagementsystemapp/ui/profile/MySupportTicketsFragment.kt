@@ -1,6 +1,7 @@
 package com.rst.gadissalonmanagementsystemapp.ui.profile
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,6 +10,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.firestore.ListenerRegistration
 import com.rst.gadissalonmanagementsystemapp.FirebaseManager
+import com.rst.gadissalonmanagementsystemapp.R // Make sure this is imported
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentMySupportTicketsBinding
 
 class MySupportTicketsFragment : Fragment() {
@@ -54,9 +56,26 @@ class MySupportTicketsFragment : Fragment() {
         ticketsAdapter = MySupportTicketsAdapter(
             tickets = emptyList(),
             onItemClick = { ticket ->
-                // This is what happens when a user clicks on a ticket
-                val action = MySupportTicketsFragmentDirections.actionMySupportTicketsFragmentToTicketDetailFragment(ticket)
-                findNavController().navigate(action)
+                // --- THIS IS THE FIX: Manually create a bundle and navigate by ID ---
+                val bundle = Bundle().apply {
+                    putParcelable("ticket", ticket)
+                }
+
+                // Check which version of the fragment we are on and use the correct action ID
+                when (findNavController().currentDestination?.id) {
+                    R.id.workerMySupportTicketsFragment -> {
+                        // We are in the worker's flow
+                        findNavController().navigate(R.id.action_workerMySupportTicketsFragment_to_ticketDetailFragment, bundle)
+                    }
+                    R.id.mySupportTicketsFragment -> {
+                        // We are in the customer's flow
+                        findNavController().navigate(R.id.action_mySupportTicketsFragment_to_ticketDetailFragment, bundle)
+                    }
+                    else -> {
+                        // As a fallback, you could log an error if neither is found
+                        Log.e("MySupportTickets", "Could not determine navigation action from current destination.")
+                    }
+                }
             }
         )
         binding.myTicketsRecyclerView.layoutManager = LinearLayoutManager(context)

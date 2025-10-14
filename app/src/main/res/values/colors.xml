@@ -19,4 +19,7 @@
     <color name="status_green">#1E8E3E</color>
     <color name="status_red">#D93025</color>
     <color name="status_grey">#5F6368</color>
+    <color name="placeholder_bg">#DDDDDD</color>
+    <color name="colorErrorContainer">#F8D7DA</color>
+    <color name="colorOnErrorContainer">#721C24</color>
 </resources>

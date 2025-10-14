@@ -34,7 +34,8 @@
                 android:layout_gravity="center_horizontal"
                 android:layout_marginBottom="16dp"
                 android:src="@drawable/ic_profile"
-                app:shapeAppearanceOverlay="@style/CircleImageView" />
+                app:shapeAppearanceOverlay="@style/CircleImageView"
+                android:scaleType="centerCrop" />
 
             <TextView
                 android:id="@+id/email_text"

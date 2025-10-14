@@ -28,10 +28,20 @@ class ProductsGridFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // --- START SHIMMER ---
+        binding.shimmerViewContainer.startShimmer()
+
         // Launch a coroutine to fetch the products from Firebase
         viewLifecycleOwner.lifecycleScope.launch {
             Log.d(TAG, "Fetching products from Firebase...")
             val result = FirebaseManager.getAllProducts()
+
+            // --- STOP SHIMMER & SHOW DATA ---
+            if (isAdded) { // Ensure fragment is still attached
+                binding.shimmerViewContainer.stopShimmer()
+                binding.shimmerViewContainer.visibility = View.GONE
+                binding.gridRecyclerView.visibility = View.VISIBLE
+            }
 
             if (result.isSuccess) {
                 val productList = result.getOrNull() ?: emptyList()

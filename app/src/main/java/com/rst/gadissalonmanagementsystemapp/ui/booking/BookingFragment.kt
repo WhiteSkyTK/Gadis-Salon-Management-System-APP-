@@ -62,13 +62,26 @@ class BookingFragment : Fragment() {
     }
 
     private fun listenForMyBookings() {
+        binding.shimmerViewContainer.startShimmer()
+        binding.shimmerViewContainer.visibility = View.VISIBLE
+        binding.bookingRecyclerView.visibility = View.GONE
+        binding.emptyViewText.visibility = View.GONE
+
         bookingsListener = FirebaseManager.addCurrentUserBookingsListener { myBookings ->
-            if (view != null) {
-                // --- ADDED LOGS ---
-                Log.d(TAG, "Listener callback received with ${myBookings.size} bookings.")
-                if (myBookings.isNotEmpty()) {
-                    Log.d(TAG, "Updating adapter. First booking status is now '${myBookings[0].status}'")
-                }
+            if (view == null) return@addCurrentUserBookingsListener
+
+            // --- STOP SHIMMER ---
+            binding.shimmerViewContainer.stopShimmer()
+            binding.shimmerViewContainer.visibility = View.GONE
+
+            if (myBookings.isEmpty()) {
+                // Show empty message if there are no bookings
+                binding.bookingRecyclerView.visibility = View.GONE
+                binding.emptyViewText.visibility = View.VISIBLE
+            } else {
+                // Show the list if there are bookings
+                binding.bookingRecyclerView.visibility = View.VISIBLE
+                binding.emptyViewText.visibility = View.GONE
                 bookingAdapter.updateData(myBookings)
             }
         }

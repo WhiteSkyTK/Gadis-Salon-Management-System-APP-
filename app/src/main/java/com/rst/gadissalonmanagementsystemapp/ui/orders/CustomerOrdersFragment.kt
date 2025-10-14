@@ -32,18 +32,40 @@ class CustomerOrdersFragment : Fragment() {
 
     override fun onStart() {
         super.onStart()
-        // Start listening for orders when the screen is visible
-        ordersListener = FirebaseManager.addCurrentUserOrdersListener { myOrders ->
-            if (view != null) {
-                ordersAdapter.updateData(myOrders)
-            }
-        }
+        listenForMyOrders()
     }
 
     override fun onStop() {
         super.onStop()
         // Stop listening when the screen is not visible
         ordersListener?.remove()
+    }
+
+    private fun listenForMyOrders() {
+        // Start shimmer and set initial visibility
+        binding.shimmerViewContainerOrders.startShimmer()
+        binding.shimmerViewContainerOrders.visibility = View.VISIBLE
+        binding.customerOrdersRecyclerView.visibility = View.GONE
+        binding.emptyViewTextOrders.visibility = View.GONE
+
+        ordersListener = FirebaseManager.addCurrentUserOrdersListener { myOrders ->
+            if (view == null) return@addCurrentUserOrdersListener
+
+            // Stop shimmer
+            binding.shimmerViewContainerOrders.stopShimmer()
+            binding.shimmerViewContainerOrders.visibility = View.GONE
+
+            if (myOrders.isEmpty()) {
+                // Show empty message if there are no orders
+                binding.customerOrdersRecyclerView.visibility = View.GONE
+                binding.emptyViewTextOrders.visibility = View.VISIBLE
+            } else {
+                // Show the list if there are orders
+                binding.customerOrdersRecyclerView.visibility = View.VISIBLE
+                binding.emptyViewTextOrders.visibility = View.GONE
+                ordersAdapter.updateData(myOrders)
+            }
+        }
     }
 
     private fun setupRecyclerView() {

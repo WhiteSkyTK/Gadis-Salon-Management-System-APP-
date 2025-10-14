@@ -16,5 +16,6 @@ data class AdminBooking(
     val time: String = "",
     var status: String = "Pending",
     var workerUnreadCount: Int = 0,
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = System.currentTimeMillis(),
+    val cancellationReason: String = ""
 ) : Parcelable

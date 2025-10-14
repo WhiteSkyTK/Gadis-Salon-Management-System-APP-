@@ -75,11 +75,11 @@ class WorkerEditProfileFragment : Fragment(), ProfilePictureBottomSheet.PictureO
         viewLifecycleOwner.lifecycleScope.launch {
             val result = FirebaseManager.getUser(uid)
             if (result.isSuccess) {
-                val user = result.getOrNull()
-                binding.emailText.text = user?.email
-                binding.nameInput.setText(user?.name)
-                binding.phoneInput.setText(user?.phone)
-                binding.profileImageEdit.load(user?.imageUrl) {
+                currentUserData = result.getOrNull() // Store the user data
+                binding.emailText.text = currentUserData?.email
+                binding.nameInput.setText(currentUserData?.name)
+                binding.phoneInput.setText(currentUserData?.phone)
+                binding.profileImageEdit.load(currentUserData?.imageUrl) {
                     placeholder(R.drawable.ic_profile)
                     error(R.drawable.ic_profile)
                 }
@@ -96,7 +96,12 @@ class WorkerEditProfileFragment : Fragment(), ProfilePictureBottomSheet.PictureO
             Toast.makeText(context, "Fields cannot be empty", Toast.LENGTH_SHORT).show()
             return
         }
+        if (newPhone.length != 10 || !newPhone.all { it.isDigit() }) {
+            binding.phoneLayout.error = "Please enter a valid 10-digit phone number"
+            return
+        }
 
+        binding.loadingIndicator.visibility = View.VISIBLE
         binding.saveChangesButton.isEnabled = false
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -108,6 +113,7 @@ class WorkerEditProfileFragment : Fragment(), ProfilePictureBottomSheet.PictureO
                     finalImageUrl = uploadResult.getOrNull().toString()
                 } else {
                     Toast.makeText(context, "Error uploading image", Toast.LENGTH_SHORT).show()
+                    binding.loadingIndicator.visibility = View.GONE
                     binding.saveChangesButton.isEnabled = true
                     return@launch
                 }
@@ -115,6 +121,11 @@ class WorkerEditProfileFragment : Fragment(), ProfilePictureBottomSheet.PictureO
 
             // Now, update the user's profile in Firestore
             val updateResult = FirebaseManager.updateUserProfile(uid, newName, newPhone, finalImageUrl)
+
+            // --- HIDE LOADING INDICATOR ON COMPLETION ---
+            binding.loadingIndicator.visibility = View.GONE
+            binding.saveChangesButton.isEnabled = true
+
             if (updateResult.isSuccess) {
                 Toast.makeText(context, "Profile updated successfully", Toast.LENGTH_SHORT).show()
                 findNavController().popBackStack()

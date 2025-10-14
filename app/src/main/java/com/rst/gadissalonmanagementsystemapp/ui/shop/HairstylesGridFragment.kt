@@ -28,10 +28,21 @@ class HairstylesGridFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // --- START SHIMMER ---
+        binding.shimmerViewContainer.startShimmer()
+
         // Launch a coroutine to fetch the hairstyles from Firebase
         viewLifecycleOwner.lifecycleScope.launch {
             Log.d(TAG, "Fetching hairstyles from Firebase...")
             val result = FirebaseManager.getAllHairstyles()
+
+            // --- STOP SHIMMER & SHOW DATA ---
+            if (isAdded) { // Ensure fragment is still attached
+                binding.shimmerViewContainer.stopShimmer()
+                binding.shimmerViewContainer.visibility = View.GONE
+                binding.gridRecyclerView.visibility = View.VISIBLE
+            }
+
             if (result.isSuccess) {
                 val hairstyleList = result.getOrNull() ?: emptyList()
                 Log.d(TAG, "Successfully fetched ${hairstyleList.size} hairstyles.")

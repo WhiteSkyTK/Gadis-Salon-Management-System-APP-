@@ -5,6 +5,11 @@
     android:id="@+id/nav_graph"
     app:startDestination="@id/homeFragment">
 
+
+    <action
+        android:id="@+id/action_global_to_ticketDetailFragment"
+        app:destination="@id/ticketDetailFragment" />
+
     <fragment
         android:id="@+id/homeFragment"
         android:name="com.rst.gadissalonmanagementsystemapp.ui.home.HomeFragment"
@@ -277,6 +282,12 @@
         <argument
             android:name="product"
             app:argType="com.rst.gadissalonmanagementsystemapp.Product"
+            app:nullable="true"
+            android:defaultValue="@null" />
+
+        <argument
+            android:name="selectedVariant"
+            app:argType="com.rst.gadissalonmanagementsystemapp.ProductVariant"
             app:nullable="true"
             android:defaultValue="@null" />
 

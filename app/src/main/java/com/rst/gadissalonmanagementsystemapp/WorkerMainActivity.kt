@@ -97,6 +97,7 @@ class WorkerMainActivity : AppCompatActivity() {
                 destination.id == R.id.productDetailFragment ||
                 destination.id == R.id.workerOrderDetailFragment ||
                 destination.id == R.id.bookingDetailWorkerFragment ||
+                destination.id == R.id.ticketDetailFragment ||
                 destination.id == R.id.workerContactFragment) {
 
                 binding.bottomNavCardWorker.visibility = View.GONE

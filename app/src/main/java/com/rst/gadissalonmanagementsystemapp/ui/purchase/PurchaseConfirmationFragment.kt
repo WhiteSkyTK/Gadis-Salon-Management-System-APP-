@@ -53,26 +53,25 @@ class PurchaseConfirmationFragment : Fragment() {
     }
 
     private fun loadConfirmationData() {
-        val productToShow = args.product
-        if (productToShow != null) {
-            // Case 1: User clicked "Buy Now" on a single product
-            val variant = productToShow.variants.firstOrNull()
-            if (variant != null) {
-                itemsToPurchase = listOf(CartItem(
-                    productId = productToShow.id,
-                    name = productToShow.name,
+        val product = args.product
+        val variant = args.selectedVariant
+
+        if (product != null && variant != null) {
+            // Case 1: User clicked "Buy Now". Use the passed-in product and selected variant.
+            itemsToPurchase = listOf(
+                CartItem(
+                    productId = product.id,
+                    name = product.name,
                     size = variant.size,
                     price = variant.price,
                     quantity = 1,
-                    imageUrl = productToShow.imageUrl
-                ))
-                binding.summaryRecyclerView.adapter = OrderDetailAdapter(itemsToPurchase)
-            }
+                    imageUrl = product.imageUrl
+                )
+            )
+            binding.summaryRecyclerView.adapter = OrderDetailAdapter(itemsToPurchase)
         } else {
-            // Case 2: User is checking out with their full cart
-            // We now store the listener so we can stop it later
+            // Case 2: User is checking out from their full cart.
             cartListener = FirebaseManager.addCurrentUserCartListener { cartItems ->
-                // Check if the view is still alive before updating
                 if (view != null) {
                     itemsToPurchase = cartItems
                     binding.summaryRecyclerView.adapter = OrderDetailAdapter(itemsToPurchase)

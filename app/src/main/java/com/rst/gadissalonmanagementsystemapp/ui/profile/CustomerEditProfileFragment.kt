@@ -30,9 +30,9 @@ class CustomerEditProfileFragment : Fragment(), ProfilePictureBottomSheet.Pictur
     private var _binding: FragmentCustomerEditProfileBinding? = null
     private val binding get() = _binding!!
     private val mainViewModel: MainViewModel by activityViewModels()
-
     private var selectedImageUri: Uri? = null
     private var latestTmpUri: Uri? = null
+
 
     // --- Activity Result Launchers for image picking and permissions ---
     private val requestPermissionLauncher = registerForActivityResult(
@@ -80,6 +80,7 @@ class CustomerEditProfileFragment : Fragment(), ProfilePictureBottomSheet.Pictur
             if (user != null) {
                 binding.nameInput.setText(user.name)
                 binding.phoneInput.setText(user.phone)
+                binding.emailText.text = user.email
                 binding.profileImageEdit.load(user.imageUrl) {
                     placeholder(R.drawable.ic_profile)
                     error(R.drawable.ic_profile)
@@ -93,6 +94,20 @@ class CustomerEditProfileFragment : Fragment(), ProfilePictureBottomSheet.Pictur
         val newName = binding.nameInput.text.toString().trim()
         val newPhone = binding.phoneInput.text.toString().trim()
 
+        binding.nameLayout.error = null
+        binding.phoneLayout.error = null
+        if (newName.isEmpty()) {
+            binding.nameLayout.error = "Name cannot be empty"
+            return
+        }
+        if (newPhone.length != 10 || !newPhone.all { it.isDigit() }) {
+            binding.phoneLayout.error = "Please enter a valid 10-digit phone number"
+            return
+        }
+
+        binding.loadingIndicator.visibility = View.VISIBLE
+        binding.saveChangesButton.isEnabled = false
+
         viewLifecycleOwner.lifecycleScope.launch {
             var finalImageUrl = mainViewModel.currentUser.value?.imageUrl ?: ""
 
@@ -103,12 +118,19 @@ class CustomerEditProfileFragment : Fragment(), ProfilePictureBottomSheet.Pictur
                     finalImageUrl = uploadResult.getOrNull().toString()
                 } else {
                     Toast.makeText(context, "Error uploading image", Toast.LENGTH_SHORT).show()
+                    binding.loadingIndicator.visibility = View.GONE
+                    binding.saveChangesButton.isEnabled = true
                     return@launch
                 }
             }
 
             // Now, update the user's profile in Firestore
             val result = FirebaseManager.updateUserProfile(uid, newName, newPhone, finalImageUrl)
+
+            // --- HIDE LOADING INDICATOR ON COMPLETION ---
+            binding.loadingIndicator.visibility = View.GONE
+            binding.saveChangesButton.isEnabled = true
+
             if (result.isSuccess) {
                 Toast.makeText(context, "Profile updated!", Toast.LENGTH_SHORT).show()
                 findNavController().popBackStack()

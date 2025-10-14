@@ -50,7 +50,18 @@ class BookingDetailCustomerFragment : Fragment() {
         binding.stylistNameDetail.text = "With: ${booking.stylistName}"
         binding.bookingTimeDetail.text = "On: ${booking.date} at ${booking.time}"
 
-        if (!booking.status.equals("Confirmed", ignoreCase = true)) {
+        // Check if the booking is cancelled and has a reason
+        if (booking.status.equals("Cancelled", ignoreCase = true) || booking.status.equals("Declined", ignoreCase = true)) {
+            // Disable the chat for cancelled bookings
+            binding.inputLayout.visibility = View.GONE
+
+            // Show the cancellation reason card if a reason exists
+            if (booking.cancellationReason.isNotBlank()) {
+                binding.cancellationReasonCard.visibility = View.VISIBLE
+                binding.cancellationReasonText.text = "Reason: ${booking.cancellationReason}"
+            }
+        } else if (!booking.status.equals("Confirmed", ignoreCase = true)) {
+            // Also disable chat for any other non-confirmed status (Pending, Completed, etc.)
             binding.inputLayout.visibility = View.GONE
         }
 
@@ -85,10 +96,18 @@ class BookingDetailCustomerFragment : Fragment() {
     }
 
     private fun listenForMessages(bookingId: String) {
-        // This is now the ONLY place where the listener is created.
         chatListener = FirebaseManager.addChatMessagesListener(bookingId) { messages ->
             if (view != null) {
                 val uid = Firebase.auth.currentUser?.uid ?: ""
+
+                // --- NEW: AUTO-READ LOGIC ---
+                // If the list is not empty and the last message is from someone else, mark as read.
+                if (messages.isNotEmpty() && messages.last().senderUid != uid) {
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        FirebaseManager.markMessagesAsRead(bookingId)
+                    }
+                }
+
                 messages.forEach { it.isSentByUser = (it.senderUid == uid) }
                 chatAdapter.updateData(messages)
                 if (messages.isNotEmpty()) {

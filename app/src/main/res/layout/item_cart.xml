@@ -87,7 +87,8 @@
                 android:id="@+id/button_minus"
                 android:layout_width="32dp"
                 android:layout_height="32dp"
-                android:src="@drawable/ic_remove" />
+                android:src="@drawable/ic_remove"
+                android:background="?attr/selectableItemBackgroundBorderless"/>
 
             <TextView
                 android:id="@+id/item_quantity"
@@ -103,7 +104,8 @@
                 android:id="@+id/button_plus"
                 android:layout_width="32dp"
                 android:layout_height="32dp"
-                android:src="@drawable/ic_add" />
+                android:src="@drawable/ic_add"
+                android:background="?attr/selectableItemBackgroundBorderless"/>
         </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>

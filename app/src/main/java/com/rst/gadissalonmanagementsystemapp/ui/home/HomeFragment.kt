@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.rst.gadissalonmanagementsystemapp.FirebaseManager
 import com.rst.gadissalonmanagementsystemapp.ui.shop.HairstyleItemAdapter
@@ -34,8 +35,15 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        setupRecyclerViews()
         setupClickListeners()
         loadDataFromFirebase()
+    }
+
+    private fun setupRecyclerViews() {
+        // Use a GridLayoutManager with 2 columns
+        binding.recyclerViewProducts.layoutManager = GridLayoutManager(context, 2)
+        binding.recyclerViewHairstyles.layoutManager = GridLayoutManager(context, 2)
     }
 
     private fun setupClickListeners() {
@@ -52,14 +60,17 @@ class HomeFragment : Fragment() {
     }
 
     private fun loadDataFromFirebase() {
-        binding.recyclerViewProducts.layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
-        binding.recyclerViewHairstyles.layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
+        binding.shimmerViewProducts.startShimmer()
+        binding.shimmerViewHairstyles.startShimmer()
 
         viewLifecycleOwner.lifecycleScope.launch {
             // --- Fetch Products ---
             val productsResult = FirebaseManager.getAllProducts()
-
             if (!isAdded) return@launch
+
+            binding.shimmerViewProducts.stopShimmer()
+            binding.shimmerViewProducts.visibility = View.GONE
+            binding.recyclerViewProducts.visibility = View.VISIBLE
 
             if (productsResult.isSuccess) {
                 val productList = productsResult.getOrNull()?.take(4) ?: emptyList()
@@ -76,8 +87,12 @@ class HomeFragment : Fragment() {
 
             // --- Fetch Hairstyles ---
             val hairstylesResult = FirebaseManager.getAllHairstyles()
-
             if (!isAdded) return@launch
+
+            // --- STOP SHIMMER & SHOW DATA ---
+            binding.shimmerViewHairstyles.stopShimmer()
+            binding.shimmerViewHairstyles.visibility = View.GONE
+            binding.recyclerViewHairstyles.visibility = View.VISIBLE
 
             if (hairstylesResult.isSuccess) {
                 val hairstyleList = hairstylesResult.getOrNull()?.take(4) ?: emptyList()

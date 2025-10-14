@@ -70,6 +70,10 @@ class RegisterActivity : AppCompatActivity() {
             binding.phoneLayout.error = "Phone number is required"
             return
         }
+        if (phone.length != 10 || !phone.all { it.isDigit() }) {
+            binding.phoneLayout.error = "Please enter a valid 10-digit phone number"
+            return
+        }
         if (password.length < 6) {
             binding.passwordLayout.error = "Password must be at least 6 characters"
             return

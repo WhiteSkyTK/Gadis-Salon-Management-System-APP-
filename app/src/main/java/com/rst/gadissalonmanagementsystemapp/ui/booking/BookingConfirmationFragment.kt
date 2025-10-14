@@ -11,8 +11,8 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import androidx.recyclerview.widget.GridLayoutManager
 import coil.load
+import coil.transform.CircleCropTransformation
 import com.google.android.material.chip.Chip
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
@@ -67,42 +67,99 @@ class BookingConfirmationFragment : Fragment() {
     }
 
     private fun populateStylistChips(availableStylistIds: List<String>) {
+        binding.shimmerViewStylists.startShimmer()
+        binding.shimmerViewStylists.visibility = View.VISIBLE
+        binding.stylistChipGroup.visibility = View.GONE
+
         viewLifecycleOwner.lifecycleScope.launch {
+
             Log.d(TAG, "Fetching ${availableStylistIds.size} specific stylists from Firebase...")
             val result = FirebaseManager.getStylistsByIds(availableStylistIds)
+
+            // --- STOP SHIMMER ---
+            if (!isAdded) return@launch
+            binding.shimmerViewStylists.stopShimmer()
+            binding.shimmerViewStylists.visibility = View.GONE
+            binding.stylistChipGroup.visibility = View.VISIBLE
+
             if (result.isSuccess) {
                 // The result will ONLY contain the workers for this hairstyle
                 allAvailableStylists = result.getOrNull() ?: emptyList()
                 Log.d(TAG, "Successfully fetched ${allAvailableStylists.size} available stylists.")
-
                 binding.stylistChipGroup.removeAllViews()
 
                 // Add the "Any Available" chip
-                val anyChip = layoutInflater.inflate(R.layout.chip_stylist, binding.stylistChipGroup, false) as Chip
+                val anyChip = layoutInflater.inflate(R.layout.chip_stylist_with_image, binding.stylistChipGroup, false) as Chip
                 anyChip.text = "Any Available"
+                anyChip.isChipIconVisible = false
                 anyChip.isChecked = true
                 binding.stylistChipGroup.addView(anyChip)
 
                 // Add a chip for each specific stylist
                 allAvailableStylists.forEach { stylistUser ->
-                    val chip = layoutInflater.inflate(R.layout.chip_stylist, binding.stylistChipGroup, false) as Chip
+                    val chip = layoutInflater.inflate(R.layout.chip_stylist_with_image, binding.stylistChipGroup, false) as Chip
                     chip.text = stylistUser.name
                     chip.tag = stylistUser
+                    chip.chipIcon = context?.let {
+                        coil.Coil.imageLoader(it).execute(
+                            coil.request.ImageRequest.Builder(it)
+                                .data(stylistUser.imageUrl.ifEmpty { R.drawable.ic_profile })
+                                .transformations(CircleCropTransformation())
+                                .target { drawable -> chip.chipIcon = drawable }
+                                .build()
+                        ).drawable
+                    }
                     binding.stylistChipGroup.addView(chip)
                 }
-                updateAvailableTimeSlots() // Initial time slot calculation
+                updateAvailableTimeSlots()
             } else {
                 Log.e(TAG, "Error fetching stylists: ${result.exceptionOrNull()?.message}")
             }
         }
     }
 
+    private fun getOccupiedSlots(existingBookings: List<AdminBooking>): Set<String> {
+        val occupied = mutableSetOf<String>()
+        // Safely get the list from the ViewModel. If it's not ready, log an error and stop.
+        val allHairstyles = mainViewModel.allHairstyles.value ?: run {
+            Log.e(TAG, "Hairstyles list from ViewModel is null. Cannot calculate occupied slots correctly.")
+            return occupied // Return empty set if data is not ready
+        }
+        Log.d(TAG, "Calculating occupied slots with ${allHairstyles.size} total hairstyles available in ViewModel.")
+
+        existingBookings.forEach { booking ->
+            val hairstyle = allHairstyles.find { it.name == booking.serviceName }
+            // Add a warning if a hairstyle from a booking isn't in our main list
+            if (hairstyle == null) {
+                Log.w(TAG, "Could not find hairstyle '${booking.serviceName}' in ViewModel to calculate duration. Defaulting to 1 hour.")
+            }
+            val duration = hairstyle?.durationHours ?: 1 // Default to 1 hour if not found
+            val startTimeHour = booking.time.split(":")[0].toInt()
+
+            for (i in 0 until duration) {
+                occupied.add(String.format("%02d:00", startTimeHour + i))
+            }
+        }
+        Log.d(TAG, "Calculated occupied slots: $occupied")
+        return occupied
+    }
+
     private fun setupListeners() {
         binding.stylistChipGroup.setOnCheckedChangeListener { group, checkedId ->
-            val selectedChip = group.findViewById<Chip>(checkedId)
-            selectedStylist = selectedChip?.tag as? User
-            selectedTime = null
-            Log.d(TAG, "Stylist selected: ${selectedStylist?.name ?: "Any Available"}")
+            // --- ADDED DETAILED LOGS ---
+            Log.d(TAG, "Chip selection changed. Checked ID is: $checkedId")
+            if (checkedId == View.NO_ID) {
+                // This can happen when chips are being cleared.
+                Log.d(TAG, "No chip selected.")
+                selectedStylist = null
+            } else {
+                val selectedChip = group.findViewById<Chip>(checkedId)
+                selectedStylist = selectedChip?.tag as? User
+                Log.d(TAG, "Selected Chip Text: ${selectedChip?.text}")
+                Log.d(TAG, "Selected Stylist Object: ${selectedStylist?.name ?: "'Any Available' (null object)"}")
+            }
+
+            selectedTime = null // Always reset time on stylist change
             updateAvailableTimeSlots()
         }
         binding.calendarView.setOnDateChangeListener { _, year, month, dayOfMonth ->
@@ -134,77 +191,61 @@ class BookingConfirmationFragment : Fragment() {
         val date = selectedDate.takeIf { it.isNotBlank() } ?: return
         val stylist = selectedStylist
 
+        // --- START LOADING STATE ---
+        binding.timeSlotLoadingIndicator.visibility = View.VISIBLE
+        binding.timeSlotRecyclerView.visibility = View.INVISIBLE
+        binding.confirmBookingButton.isEnabled = false // Disable button during load
+
         Log.d(TAG, "Updating time slots for date: $date and stylist: ${stylist?.name}")
 
         viewLifecycleOwner.lifecycleScope.launch {
             val masterSlotsResult = FirebaseManager.getSalonTimeSlots()
             if (!masterSlotsResult.isSuccess) {
                 Toast.makeText(context, "Error fetching salon hours.", Toast.LENGTH_SHORT).show()
+                binding.timeSlotLoadingIndicator.visibility = View.GONE // Hide loading on error
                 return@launch
             }
             val masterSlotList = masterSlotsResult.getOrNull() ?: emptyList()
             var availableSlots: List<String>
 
-            // --- THIS IS THE NEW, SECURE LOGIC ---
             if (stylist != null) {
-                // If a specific stylist is chosen, call our secure Cloud Function
-                val result = FirebaseManager.getAvailableSlots(stylist.name, date, args.hairstyle.id)
-                if (result.isSuccess) {
-                    availableSlots = result.getOrNull() ?: emptyList()
-                } else {
-                    Toast.makeText(context, "Could not fetch availability.", Toast.LENGTH_SHORT).show()
-                    availableSlots = emptyList() // Show no slots on error
-                }
+                val result =
+                    FirebaseManager.getAvailableSlots(stylist.name, date, args.hairstyle.id)
+                availableSlots =
+                    if (result.isSuccess) result.getOrNull() ?: emptyList() else emptyList()
             } else {
-                // If "Any Available" is chosen, show all master slots for now
                 availableSlots = masterSlotList
             }
 
-            // Filter for the 3-hour lead time if the selected date is today
-            val todayDateString = SimpleDateFormat("dd MMM, yyyy", Locale.getDefault()).format(Date())
+            // 1. Create a new, changeable (mutable) copy of the availableSlots list.
+            val mutableAvailableSlots = availableSlots.toMutableList()
+
+            // 2. Filter for the 3-hour lead time if the selected date is today
+            val todayDateString =
+                SimpleDateFormat("dd MMM, yyyy", Locale.getDefault()).format(Date())
             if (date == todayDateString) {
                 val calendar = Calendar.getInstance()
                 val currentHour = calendar.get(Calendar.HOUR_OF_DAY)
 
-                (availableSlots as MutableList).removeAll { slot ->
+                mutableAvailableSlots.removeAll { slot ->
                     val slotHour = slot.split(":")[0].toInt()
                     slotHour < currentHour + BOOKING_LEAD_TIME_HOURS
                 }
             }
 
-            Log.d(TAG, "Final available slots: $availableSlots")
-            binding.timeSlotRecyclerView.adapter = TimeSlotAdapter(masterSlotList, availableSlots) { time ->
-                selectedTime = time
+            if (isAdded) {
+                binding.timeSlotLoadingIndicator.visibility = View.GONE
+                binding.timeSlotRecyclerView.visibility = View.VISIBLE
+
+                Log.d(TAG, "Final available slots: $mutableAvailableSlots")
+                binding.timeSlotRecyclerView.adapter =
+                    TimeSlotAdapter(masterSlotList, mutableAvailableSlots) { time ->
+                        selectedTime = time
+                        checkIfReadyToBook()
+                    }
                 checkIfReadyToBook()
             }
-            checkIfReadyToBook()
         }
-    }
-
-    private fun getOccupiedSlots(existingBookings: List<AdminBooking>): Set<String> {
-        val occupied = mutableSetOf<String>()
-        // Safely get the list from the ViewModel. If it's not ready, log an error and stop.
-        val allHairstyles = mainViewModel.allHairstyles.value ?: run {
-            Log.e(TAG, "Hairstyles list from ViewModel is null. Cannot calculate occupied slots correctly.")
-            return occupied // Return empty set if data is not ready
-        }
-        Log.d(TAG, "Calculating occupied slots with ${allHairstyles.size} total hairstyles available in ViewModel.")
-
-        existingBookings.forEach { booking ->
-            val hairstyle = allHairstyles.find { it.name == booking.serviceName }
-            // Add a warning if a hairstyle from a booking isn't in our main list
-            if (hairstyle == null) {
-                Log.w(TAG, "Could not find hairstyle '${booking.serviceName}' in ViewModel to calculate duration. Defaulting to 1 hour.")
-            }
-            val duration = hairstyle?.durationHours ?: 1 // Default to 1 hour if not found
-            val startTimeHour = booking.time.split(":")[0].toInt()
-
-            for (i in 0 until duration) {
-                occupied.add(String.format("%02d:00", startTimeHour + i))
-            }
-        }
-        Log.d(TAG, "Calculated occupied slots: $occupied")
-        return occupied
     }
 
     private fun confirmBooking() {
