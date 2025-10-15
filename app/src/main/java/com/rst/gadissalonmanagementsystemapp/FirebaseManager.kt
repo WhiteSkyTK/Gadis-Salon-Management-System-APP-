@@ -1,15 +1,11 @@
 package com.rst.gadissalonmanagementsystemapp
 
-import android.content.Context
 import android.net.Uri
 import android.util.Log
-import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.auth
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import com.google.firebase.storage.storage
-import com.google.firebase.app
-import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
@@ -448,8 +444,8 @@ object FirebaseManager {
         }
     }
 
-    fun addUserListener(onUpdate: (List<User>) -> Unit) {
-        usersCollection.addSnapshotListener { snapshots, error ->
+    fun addUserListener(onUpdate: (List<User>) -> Unit): ListenerRegistration?  {
+        return usersCollection.addSnapshotListener { snapshots, error ->
             if (error != null) {
                 Log.w("FirebaseManager", "User listener failed.", error)
                 return@addSnapshotListener
@@ -463,6 +459,32 @@ object FirebaseManager {
 
             onUpdate(userList)
         }
+    }
+
+    // Listens for real-time updates to the products collection
+    fun addProductsListener(onUpdate: (List<Product>) -> Unit): ListenerRegistration? {
+        val user = auth.currentUser
+        if (user == null) {
+            Log.w("FirebaseManager", "No user logged in, cannot fetch products.")
+            onUpdate(emptyList())
+            return null
+        }
+
+        // Return the ListenerRegistration object so the fragment can manage its lifecycle
+        return firestore.collection("products")
+            .addSnapshotListener { snapshots, error ->
+                if (error != null) {
+                    Log.w("FirebaseManager", "Products listener failed.", error)
+                    return@addSnapshotListener
+                }
+
+                val productList = snapshots?.map { doc ->
+                    val product = doc.toObject(Product::class.java)
+                    product.id = doc.id
+                    product
+                } ?: emptyList()
+                onUpdate(productList)
+            }
     }
 
     // Fetches the 'about_us' document from the 'app_content' collection
@@ -755,31 +777,7 @@ object FirebaseManager {
 
 
 
-    // Listens for real-time updates to the products collection
-    fun addProductsListener(onUpdate: (List<Product>) -> Unit): ListenerRegistration? {
-        val user = auth.currentUser
-        if (user == null) {
-            Log.w("FirebaseManager", "No user logged in, cannot fetch products.")
-            onUpdate(emptyList())
-            return null
-        }
 
-        // Return the ListenerRegistration object so the fragment can manage its lifecycle
-        return firestore.collection("products")
-            .addSnapshotListener { snapshots, error ->
-                if (error != null) {
-                    Log.w("FirebaseManager", "Products listener failed.", error)
-                    return@addSnapshotListener
-                }
-
-                val productList = snapshots?.map { doc ->
-                    val product = doc.toObject(Product::class.java)
-                    product.id = doc.id
-                    product
-                } ?: emptyList()
-                onUpdate(productList)
-            }
-    }
 
     /**
      * Deletes a hairstyle from Firestore and its associated image from Firebase Storage.
@@ -919,27 +917,58 @@ object FirebaseManager {
         } catch (e: Exception) { Result.failure(e) }
     }
 
+    /**
+     * Updates a booking's status to 'Declined' and adds a cancellation reason.
+     * Used for directly assigned bookings.
+     */
+    suspend fun declineDirectBooking(bookingId: String, reason: String): Result<Unit> {
+        return try {
+            firestore.collection("bookings").document(bookingId)
+                .update(mapOf(
+                    "status" to "Declined",
+                    "cancellationReason" to reason
+                )).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun addDeclinedStylist(bookingId: String, stylistId: String): Result<Unit> {
+        return try {
+            firestore.collection("bookings").document(bookingId)
+                .update("declinedBy", FieldValue.arrayUnion(stylistId)).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     fun addPendingBookingsListener(onUpdate: (List<AdminBooking>) -> Unit): ListenerRegistration? {
-        val user = auth.currentUser
-        if (user == null) {
-            Log.w("FirebaseManager", "No user logged in, cannot listen for pending bookings.")
+        val uid = auth.currentUser?.uid
+        if (uid == null) {
             onUpdate(emptyList())
             return null
         }
 
-        // --- THIS IS THE FIX ---
-        // We now correctly return the ListenerRegistration object.
         return firestore.collection("bookings")
             .whereEqualTo("status", "Pending")
             .addSnapshotListener { snapshots, error ->
                 if (error != null) {
-                    Log.w("FirebaseManager", "Pending Bookings listener failed.", error)
+                    // ... (error handling)
                     return@addSnapshotListener
                 }
-                val bookingList = snapshots?.map { doc ->
+                val bookingList = snapshots?.mapNotNull { doc ->
                     val booking = doc.toObject(AdminBooking::class.java)
                     booking.id = doc.id
-                    booking
+
+                    // --- NEW FILTERING LOGIC ---
+                    // Only include the booking if the current user has NOT declined it.
+                    if (booking.declinedBy.contains(uid)) {
+                        null // Exclude this booking
+                    } else {
+                        booking // Include this booking
+                    }
                 } ?: emptyList()
                 onUpdate(bookingList)
             }
@@ -1045,6 +1074,22 @@ object FirebaseManager {
         return try {
             firestore.collection("product_orders").document(orderId)
                 .update("status", newStatus).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Updates a booking's status to 'Cancelled' and saves the reason.
+     */
+    suspend fun cancelBooking(bookingId: String, reason: String): Result<Unit> {
+        return try {
+            firestore.collection("bookings").document(bookingId)
+                .update(mapOf(
+                    "status" to "Cancelled",
+                    "cancellationReason" to reason
+                )).await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

@@ -1,14 +1,12 @@
 package com.rst.gadissalonmanagementsystemapp.ui.worker
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.firestore.ListenerRegistration
@@ -16,13 +14,11 @@ import com.prolificinteractive.materialcalendarview.CalendarDay
 import com.prolificinteractive.materialcalendarview.CalendarMode
 import com.rst.gadissalonmanagementsystemapp.AdminBooking
 import com.rst.gadissalonmanagementsystemapp.FirebaseManager
-import com.rst.gadissalonmanagementsystemapp.Hairstyle
 import com.rst.gadissalonmanagementsystemapp.MainViewModel
 import com.rst.gadissalonmanagementsystemapp.R
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentWorkerScheduleBinding
-import kotlinx.coroutines.launch
+import com.rst.gadissalonmanagementsystemapp.util.NetworkUtils
 import java.text.SimpleDateFormat
-import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -42,7 +38,6 @@ class WorkerScheduleFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         setupRecyclerView()
         setupCalendar()
     }
@@ -78,7 +73,12 @@ class WorkerScheduleFragment : Fragment() {
     override fun onStart() {
         super.onStart()
         // Start listening for schedule updates when the screen becomes visible
-        listenForMyScheduleUpdates()
+        if (NetworkUtils.isInternetAvailable(requireContext())) {
+            showOfflineUI(false)
+            listenForMyScheduleUpdates()
+        } else {
+            showOfflineUI(true)
+        }
     }
 
     override fun onStop() {
@@ -87,6 +87,10 @@ class WorkerScheduleFragment : Fragment() {
         scheduleListener?.remove()
     }
 
+    private fun showOfflineUI(isOffline: Boolean) {
+        binding.offlineLayout.root.visibility = if (isOffline) View.VISIBLE else View.GONE
+        binding.contentContainer.visibility = if (isOffline) View.GONE else View.VISIBLE
+    }
 
     private fun setupRecyclerView() {
         scheduleAdapter = WorkerScheduleAdapter(emptyList(), mainViewModel.allHairstyles.value ?: emptyList()) { booking ->
@@ -98,16 +102,26 @@ class WorkerScheduleFragment : Fragment() {
     }
 
     private fun listenForMyScheduleUpdates() {
-        // We now store the returned listener in our class property
-        scheduleListener = FirebaseManager.addWorkerScheduleListener { myBookings ->
-            if (view != null) { // Only update if the view still exists
-                allMyBookings = myBookings
-                highlightBookingDates(myBookings)
+        // --- START SHIMMER ---
+        binding.shimmerViewContainer.startShimmer()
+        binding.shimmerViewContainer.visibility = View.VISIBLE
+        binding.scheduleRecyclerViewWorker.visibility = View.GONE
+        binding.emptyViewText.visibility = View.GONE
 
-                val selectedDate = binding.calendarViewWorker.selectedDate?.date
-                val selectedDateStr = SimpleDateFormat("dd MMM, yyyy", Locale.getDefault()).format(selectedDate ?: Date())
-                filterScheduleForDate(selectedDateStr)
-            }
+        scheduleListener = FirebaseManager.addWorkerScheduleListener { myBookings ->
+            if (view == null) return@addWorkerScheduleListener
+
+            // --- STOP SHIMMER ---
+            binding.shimmerViewContainer.stopShimmer()
+            binding.shimmerViewContainer.visibility = View.GONE
+
+            allMyBookings = myBookings
+            highlightBookingDates(myBookings)
+
+            // Re-filter for the currently selected date now that we have new data
+            val selectedDate = binding.calendarViewWorker.selectedDate?.date
+            val selectedDateStr = SimpleDateFormat("dd MMM, yyyy", Locale.getDefault()).format(selectedDate ?: Date())
+            filterScheduleForDate(selectedDateStr)
         }
     }
 
@@ -128,7 +142,16 @@ class WorkerScheduleFragment : Fragment() {
 
     private fun filterScheduleForDate(date: String) {
         val filteredList = allMyBookings.filter { it.date == date }
-        scheduleAdapter.updateData(filteredList)
+
+        // --- NEW LOGIC for empty state ---
+        if (filteredList.isEmpty()) {
+            binding.scheduleRecyclerViewWorker.visibility = View.GONE
+            binding.emptyViewText.visibility = View.VISIBLE
+        } else {
+            binding.scheduleRecyclerViewWorker.visibility = View.VISIBLE
+            binding.emptyViewText.visibility = View.GONE
+            scheduleAdapter.updateData(filteredList)
+        }
     }
 
     override fun onDestroyView() {

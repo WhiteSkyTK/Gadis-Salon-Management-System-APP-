@@ -10,12 +10,11 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.rst.gadissalonmanagementsystemapp.FirebaseManager
-import com.rst.gadissalonmanagementsystemapp.ui.shop.HairstyleItemAdapter
-import com.rst.gadissalonmanagementsystemapp.ui.home.HomeItemAdapter
 import com.rst.gadissalonmanagementsystemapp.R
+import com.rst.gadissalonmanagementsystemapp.ui.shop.HairstyleItemAdapter
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentHomeBinding
+import com.rst.gadissalonmanagementsystemapp.util.NetworkUtils
 import kotlinx.coroutines.launch
 
 class HomeFragment : Fragment() {
@@ -23,6 +22,7 @@ class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
     private val TAG = "HomeFragment"
+    private lateinit var offlineContainer: View
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -34,10 +34,26 @@ class HomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
+        offlineContainer = view.findViewById(R.id.offline_container)
         setupRecyclerViews()
         setupClickListeners()
-        loadDataFromFirebase()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        // --- THIS IS THE NEW LOGIC ---
+        // Check for internet every time the fragment becomes visible
+        if (NetworkUtils.isInternetAvailable(requireContext())) {
+            showOfflineUI(false) // Hide offline screen
+            loadDataFromFirebase()
+        } else {
+            showOfflineUI(true) // Show offline screen
+        }
+    }
+
+    private fun showOfflineUI(isOffline: Boolean) {
+        offlineContainer.visibility = if (isOffline) View.VISIBLE else View.GONE
+        binding.contentContainer.visibility = if (isOffline) View.GONE else View.VISIBLE
     }
 
     private fun setupRecyclerViews() {

@@ -18,6 +18,7 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.rst.gadissalonmanagementsystemapp.*
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentBookingConfirmationBinding
+import com.rst.gadissalonmanagementsystemapp.util.NetworkUtils
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
@@ -32,6 +33,7 @@ class BookingConfirmationFragment : Fragment() {
     private val args: BookingConfirmationFragmentArgs by navArgs()
 
     private val mainViewModel: MainViewModel by activityViewModels()
+
 
     companion object {
         private const val TAG = "BookingConfirmation"
@@ -65,6 +67,23 @@ class BookingConfirmationFragment : Fragment() {
             confirmBooking()
         }
     }
+
+    override fun onStart() {
+        super.onStart()
+        if (NetworkUtils.isInternetAvailable(requireContext())) {
+            showOfflineUI(false)
+            populateStylistChips(args.hairstyle.availableStylistIds)
+        } else {
+            showOfflineUI(true)
+        }
+    }
+
+    private fun showOfflineUI(isOffline: Boolean) {
+        binding.offlineLayout.root.visibility = if (isOffline) View.VISIBLE else View.GONE
+        binding.contentContainer.visibility = if (isOffline) View.GONE else View.VISIBLE
+        binding.confirmBookingButton.visibility = if (isOffline) View.GONE else View.VISIBLE
+    }
+
 
     private fun populateStylistChips(availableStylistIds: List<String>) {
         binding.shimmerViewStylists.startShimmer()
@@ -118,48 +137,17 @@ class BookingConfirmationFragment : Fragment() {
         }
     }
 
-    private fun getOccupiedSlots(existingBookings: List<AdminBooking>): Set<String> {
-        val occupied = mutableSetOf<String>()
-        // Safely get the list from the ViewModel. If it's not ready, log an error and stop.
-        val allHairstyles = mainViewModel.allHairstyles.value ?: run {
-            Log.e(TAG, "Hairstyles list from ViewModel is null. Cannot calculate occupied slots correctly.")
-            return occupied // Return empty set if data is not ready
-        }
-        Log.d(TAG, "Calculating occupied slots with ${allHairstyles.size} total hairstyles available in ViewModel.")
-
-        existingBookings.forEach { booking ->
-            val hairstyle = allHairstyles.find { it.name == booking.serviceName }
-            // Add a warning if a hairstyle from a booking isn't in our main list
-            if (hairstyle == null) {
-                Log.w(TAG, "Could not find hairstyle '${booking.serviceName}' in ViewModel to calculate duration. Defaulting to 1 hour.")
-            }
-            val duration = hairstyle?.durationHours ?: 1 // Default to 1 hour if not found
-            val startTimeHour = booking.time.split(":")[0].toInt()
-
-            for (i in 0 until duration) {
-                occupied.add(String.format("%02d:00", startTimeHour + i))
-            }
-        }
-        Log.d(TAG, "Calculated occupied slots: $occupied")
-        return occupied
-    }
-
     private fun setupListeners() {
         binding.stylistChipGroup.setOnCheckedChangeListener { group, checkedId ->
-            // --- ADDED DETAILED LOGS ---
             Log.d(TAG, "Chip selection changed. Checked ID is: $checkedId")
-            if (checkedId == View.NO_ID) {
-                // This can happen when chips are being cleared.
-                Log.d(TAG, "No chip selected.")
-                selectedStylist = null
-            } else {
+            if (checkedId != View.NO_ID) {
                 val selectedChip = group.findViewById<Chip>(checkedId)
                 selectedStylist = selectedChip?.tag as? User
-                Log.d(TAG, "Selected Chip Text: ${selectedChip?.text}")
                 Log.d(TAG, "Selected Stylist Object: ${selectedStylist?.name ?: "'Any Available' (null object)"}")
+            } else {
+                selectedStylist = null // When "Any Available" is re-selected if it's the only one
             }
-
-            selectedTime = null // Always reset time on stylist change
+            selectedTime = null
             updateAvailableTimeSlots()
         }
         binding.calendarView.setOnDateChangeListener { _, year, month, dayOfMonth ->
@@ -290,7 +278,10 @@ class BookingConfirmationFragment : Fragment() {
     }
 
     private fun checkIfReadyToBook() {
-        binding.confirmBookingButton.isEnabled = (!selectedDate.isNullOrEmpty() && !selectedTime.isNullOrEmpty())
+        // This check is now robust and prevents the crash
+        val isReady = !selectedDate.isNullOrEmpty() && !selectedTime.isNullOrEmpty()
+        val isLoading = binding.timeSlotLoadingIndicator.visibility == View.VISIBLE
+        binding.confirmBookingButton.isEnabled = isReady && !isLoading
     }
 
     override fun onDestroyView() {

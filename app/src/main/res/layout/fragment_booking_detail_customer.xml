@@ -6,133 +6,163 @@
     android:layout_height="match_parent"
     tools:context=".ui.booking.BookingDetailCustomerFragment">
 
-    <!-- Booking Details Card -->
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/details_card"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="16dp">
-
-            <ImageView
-                android:id="@+id/hairstyle_image_detail"
-                android:layout_width="80dp"
-                android:layout_height="80dp"
-                android:scaleType="centerCrop"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:src="@drawable/ic_placeholder_image"/>
-
-            <TextView
-                android:id="@+id/service_name_detail"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                app:layout_constraintStart_toEndOf="@id/hairstyle_image_detail"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                tools:text="Butterfly Locs" />
-
-            <TextView
-                android:id="@+id/stylist_name_detail"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                app:layout_constraintStart_toStartOf="@id/service_name_detail"
-                app:layout_constraintTop_toBottomOf="@id/service_name_detail"
-                app:layout_constraintEnd_toEndOf="@id/service_name_detail"
-                tools:text="With: Sarah" />
-
-            <TextView
-                android:id="@+id/booking_time_detail"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                app:layout_constraintStart_toStartOf="@id/service_name_detail"
-                app:layout_constraintTop_toBottomOf="@id/stylist_name_detail"
-                app:layout_constraintEnd_toEndOf="@id/service_name_detail"
-                tools:text="On: 20 Sep, 2025 at 10:00" />
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-    </com.google.android.material.card.MaterialCardView>
-
-    <!-- ADD THIS NEW CARD FOR THE CANCELLATION REASON -->
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/cancellation_reason_card"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:visibility="gone"
-        app:cardBackgroundColor="@color/colorErrorContainer"
-        app:layout_constraintTop_toBottomOf="@id/details_card"
-        app:layout_constraintStart_toStartOf="@id/details_card"
-        app:layout_constraintEnd_toEndOf="@id/details_card"
-        tools:visibility="visible">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:padding="16dp"
-            android:gravity="center_vertical">
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/ic_info"
-                app:tint="@color/colorOnErrorContainer" />
-            <TextView
-                android:id="@+id/cancellation_reason_text"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="12dp"
-                android:textColor="@color/colorOnErrorContainer"
-                android:textSize="16sp"
-                tools:text="Reason for cancellation: Stylist was unavailable." />
-        </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
-
-    <!-- Chat History -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/chat_recycler_view"
+    <!-- This container holds all your main online content -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/content_container"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_margin="16dp"
-        app:layout_constraintTop_toBottomOf="@id/details_card"
-        app:layout_constraintBottom_toTopOf="@id/input_layout"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
-
-    <!-- Message Input Area -->
-    <LinearLayout
-        android:id="@+id/input_layout"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="8dp"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
-        <EditText
-            android:id="@+id/message_input"
+
+        <!-- Booking Details Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/details_card"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:hint="Type a message..." />
-        <ImageButton
-            android:id="@+id/send_button"
-            android:layout_width="wrap_content"
+            android:layout_margin="16dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp">
+
+                <ImageView
+                    android:id="@+id/hairstyle_image_detail"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:scaleType="centerCrop"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    tools:src="@drawable/ic_placeholder_image"/>
+
+                <TextView
+                    android:id="@+id/service_name_detail"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toEndOf="@id/hairstyle_image_detail"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    tools:text="Butterfly Locs" />
+
+                <TextView
+                    android:id="@+id/stylist_name_detail"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintStart_toStartOf="@id/service_name_detail"
+                    app:layout_constraintTop_toBottomOf="@id/service_name_detail"
+                    app:layout_constraintEnd_toEndOf="@id/service_name_detail"
+                    tools:text="With: Sarah" />
+
+                <TextView
+                    android:id="@+id/booking_time_detail"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintStart_toStartOf="@id/service_name_detail"
+                    app:layout_constraintTop_toBottomOf="@id/stylist_name_detail"
+                    app:layout_constraintEnd_toEndOf="@id/service_name_detail"
+                    tools:text="On: 20 Sep, 2025 at 10:00" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ADD THIS NEW CARD FOR THE CANCELLATION REASON -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cancellation_reason_card"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:src="@drawable/ic_send"
-            android:layout_gravity="center_vertical"
-            android:background="?attr/selectableItemBackgroundBorderless"/>
-    </LinearLayout>
+            android:layout_marginTop="12dp"
+            android:visibility="gone"
+            app:cardBackgroundColor="@color/colorErrorContainer"
+            app:layout_constraintTop_toBottomOf="@id/details_card"
+            app:layout_constraintStart_toStartOf="@id/details_card"
+            app:layout_constraintEnd_toEndOf="@id/details_card"
+            tools:visibility="visible">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="16dp"
+                android:gravity="center_vertical">
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_info"
+                    app:tint="@color/colorOnErrorContainer" />
+                <TextView
+                    android:id="@+id/cancellation_reason_text"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="12dp"
+                    android:textColor="@color/colorOnErrorContainer"
+                    android:textSize="16sp"
+                    tools:text="Reason for cancellation: Stylist was unavailable." />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Chat History -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/chat_recycler_view"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_margin="16dp"
+            app:layout_constraintTop_toBottomOf="@id/cancellation_reason_card"
+            app:layout_constraintBottom_toTopOf="@id/input_layout"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
+        <!-- Message Input Area -->
+        <LinearLayout
+            android:id="@+id/input_layout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+            <EditText
+                android:id="@+id/message_input"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="Type a message..." />
+            <ImageButton
+                android:id="@+id/send_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_send"
+                android:layout_gravity="center_vertical"
+                android:background="?attr/selectableItemBackgroundBorderless"/>
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- SHIMMER LAYOUT FOR LOADING -->
+    <com.facebook.shimmer.ShimmerFrameLayout
+        android:id="@+id/shimmer_view_container"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+        <include layout="@layout/fragment_booking_detail_placeholder" />
+    </com.facebook.shimmer.ShimmerFrameLayout>
+
+    <!-- INCLUDE THE OFFLINE PLACEHOLDER -->
+    <include
+        android:id="@+id/offline_layout"
+        layout="@layout/offline_placeholder" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
+

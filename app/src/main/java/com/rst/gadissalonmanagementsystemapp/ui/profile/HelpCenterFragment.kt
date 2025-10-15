@@ -10,6 +10,7 @@ import com.rst.gadissalonmanagementsystemapp.CustomerMainActivity
 import com.rst.gadissalonmanagementsystemapp.R
 import com.rst.gadissalonmanagementsystemapp.WorkerMainActivity
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentHelpCenterBinding
+import com.rst.gadissalonmanagementsystemapp.util.NetworkUtils
 
 class HelpCenterFragment : Fragment() {
     private var _binding: FragmentHelpCenterBinding? = null
@@ -22,7 +23,25 @@ class HelpCenterFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        setupClickListeners()
+    }
 
+    override fun onStart() {
+        super.onStart()
+        // Check for internet every time the fragment becomes visible
+        if (NetworkUtils.isInternetAvailable(requireContext())) {
+            showOfflineUI(false) // Hide offline screen
+        } else {
+            showOfflineUI(true) // Show offline screen
+        }
+    }
+
+    private fun showOfflineUI(isOffline: Boolean) {
+        binding.offlineLayout.root.visibility = if (isOffline) View.VISIBLE else View.GONE
+        binding.contentContainer.visibility = if (isOffline) View.GONE else View.VISIBLE
+    }
+
+    private fun setupClickListeners() {
         binding.viewMyTicketsOption.setOnClickListener {
             // Check which activity is hosting this fragment
             when (requireActivity()) {

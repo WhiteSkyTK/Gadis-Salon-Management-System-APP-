@@ -2,10 +2,12 @@ package com.rst.gadissalonmanagementsystemapp.ui.worker
 
 import android.app.AlertDialog
 import android.os.Bundle
+import android.text.InputType
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -49,10 +51,7 @@ class BookingDetailWorkerFragment : Fragment() {
 
         // Fetch the current user's details
         viewLifecycleOwner.lifecycleScope.launch {
-            val result = FirebaseManager.getCurrentUser()
-            if (result.isSuccess) {
-                currentUser = result.getOrNull()
-            }
+            currentUser = FirebaseManager.getCurrentUser().getOrNull()
         }
 
         // --- Populate the booking details card ---
@@ -121,8 +120,6 @@ class BookingDetailWorkerFragment : Fragment() {
         }
     }
 
-
-
     private fun sendMessage(bookingId: String) {
         val messageText = binding.messageInput.text.toString().trim()
         val currentUser = Firebase.auth.currentUser
@@ -159,15 +156,38 @@ class BookingDetailWorkerFragment : Fragment() {
         }
 
         binding.cancelBookingButton.setOnClickListener {
-            AlertDialog.Builder(requireContext())
-                .setTitle("Cancel Booking")
-                .setMessage("Are you sure you want to cancel this appointment?")
-                .setPositiveButton("Yes, Cancel") { _, _ ->
-                    updateBookingStatus(booking.id, "Cancelled", "Booking has been cancelled.")
-                }
-                .setNegativeButton("No", null)
-                .show()
+            showCancelReasonDialog(booking)
         }
+    }
+
+    private fun showCancelReasonDialog(booking: AdminBooking) {
+        val input = EditText(requireContext()).apply {
+            inputType = InputType.TYPE_CLASS_TEXT
+            hint = "Reason for cancellation"
+        }
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Cancel Booking")
+            .setMessage("Please provide a reason for cancelling this appointment. The customer will see this reason.")
+            .setView(input)
+            .setPositiveButton("Confirm Cancellation") { _, _ ->
+                val reason = input.text.toString().trim()
+                if (reason.isNotEmpty()) {
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        val result = FirebaseManager.cancelBooking(booking.id, reason)
+                        if (result.isSuccess) {
+                            Toast.makeText(context, "Booking has been cancelled.", Toast.LENGTH_SHORT).show()
+                            findNavController().popBackStack()
+                        } else {
+                            Toast.makeText(context, "Failed to cancel booking.", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                } else {
+                    Toast.makeText(context, "A reason is required to cancel.", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Go Back", null)
+            .show()
     }
 
     private fun updateBookingStatus(bookingId: String, newStatus: String, successMessage: String) {

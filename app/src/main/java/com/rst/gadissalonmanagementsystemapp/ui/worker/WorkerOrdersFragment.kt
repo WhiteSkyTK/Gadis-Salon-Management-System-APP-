@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.firestore.ListenerRegistration
 import com.rst.gadissalonmanagementsystemapp.FirebaseManager
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentWorkerOrdersBinding
+import com.rst.gadissalonmanagementsystemapp.util.NetworkUtils
 import kotlinx.coroutines.launch
 
 class WorkerOrdersFragment : Fragment() {
@@ -28,20 +29,29 @@ class WorkerOrdersFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         setupRecyclerView()
     }
 
     override fun onStart() {
         super.onStart()
         // Start listening for real-time updates when the screen is visible
-        listenForPendingOrders()
+        if (NetworkUtils.isInternetAvailable(requireContext())) {
+            showOfflineUI(false)
+            listenForPendingOrders()
+        } else {
+            showOfflineUI(true)
+        }
     }
 
     override fun onStop() {
         super.onStop()
         // Stop listening when the screen is not visible to prevent crashes
         ordersListener?.remove()
+    }
+
+    private fun showOfflineUI(isOffline: Boolean) {
+        binding.offlineLayout.root.visibility = if (isOffline) View.VISIBLE else View.GONE
+        binding.contentContainer.visibility = if (isOffline) View.GONE else View.VISIBLE
     }
 
     private fun setupRecyclerView() {
@@ -62,10 +72,29 @@ class WorkerOrdersFragment : Fragment() {
 
 
     private fun listenForPendingOrders() {
-        // We now store the returned listener in our class property
+        // --- START SHIMMER ---
+        binding.shimmerViewContainer.startShimmer()
+        binding.shimmerViewContainer.visibility = View.VISIBLE
+        binding.workerOrdersRecyclerView.visibility = View.GONE
+        binding.emptyViewText.visibility = View.GONE
+
         ordersListener = FirebaseManager.addPendingOrdersListener { orders ->
-            if (view != null) { // Only update if the view still exists
-                Log.d("WorkerOrdersFragment", "Live update: Found ${orders.size} pending orders.")
+            if (view == null) return@addPendingOrdersListener
+
+            // --- STOP SHIMMER ---
+            binding.shimmerViewContainer.stopShimmer()
+            binding.shimmerViewContainer.visibility = View.GONE
+
+            Log.d("WorkerOrdersFragment", "Live update: Found ${orders.size} pending orders.")
+
+            if (orders.isEmpty()) {
+                // Show empty message
+                binding.workerOrdersRecyclerView.visibility = View.GONE
+                binding.emptyViewText.visibility = View.VISIBLE
+            } else {
+                // Show the list
+                binding.workerOrdersRecyclerView.visibility = View.VISIBLE
+                binding.emptyViewText.visibility = View.GONE
                 ordersAdapter.updateData(orders)
             }
         }

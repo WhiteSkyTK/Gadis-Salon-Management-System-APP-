@@ -14,6 +14,7 @@ import com.google.firebase.firestore.ListenerRegistration
 import com.rst.gadissalonmanagementsystemapp.*
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentPurchaseConfirmationBinding
 import com.rst.gadissalonmanagementsystemapp.ui.orders.OrderDetailAdapter
+import com.rst.gadissalonmanagementsystemapp.util.NetworkUtils
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -42,8 +43,12 @@ class PurchaseConfirmationFragment : Fragment() {
 
     override fun onStart() {
         super.onStart()
-        // Start listening for data when the screen becomes visible
-        loadConfirmationData()
+        if (NetworkUtils.isInternetAvailable(requireContext())) {
+            showOfflineUI(false)
+            loadConfirmationData()
+        } else {
+            showOfflineUI(true)
+        }
     }
 
     override fun onStop() {
@@ -52,29 +57,40 @@ class PurchaseConfirmationFragment : Fragment() {
         cartListener?.remove()
     }
 
+    private fun showOfflineUI(isOffline: Boolean) {
+        binding.offlineLayout.root.visibility = if (isOffline) View.VISIBLE else View.GONE
+        binding.contentContainer.visibility = if (isOffline) View.GONE else View.VISIBLE
+    }
+
     private fun loadConfirmationData() {
+        binding.shimmerViewContainer.startShimmer()
+        binding.shimmerViewContainer.visibility = View.VISIBLE
+        binding.contentContainer.visibility = View.INVISIBLE
+
         val product = args.product
         val variant = args.selectedVariant
 
         if (product != null && variant != null) {
-            // Case 1: User clicked "Buy Now". Use the passed-in product and selected variant.
-            itemsToPurchase = listOf(
-                CartItem(
-                    productId = product.id,
-                    name = product.name,
-                    size = variant.size,
-                    price = variant.price,
-                    quantity = 1,
-                    imageUrl = product.imageUrl
-                )
-            )
+            // Case 1: "Buy Now" - data is passed directly
+            itemsToPurchase = listOf(CartItem(
+                productId = product.id, name = product.name, size = variant.size,
+                price = variant.price, quantity = 1, imageUrl = product.imageUrl
+            ))
             binding.summaryRecyclerView.adapter = OrderDetailAdapter(itemsToPurchase)
+            // Stop shimmer and show content immediately
+            binding.shimmerViewContainer.stopShimmer()
+            binding.shimmerViewContainer.visibility = View.GONE
+            binding.contentContainer.visibility = View.VISIBLE
         } else {
-            // Case 2: User is checking out from their full cart.
+            // Case 2: "Checkout from Cart" - data is loaded from Firebase
             cartListener = FirebaseManager.addCurrentUserCartListener { cartItems ->
                 if (view != null) {
                     itemsToPurchase = cartItems
                     binding.summaryRecyclerView.adapter = OrderDetailAdapter(itemsToPurchase)
+                    // Stop shimmer and show content after data is loaded
+                    binding.shimmerViewContainer.stopShimmer()
+                    binding.shimmerViewContainer.visibility = View.GONE
+                    binding.contentContainer.visibility = View.VISIBLE
                 }
             }
         }

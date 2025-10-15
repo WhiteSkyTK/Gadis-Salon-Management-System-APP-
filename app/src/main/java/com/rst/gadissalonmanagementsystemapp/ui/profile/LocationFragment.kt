@@ -17,6 +17,7 @@ import com.rst.gadissalonmanagementsystemapp.FirebaseManager
 import com.rst.gadissalonmanagementsystemapp.R
 import com.rst.gadissalonmanagementsystemapp.SalonLocation
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentLocationBinding
+import com.rst.gadissalonmanagementsystemapp.util.NetworkUtils
 import kotlinx.coroutines.launch
 
 class LocationFragment : Fragment(), OnMapReadyCallback {
@@ -32,8 +33,22 @@ class LocationFragment : Fragment(), OnMapReadyCallback {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
-        mapFragment.getMapAsync(this)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        // Check for internet before initializing the map
+        if (NetworkUtils.isInternetAvailable(requireContext())) {
+            showOfflineUI(false)
+            binding.shimmerViewContainer.startShimmer()
+            binding.shimmerViewContainer.visibility = View.VISIBLE
+            binding.contentContainer.visibility = View.GONE
+
+            val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
+            mapFragment.getMapAsync(this)
+        } else {
+            showOfflineUI(true)
+        }
     }
 
     // This function is called when the map is fully loaded
@@ -43,17 +58,27 @@ class LocationFragment : Fragment(), OnMapReadyCallback {
         loadLocationFromFirebase()
     }
 
+    private fun showOfflineUI(isOffline: Boolean) {
+        binding.offlineLayout.root.visibility = if (isOffline) View.VISIBLE else View.GONE
+        binding.contentContainer.visibility = if (isOffline) View.GONE else View.VISIBLE
+    }
+
     private fun loadLocationFromFirebase() {
         viewLifecycleOwner.lifecycleScope.launch {
             val result = FirebaseManager.getSalonLocation()
             if (view == null) return@launch
+
+            // --- STOP SHIMMER & SHOW CONTENT ---
+            binding.shimmerViewContainer.stopShimmer()
+            binding.shimmerViewContainer.visibility = View.GONE
+            binding.contentContainer.visibility = View.VISIBLE
+
             if (result.isSuccess) {
-                val location = result.getOrNull() ?: SalonLocation() // Use default if not found
+                val location = result.getOrNull() ?: SalonLocation()
                 updateMapAndUI(location)
             } else {
                 Log.e("LocationFragment", "Failed to fetch salon location", result.exceptionOrNull())
-                // Optionally, show a default location or an error message
-                updateMapAndUI(SalonLocation()) // Show default location on error
+                updateMapAndUI(SalonLocation())
             }
         }
     }

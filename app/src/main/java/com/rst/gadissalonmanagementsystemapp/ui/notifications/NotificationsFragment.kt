@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.firestore.ListenerRegistration
 import com.rst.gadissalonmanagementsystemapp.FirebaseManager
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentNotificationsBinding
+import com.rst.gadissalonmanagementsystemapp.util.NetworkUtils
 import kotlinx.coroutines.launch
 class NotificationsFragment : Fragment() {
 
@@ -32,8 +33,35 @@ class NotificationsFragment : Fragment() {
 
     override fun onStart() {
         super.onStart()
+        if (NetworkUtils.isInternetAvailable(requireContext())) {
+            showOfflineUI(false)
+            listenForNotifications()
+        } else {
+            showOfflineUI(true)
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        notificationListener?.remove()
+    }
+
+    private fun showOfflineUI(isOffline: Boolean) {
+        binding.offlineLayout.root.visibility = if (isOffline) View.VISIBLE else View.GONE
+        binding.contentContainer.visibility = if (isOffline) View.GONE else View.VISIBLE
+    }
+
+    private fun listenForNotifications() {
+        binding.shimmerViewContainer.startShimmer()
+        binding.shimmerViewContainer.visibility = View.VISIBLE
+        binding.notificationsRecyclerView.visibility = View.GONE
+        binding.emptyNotificationsText.visibility = View.GONE
+
         notificationListener = FirebaseManager.addUserNotificationsListener { notifications ->
             if (view != null) {
+                binding.shimmerViewContainer.stopShimmer()
+                binding.shimmerViewContainer.visibility = View.GONE
+
                 if (notifications.isEmpty()) {
                     binding.notificationsRecyclerView.visibility = View.GONE
                     binding.emptyNotificationsText.visibility = View.VISIBLE
@@ -45,26 +73,17 @@ class NotificationsFragment : Fragment() {
             }
         }
 
-        // As soon as the screen is visible, mark all notifications as read.
         viewLifecycleOwner.lifecycleScope.launch {
             FirebaseManager.markAllNotificationsAsRead()
         }
     }
 
-    override fun onStop() {
-        super.onStop()
-        notificationListener?.remove()
-    }
-
     private fun setupRecyclerView() {
-        // --- THIS IS THE FINAL, COMPLETED LOGIC ---
         adapter = NotificationsAdapter(emptyList()) { notification ->
-            // Mark the single notification as read immediately for a responsive feel
             if (!notification.isRead) {
                 lifecycleScope.launch { FirebaseManager.markNotificationAsRead(notification.id) }
             }
 
-            // Decide where to navigate based on the notification's data
             when {
                 notification.bookingId != null -> {
                     lifecycleScope.launch {
@@ -89,7 +108,6 @@ class NotificationsFragment : Fragment() {
                     }
                 }
                 else -> {
-                    // Handle general notifications that don't link anywhere
                     Toast.makeText(context, "This is a general notification.", Toast.LENGTH_SHORT).show()
                 }
             }

@@ -14,6 +14,7 @@ import com.google.firebase.auth.auth
 import com.google.firebase.firestore.ListenerRegistration
 import com.rst.gadissalonmanagementsystemapp.ChatMessage
 import com.rst.gadissalonmanagementsystemapp.FirebaseManager
+import com.rst.gadissalonmanagementsystemapp.User
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentTicketDetailBinding
 import com.rst.gadissalonmanagementsystemapp.ui.chat.ChatAdapter
 import kotlinx.coroutines.launch
@@ -24,6 +25,7 @@ class TicketDetailFragment : Fragment() {
     private val args: TicketDetailFragmentArgs by navArgs()
     private var repliesListener: ListenerRegistration? = null
     private lateinit var chatAdapter: ChatAdapter
+    private var currentUserData: User? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentTicketDetailBinding.inflate(inflater, container, false)
@@ -43,13 +45,13 @@ class TicketDetailFragment : Fragment() {
             binding.replyInputLayout.visibility = View.GONE
         }
 
-        if (ticket.status.equals("Closed", ignoreCase = true)) {
-            binding.replyInputLayout.visibility = View.GONE
-        }
-
         setupRecyclerView()
         binding.sendReplyButton.setOnClickListener {
             sendReply(ticket.id)
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            currentUserData = FirebaseManager.getCurrentUser().getOrNull()
         }
     }
 
@@ -99,19 +101,20 @@ class TicketDetailFragment : Fragment() {
     private fun sendReply(ticketId: String) {
         val messageText = binding.replyInput.text.toString().trim()
         val currentUser = Firebase.auth.currentUser
-        if (messageText.isNotEmpty() && currentUser != null) {
+        if (messageText.isNotEmpty() && currentUserData != null) {
             val replyMessage = ChatMessage(
-                senderUid = currentUser.uid,
-                senderName = currentUser.displayName ?: "User",
+                senderUid = currentUserData!!.id,
+                senderName = currentUserData!!.name, // Use the correct name from Firestore
                 messageText = messageText
             )
-            val allParticipants = (args.ticket.participantUids + currentUser.uid).distinct()
-
             viewLifecycleOwner.lifecycleScope.launch {
-                // Pass the full list of participants to the updated function.
-                FirebaseManager.sendSupportReply(ticketId, replyMessage, allParticipants)
+                FirebaseManager.sendSupportReply(ticketId, replyMessage, listOf(currentUserData!!.id)) // Assuming you've updated this function
                 binding.replyInput.setText("")
             }
+        } else if (messageText.isEmpty()) {
+            // Do nothing if message is empty
+        } else {
+            Toast.makeText(context, "Could not identify user. Please try again.", Toast.LENGTH_SHORT).show()
         }
     }
 

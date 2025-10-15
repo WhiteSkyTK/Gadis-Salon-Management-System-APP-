@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.firestore.ListenerRegistration
 import com.rst.gadissalonmanagementsystemapp.*
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentCartBinding
+import com.rst.gadissalonmanagementsystemapp.util.NetworkUtils
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.Locale
@@ -22,7 +23,6 @@ class CartFragment : Fragment() {
     private var _binding: FragmentCartBinding? = null
     private val binding get() = _binding!!
     private lateinit var cartAdapter: CartAdapter
-
     private var cartListener: ListenerRegistration? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -41,16 +41,23 @@ class CartFragment : Fragment() {
 
     override fun onStart() {
         super.onStart()
-        // Start listening for cart updates when the screen becomes visible
-        listenForCartUpdates()
+        if (NetworkUtils.isInternetAvailable(requireContext())) {
+            showOfflineUI(false)
+            listenForCartUpdates()
+        } else {
+            showOfflineUI(true)
+        }
     }
 
     override fun onStop() {
         super.onStop()
-        // Stop listening when the screen is no longer visible to prevent crashes
         cartListener?.remove()
     }
 
+    private fun showOfflineUI(isOffline: Boolean) {
+        binding.offlineLayout.root.visibility = if (isOffline) View.VISIBLE else View.GONE
+        binding.contentContainer.visibility = if (isOffline) View.GONE else View.VISIBLE
+    }
 
     private fun setupRecyclerView() {
         cartAdapter = CartAdapter(
@@ -76,20 +83,27 @@ class CartFragment : Fragment() {
     }
 
     private fun listenForCartUpdates() {
-        FirebaseManager.addCurrentUserCartListener { cartItems ->
+        binding.shimmerViewContainer.startShimmer()
+        binding.shimmerViewContainer.visibility = View.VISIBLE
+        binding.contentContainer.visibility = View.INVISIBLE
+
+        cartListener = FirebaseManager.addCurrentUserCartListener { cartItems ->
             if (view != null) {
+                binding.shimmerViewContainer.stopShimmer()
+                binding.shimmerViewContainer.visibility = View.GONE
+                binding.contentContainer.visibility = View.VISIBLE
+
                 if (cartItems.isEmpty()) {
                     binding.cartRecyclerView.visibility = View.GONE
                     binding.emptyCartText.visibility = View.VISIBLE
-                    binding.summaryCard.visibility = View.GONE // Hide bottom bar
+                    binding.summaryCard.visibility = View.GONE
                 } else {
                     binding.cartRecyclerView.visibility = View.VISIBLE
                     binding.emptyCartText.visibility = View.GONE
-                    binding.summaryCard.visibility = View.VISIBLE // Show bottom bar
+                    binding.summaryCard.visibility = View.VISIBLE
                     cartAdapter.updateData(cartItems)
                 }
 
-                // Always update the total price
                 val totalPrice = cartItems.sumOf { it.price * it.quantity }
                 val format = NumberFormat.getCurrencyInstance(Locale("en", "ZA"))
                 binding.totalPrice.text = format.format(totalPrice)

@@ -13,8 +13,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.firestore.ListenerRegistration
 import com.rst.gadissalonmanagementsystemapp.FirebaseManager
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentAdminListBinding
+import com.rst.gadissalonmanagementsystemapp.util.NetworkUtils
 import kotlinx.coroutines.launch
-
 
 class AdminProductsListFragment : Fragment() {
     private var _binding: FragmentAdminListBinding? = null
@@ -36,13 +36,23 @@ class AdminProductsListFragment : Fragment() {
     override fun onStart() {
         super.onStart()
         // Start listening for live updates when the screen is visible
-        listenForProductUpdates()
+        if (NetworkUtils.isInternetAvailable(requireContext())) {
+            showOfflineUI(false)
+            listenForProductUpdates()
+        } else {
+            showOfflineUI(true)
+        }
     }
 
     override fun onStop() {
         super.onStop()
         // Stop the listener when the screen is not visible to prevent memory leaks
         productsListener?.remove()
+    }
+
+    private fun showOfflineUI(isOffline: Boolean) {
+        binding.offlineLayout.root.visibility = if (isOffline) View.VISIBLE else View.GONE
+        binding.contentContainer.visibility = if (isOffline) View.GONE else View.VISIBLE
     }
 
     private fun setupRecyclerView() {
@@ -71,9 +81,23 @@ class AdminProductsListFragment : Fragment() {
     }
 
     private fun listenForProductUpdates() {
-        // Use the new real-time listener
+        binding.shimmerViewContainer.startShimmer()
+        binding.shimmerViewContainer.visibility = View.VISIBLE
+        binding.adminRecyclerView.visibility = View.GONE
+        binding.emptyViewText.visibility = View.GONE
+
         productsListener = FirebaseManager.addProductsListener { productList ->
-            if (view != null) { // Ensure the fragment's view is still available
+            if (view == null) return@addProductsListener
+
+            binding.shimmerViewContainer.stopShimmer()
+            binding.shimmerViewContainer.visibility = View.GONE
+
+            if (productList.isEmpty()) {
+                binding.adminRecyclerView.visibility = View.GONE
+                binding.emptyViewText.visibility = View.VISIBLE
+            } else {
+                binding.adminRecyclerView.visibility = View.VISIBLE
+                binding.emptyViewText.visibility = View.GONE
                 adapter.updateData(productList)
             }
         }

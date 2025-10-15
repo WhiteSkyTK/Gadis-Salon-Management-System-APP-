@@ -19,6 +19,7 @@ import com.rst.gadissalonmanagementsystemapp.Product
 import com.rst.gadissalonmanagementsystemapp.ProductVariant
 import com.rst.gadissalonmanagementsystemapp.R
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentProductDetailBinding
+import com.rst.gadissalonmanagementsystemapp.util.NetworkUtils
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.Locale
@@ -38,17 +39,38 @@ class ProductDetailFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        // Setup is now handled in onStart
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (NetworkUtils.isInternetAvailable(requireContext())) {
+            showOfflineUI(false)
+            setupUI()
+        } else {
+            showOfflineUI(true)
+        }
+    }
+
+    private fun showOfflineUI(isOffline: Boolean) {
+        binding.offlineLayout.root.visibility = if (isOffline) View.VISIBLE else View.GONE
+        binding.contentContainer.visibility = if (isOffline) View.GONE else View.VISIBLE
+    }
+
+    private fun setupUI() {
+        binding.shimmerViewContainer.startShimmer()
+        binding.shimmerViewContainer.visibility = View.VISIBLE
+        binding.contentContainer.visibility = View.INVISIBLE
+
         val product = args.product
         val role = args.userRole
 
         mainViewModel.setCurrentFavoritableItem(product)
 
-        // --- Populate Static Views ---
         binding.productImage.load(product.imageUrl)
         binding.productNameDetail.text = product.name
         binding.productReviews.text = product.reviews
 
-        // --- Setup Dynamic UI based on Role ---
         if (role.equals("WORKER", ignoreCase = true)) {
             binding.bottomBar.visibility = View.GONE
             binding.stockInfoCard.visibility = View.VISIBLE
@@ -59,6 +81,10 @@ class ProductDetailFragment : Fragment() {
 
         setupSizeChips(product)
         setupClickListeners(product)
+
+        binding.shimmerViewContainer.stopShimmer()
+        binding.shimmerViewContainer.visibility = View.GONE
+        binding.contentContainer.visibility = View.VISIBLE
     }
 
     private fun setupSizeChips(product: Product) {

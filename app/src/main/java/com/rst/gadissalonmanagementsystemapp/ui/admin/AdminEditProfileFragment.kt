@@ -22,9 +22,9 @@ import com.rst.gadissalonmanagementsystemapp.R
 import com.rst.gadissalonmanagementsystemapp.User
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentAdminEditProfileBinding
 import com.rst.gadissalonmanagementsystemapp.ui.profile.ProfilePictureBottomSheet
+import com.rst.gadissalonmanagementsystemapp.util.NetworkUtils
 import kotlinx.coroutines.launch
 import java.io.File
-import java.util.UUID
 
 class AdminEditProfileFragment : Fragment(), ProfilePictureBottomSheet.PictureOptionListener {
     private var _binding: FragmentAdminEditProfileBinding? = null
@@ -32,6 +32,7 @@ class AdminEditProfileFragment : Fragment(), ProfilePictureBottomSheet.PictureOp
     private var selectedImageUri: Uri? = null
     private var latestTmpUri: Uri? = null
     private var currentUserData: User? = null
+    private var imageRemoved = false
 
     // --- Activity Result Launchers for image picking and permissions ---
     private val requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -51,6 +52,7 @@ class AdminEditProfileFragment : Fragment(), ProfilePictureBottomSheet.PictureOp
             }
         }
     }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentAdminEditProfileBinding.inflate(inflater, container, false)
         return binding.root
@@ -58,14 +60,27 @@ class AdminEditProfileFragment : Fragment(), ProfilePictureBottomSheet.PictureOp
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        loadCurrentData()
-
         binding.profileImageEdit.setOnClickListener {
             ProfilePictureBottomSheet().show(childFragmentManager, "EditProfilePic")
         }
         binding.saveChangesButton.setOnClickListener {
             saveChanges()
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (NetworkUtils.isInternetAvailable(requireContext())) {
+            showOfflineUI(false)
+            loadCurrentData()
+        } else {
+            showOfflineUI(true)
+        }
+    }
+
+    private fun showOfflineUI(isOffline: Boolean) {
+        binding.offlineLayout.root.visibility = if (isOffline) View.VISIBLE else View.GONE
+        binding.contentContainer.visibility = if (isOffline) View.GONE else View.VISIBLE
     }
 
     private fun loadCurrentData() {
@@ -77,7 +92,7 @@ class AdminEditProfileFragment : Fragment(), ProfilePictureBottomSheet.PictureOp
                 binding.nameInput.setText(currentUserData?.name)
                 binding.phoneInput.setText(currentUserData?.phone)
                 binding.emailText.text = currentUserData?.email
-                binding.profileImageEdit.load(currentUserData?.imageUrl) {
+                binding.profileImageEdit.load(currentUserData?.imageUrl?.ifEmpty { R.drawable.ic_profile }) {
                     placeholder(R.drawable.ic_profile)
                     error(R.drawable.ic_profile)
                 }
@@ -90,35 +105,51 @@ class AdminEditProfileFragment : Fragment(), ProfilePictureBottomSheet.PictureOp
         val newName = binding.nameInput.text.toString().trim()
         val newPhone = binding.phoneInput.text.toString().trim()
 
-        if (newName.isEmpty() || newPhone.isEmpty()) {
-            Toast.makeText(context, "Fields cannot be empty", Toast.LENGTH_SHORT).show()
-            return
+        // --- VALIDATION LOGIC ---
+        binding.nameLayout.error = null
+        binding.phoneLayout.error = null
+        var isValid = true
+        if (newName.isEmpty()) {
+            binding.nameLayout.error = "Name cannot be empty"
+            isValid = false
         }
+        if (newPhone.length != 10 || !newPhone.all { it.isDigit() }) {
+            binding.phoneLayout.error = "Please enter a valid 10-digit phone number"
+            isValid = false
+        }
+        if (!isValid) return
+        // --- END VALIDATION LOGIC ---
 
+        binding.loadingIndicator.visibility = View.VISIBLE
         binding.saveChangesButton.isEnabled = false
+
         viewLifecycleOwner.lifecycleScope.launch {
             var finalImageUrl = currentUserData?.imageUrl ?: ""
-            // First, check if a new image was selected to be uploaded
             if (selectedImageUri != null) {
                 val uploadResult = FirebaseManager.uploadImage(selectedImageUri!!, "profile_pictures", "$uid.jpg")
                 if (uploadResult.isSuccess) {
                     finalImageUrl = uploadResult.getOrNull().toString()
                 } else {
                     Toast.makeText(context, "Error uploading image", Toast.LENGTH_SHORT).show()
+                    binding.loadingIndicator.visibility = View.GONE
                     binding.saveChangesButton.isEnabled = true
                     return@launch
                 }
+            } else if (imageRemoved) {
+                finalImageUrl = ""
             }
 
-            // Now, update the user's profile in Firestore
             val updateResult = FirebaseManager.updateUserProfile(uid, newName, newPhone, finalImageUrl)
+
             if (updateResult.isSuccess) {
                 Toast.makeText(context, "Profile updated successfully", Toast.LENGTH_SHORT).show()
                 findNavController().popBackStack()
             } else {
                 Toast.makeText(context, "Error: ${updateResult.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
-                binding.saveChangesButton.isEnabled = true
             }
+
+            binding.loadingIndicator.visibility = View.GONE
+            binding.saveChangesButton.isEnabled = true
         }
     }
 
@@ -128,11 +159,8 @@ class AdminEditProfileFragment : Fragment(), ProfilePictureBottomSheet.PictureOp
             "camera" -> checkCameraPermissionAndTakePhoto()
             "remove" -> {
                 selectedImageUri = null
+                imageRemoved = true
                 binding.profileImageEdit.setImageResource(R.drawable.ic_profile)
-                // We'll save an empty string to Firebase to signify "no image"
-                viewLifecycleOwner.lifecycleScope.launch {
-                    FirebaseManager.updateUserProfileImage(Firebase.auth.currentUser!!.uid, "")
-                }
             }
         }
     }

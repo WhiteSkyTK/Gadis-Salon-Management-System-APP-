@@ -8,6 +8,7 @@
     tools:context=".ui.booking.BookingConfirmationFragment">
 
     <androidx.core.widget.NestedScrollView
+        android:id="@+id/content_container"
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintTop_toTopOf="parent"
@@ -181,5 +182,10 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- INCLUDE THE OFFLINE PLACEHOLDER -->
+    <include
+        android:id="@+id/offline_layout"
+        layout="@layout/offline_placeholder" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

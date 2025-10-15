@@ -11,9 +11,11 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.firebase.firestore.ListenerRegistration
 import com.rst.gadissalonmanagementsystemapp.FirebaseManager
 import com.rst.gadissalonmanagementsystemapp.User
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentAdminListBinding
+import com.rst.gadissalonmanagementsystemapp.util.NetworkUtils
 import kotlinx.coroutines.launch
 
 class AdminUserListFragment : Fragment() {
@@ -21,6 +23,7 @@ class AdminUserListFragment : Fragment() {
     private val binding get() = _binding!!
     private var userRole: String? = null
     private lateinit var adapter: AdminUserAdapter
+    private var usersListener: ListenerRegistration? = null
 
     // A TAG for filtering our logs
     companion object {
@@ -42,7 +45,27 @@ class AdminUserListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
-        listenForUserUpdates()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        // Check for internet before fetching data
+        if (NetworkUtils.isInternetAvailable(requireContext())) {
+            showOfflineUI(false)
+            listenForUserUpdates()
+        } else {
+            showOfflineUI(true)
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        usersListener?.remove() // Make sure to remove the correct listener
+    }
+
+    private fun showOfflineUI(isOffline: Boolean) {
+        binding.offlineLayout.root.visibility = if (isOffline) View.VISIBLE else View.GONE
+        binding.contentContainer.visibility = if (isOffline) View.GONE else View.VISIBLE
     }
 
     private fun setupRecyclerView() {
@@ -61,14 +84,33 @@ class AdminUserListFragment : Fragment() {
     }
 
     private fun listenForUserUpdates() {
-        FirebaseManager.addUserListener { allUsers ->
+        // --- THIS IS THE UPDATED LOGIC ---
+        binding.shimmerViewContainer.startShimmer()
+        binding.shimmerViewContainer.visibility = View.VISIBLE
+        binding.adminRecyclerView.visibility = View.GONE
+        binding.emptyViewText.visibility = View.GONE
+
+        usersListener = FirebaseManager.addUserListener { allUsers ->
+            if (view == null) return@addUserListener
+
+            binding.shimmerViewContainer.stopShimmer()
+            binding.shimmerViewContainer.visibility = View.GONE
+
             val filteredUsers = if (userRole != null) {
                 allUsers.filter { it.role.equals(userRole, ignoreCase = true) }
             } else {
                 allUsers
             }
-            // The adapter will automatically update with the new list
-            adapter.updateData(filteredUsers)
+
+            if (filteredUsers.isEmpty()) {
+                binding.adminRecyclerView.visibility = View.GONE
+                binding.emptyViewText.visibility = View.VISIBLE
+                binding.emptyViewText.text = "No users found for this role."
+            } else {
+                binding.adminRecyclerView.visibility = View.VISIBLE
+                binding.emptyViewText.visibility = View.GONE
+                adapter.updateData(filteredUsers)
+            }
         }
     }
 

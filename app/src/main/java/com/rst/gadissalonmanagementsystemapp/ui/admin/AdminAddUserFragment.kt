@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.util.Patterns
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -116,71 +117,6 @@ class AdminAddUserFragment : Fragment(), ProfilePictureBottomSheet.PictureOption
         return FileProvider.getUriForFile(requireActivity(), "${requireActivity().packageName}.provider", tmpFile)
     }
 
-    /*private fun saveUser() {
-        val name = binding.nameInput.text.toString().trim()
-        val email = binding.emailInput.text.toString().trim()
-        val phone = binding.phoneInput.text.toString().trim()
-        val password = binding.passwordInput.text.toString().trim()
-        val role = when (binding.roleRadioGroup.checkedRadioButtonId) {
-            binding.radioWorker.id -> "WORKER"
-            //binding.radioAdmin.id -> "ADMIN"
-            else -> "CUSTOMER"
-        }
-
-        if (name.isEmpty() || email.isEmpty() || phone.isEmpty() || password.isEmpty() || password.length < 6) {
-            Toast.makeText(context, "Please fill all fields. Password must be at least 6 characters.s", Toast.LENGTH_LONG).show()
-            return
-        }
-
-        binding.loadingIndicator.visibility = View.VISIBLE
-        binding.saveUserButton.isEnabled = false
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            var imageUrl = ""
-            // First, upload the image if one was selected
-            if (selectedImageUri != null) {
-                val imageUploadResult = FirebaseManager.uploadImage(selectedImageUri!!, "profile_pictures", "${UUID.randomUUID()}.jpg")
-                if (imageUploadResult.isSuccess) {
-                    imageUrl = imageUploadResult.getOrNull().toString()
-                } else {
-                    Toast.makeText(context, "Error uploading image: ${imageUploadResult.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
-                    binding.loadingIndicator.visibility = View.GONE
-                    binding.saveUserButton.isEnabled = true
-                    return@launch
-                }
-            }
-
-            // Now, create the user in Firebase Auth and save to Firestore
-            val result = FirebaseManager.createUserByAdmin(requireContext(), name, email, phone, password, role, imageUrl)
-
-            if (result.isSuccess) {
-                val newUserId = result.getOrNull() // Get the new user's ID
-                if (newUserId != null && role != "CUSTOMER") {
-                    // Step 2: If the user is an Admin or Worker, set their custom claim
-                    Log.d("AdminAddUser", "User created, now setting role for UID: $newUserId")
-                    val functions = Firebase.functions
-                    val data = hashMapOf("userId" to newUserId, "role" to role)
-
-                    try {
-                        functions.getHttpsCallable("setUserRole").call(data).await()
-                        Log.d("AdminAddUser", "Role set successfully for $newUserId")
-                    } catch (e: Exception) {
-                        Log.e("AdminAddUser", "Failed to set role for $newUserId", e)
-                        Toast.makeText(context, "User created but failed to set role: ${e.message}", Toast.LENGTH_LONG).show()
-                    }
-                }
-
-                Toast.makeText(context, "$role '$name' added successfully", Toast.LENGTH_SHORT).show()
-                findNavController().popBackStack()
-            } else {
-                Toast.makeText(context, "Error creating user: ${result.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
-                binding.loadingIndicator.visibility = View.GONE
-                binding.saveUserButton.isEnabled = true
-            }
-        }
-    }
-
-     */
 
     private fun validateAndShowConfirmation() {
         val name = binding.nameInput.text.toString().trim()
@@ -193,9 +129,39 @@ class AdminAddUserFragment : Fragment(), ProfilePictureBottomSheet.PictureOption
             else -> "CUSTOMER"
         }
 
-        if (name.isEmpty() || email.isEmpty() || phone.isEmpty() || password.length < 6) {
-            Toast.makeText(context, "Please fill all fields. Password must be >= 6 characters.", Toast.LENGTH_LONG).show()
-            return
+        // Clear previous errors first
+        binding.nameLayout.error = null
+        binding.emailLayout.error = null
+        binding.phoneLayout.error = null
+        binding.passwordLayout.error = null
+
+        var isValid = true
+
+        if (name.isEmpty()) {
+            binding.nameLayout.error = "Name cannot be empty"
+            isValid = false
+        }
+
+        if (email.isEmpty()) {
+            binding.emailLayout.error = "Email is required"
+            isValid = false
+        } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            binding.emailLayout.error = "Please enter a valid email"
+            isValid = false
+        }
+
+        if (phone.length != 10 || !phone.all { it.isDigit() }) {
+            binding.phoneLayout.error = "Please enter a valid 10-digit phone number"
+            isValid = false
+        }
+
+        if (password.length < 6) {
+            binding.passwordLayout.error = "Password must be at least 6 characters"
+            isValid = false
+        }
+
+        if (!isValid) {
+            return // Stop if any validation fails
         }
 
         // Show the password confirmation dialog

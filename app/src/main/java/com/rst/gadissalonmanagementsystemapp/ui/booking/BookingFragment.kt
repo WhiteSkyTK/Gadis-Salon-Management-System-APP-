@@ -14,6 +14,7 @@ import com.rst.gadissalonmanagementsystemapp.ui.booking.BookingAdapter
 import com.rst.gadissalonmanagementsystemapp.FirebaseManager
 import com.rst.gadissalonmanagementsystemapp.MainViewModel
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentBookingBinding
+import com.rst.gadissalonmanagementsystemapp.util.NetworkUtils
 
 class BookingFragment : Fragment() {
 
@@ -41,13 +42,23 @@ class BookingFragment : Fragment() {
     override fun onStart() {
         super.onStart()
         // Start listening for live updates when the screen is visible
-        listenForMyBookings()
+        if (NetworkUtils.isInternetAvailable(requireContext())) {
+            showOfflineUI(false) // Hide offline screen
+            listenForMyBookings()
+        } else {
+            showOfflineUI(true) // Show offline screen
+        }
     }
 
     override fun onStop() {
         super.onStop()
         // Stop listening when the screen is not visible to prevent memory leaks
         bookingsListener?.remove()
+    }
+
+    private fun showOfflineUI(isOffline: Boolean) {
+        binding.offlineLayout.root.visibility = if (isOffline) View.VISIBLE else View.GONE
+        binding.contentContainer.visibility = if (isOffline) View.GONE else View.VISIBLE
     }
 
     private fun setupRecyclerView() {

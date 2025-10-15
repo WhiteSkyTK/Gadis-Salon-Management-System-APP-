@@ -20,6 +20,7 @@ import com.rst.gadissalonmanagementsystemapp.Hairstyle
 import com.rst.gadissalonmanagementsystemapp.R
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentAdminAddHairstyleBinding
 import com.rst.gadissalonmanagementsystemapp.ui.profile.ProfilePictureBottomSheet
+import com.rst.gadissalonmanagementsystemapp.util.NetworkUtils
 import kotlinx.coroutines.launch
 import java.io.File
 import java.util.UUID
@@ -74,6 +75,21 @@ class AdminAddHairstyleFragment : Fragment(), ProfilePictureBottomSheet.PictureO
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+        if (NetworkUtils.isInternetAvailable(requireContext())) {
+            showOfflineUI(false)
+            populateStylistChips()
+        } else {
+            showOfflineUI(true)
+        }
+    }
+
+    private fun showOfflineUI(isOffline: Boolean) {
+        binding.offlineLayout.root.visibility = if (isOffline) View.VISIBLE else View.GONE
+        binding.contentContainer.visibility = if (isOffline) View.GONE else View.VISIBLE
+    }
+
     // --- This function is called when an option is selected in the bottom sheet ---
     override fun onOptionSelected(option: String) {
         when (option) {
@@ -115,23 +131,25 @@ class AdminAddHairstyleFragment : Fragment(), ProfilePictureBottomSheet.PictureO
     }
 
     private fun populateStylistChips() {
+        binding.shimmerViewContainer.startShimmer()
+        binding.shimmerViewContainer.visibility = View.VISIBLE
+        binding.contentContainer.visibility = View.INVISIBLE
+
         viewLifecycleOwner.lifecycleScope.launch {
-            // 1. Fetch ALL users from Firebase
             val result = FirebaseManager.getAllUsers()
+
+            if (!isAdded) return@launch
+            binding.shimmerViewContainer.stopShimmer()
+            binding.shimmerViewContainer.visibility = View.GONE
+            binding.contentContainer.visibility = View.VISIBLE
+
             if (result.isSuccess) {
-                val allUsers = result.getOrNull() ?: emptyList()
-
-                // 2. Filter the list to find only the WORKERS
-                val stylists = allUsers.filter { it.role.equals("WORKER", ignoreCase = true) }
-
+                val stylists = (result.getOrNull() ?: emptyList()).filter { it.role == "WORKER" }
                 binding.stylistChipGroup.removeAllViews()
-
-                // 3. Create a chip for each worker
                 stylists.forEach { stylistUser ->
-                    val chip = Chip(context)
-                    chip.text = stylistUser.name
-                    chip.isCheckable = true
-                    chip.tag = stylistUser.id // Store the worker's unique user ID
+                    val chip = Chip(context).apply {
+                        text = stylistUser.name; isCheckable = true; tag = stylistUser.id
+                    }
                     binding.stylistChipGroup.addView(chip)
                 }
             } else {
@@ -154,6 +172,7 @@ class AdminAddHairstyleFragment : Fragment(), ProfilePictureBottomSheet.PictureO
             return
         }
 
+        binding.loadingIndicator.visibility = View.VISIBLE
         binding.saveHairstyleButton.isEnabled = false
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -178,14 +197,26 @@ class AdminAddHairstyleFragment : Fragment(), ProfilePictureBottomSheet.PictureO
                 // 3. Save Hairstyle to Firestore
                 val addHairstyleResult = FirebaseManager.addHairstyle(newHairstyle)
                 if (addHairstyleResult.isSuccess) {
+                    // Make sure to hide loading and re-enable button in both success and failure cases
+                    binding.loadingIndicator.visibility = View.GONE
+                    binding.saveHairstyleButton.isEnabled = true
                     Toast.makeText(context, "$name added successfully", Toast.LENGTH_SHORT).show()
                     findNavController().popBackStack()
                 } else {
+                    // Make sure to hide loading and re-enable button in both success and failure cases
+                    binding.loadingIndicator.visibility = View.GONE
+                    binding.saveHairstyleButton.isEnabled = true
                     Toast.makeText(context, "Error saving hairstyle: ${addHairstyleResult.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
                 }
             } else {
+                // Make sure to hide loading and re-enable button in both success and failure cases
+                binding.loadingIndicator.visibility = View.GONE
+                binding.saveHairstyleButton.isEnabled = true
                 Toast.makeText(context, "Error uploading image: ${imageUploadResult.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
             }
+            // Make sure to hide loading and re-enable button in both success and failure cases
+            binding.loadingIndicator.visibility = View.GONE
+            binding.saveHairstyleButton.isEnabled = true
             binding.saveHairstyleButton.isEnabled = true
         }
     }

@@ -1,21 +1,26 @@
 package com.rst.gadissalonmanagementsystemapp.ui.worker
 
 import android.os.Bundle
-import android.util.Log
+import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import com.google.firebase.firestore.ListenerRegistration
 import com.rst.gadissalonmanagementsystemapp.AdminBooking
 import com.rst.gadissalonmanagementsystemapp.FirebaseManager
 import com.rst.gadissalonmanagementsystemapp.MainViewModel
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentWorkerBookingsBinding
+import com.rst.gadissalonmanagementsystemapp.util.NetworkUtils // --- IMPORT THE UTILITY ---
 import kotlinx.coroutines.launch
 
 
@@ -38,12 +43,23 @@ class WorkerBookingsFragment : Fragment() {
 
     override fun onStart() {
         super.onStart()
-        listenForPendingBookings()
+        // Check for internet before fetching data
+        if (NetworkUtils.isInternetAvailable(requireContext())) {
+            showOfflineUI(false)
+            listenForPendingBookings()
+        } else {
+            showOfflineUI(true)
+        }
     }
 
     override fun onStop() {
         super.onStop()
         bookingsListener?.remove()
+    }
+
+    private fun showOfflineUI(isOffline: Boolean) {
+        binding.offlineLayout.root.visibility = if (isOffline) View.VISIBLE else View.GONE
+        binding.contentContainer.visibility = if (isOffline) View.GONE else View.VISIBLE
     }
 
     private fun setupRecyclerView() {
@@ -66,9 +82,27 @@ class WorkerBookingsFragment : Fragment() {
     }
 
     private fun listenForPendingBookings() {
+        // --- START SHIMMER ---
+        binding.shimmerViewContainer.startShimmer()
+        binding.shimmerViewContainer.visibility = View.VISIBLE
+        binding.workerBookingsRecyclerView.visibility = View.GONE
+        binding.emptyViewText.visibility = View.GONE
+
         bookingsListener = FirebaseManager.addPendingBookingsListener { pendingBookings ->
-            if (view != null) {
-                Log.d("WorkerBookings", "Live update: Found ${pendingBookings.size} pending bookings.")
+            if (view == null) return@addPendingBookingsListener
+
+            // --- STOP SHIMMER ---
+            binding.shimmerViewContainer.stopShimmer()
+            binding.shimmerViewContainer.visibility = View.GONE
+
+            if (pendingBookings.isEmpty()) {
+                // Show empty message
+                binding.workerBookingsRecyclerView.visibility = View.GONE
+                binding.emptyViewText.visibility = View.VISIBLE
+            } else {
+                // Show the list
+                binding.workerBookingsRecyclerView.visibility = View.VISIBLE
+                binding.emptyViewText.visibility = View.GONE
                 adapter.updateData(pendingBookings)
             }
         }
@@ -92,14 +126,49 @@ class WorkerBookingsFragment : Fragment() {
     }
 
     private fun declineBooking(booking: AdminBooking) {
-        viewLifecycleOwner.lifecycleScope.launch {
-            val result = FirebaseManager.updateBookingStatus(booking.id, "Declined")
-            if (result.isSuccess) {
-                Toast.makeText(context, "Booking Declined", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(context, "Failed to decline booking.", Toast.LENGTH_SHORT).show()
+        val uid = Firebase.auth.currentUser?.uid ?: return
+
+        if (booking.stylistName == "Any Available") {
+            viewLifecycleOwner.lifecycleScope.launch {
+                val result = FirebaseManager.addDeclinedStylist(booking.id, uid)
+                if (result.isSuccess) {
+                    Toast.makeText(context, "Booking passed to other stylists.", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(context, "Failed to decline booking.", Toast.LENGTH_SHORT).show()
+                }
             }
+        } else {
+            showDeclineReasonDialog(booking)
         }
+    }
+
+    private fun showDeclineReasonDialog(booking: AdminBooking) {
+        val input = EditText(requireContext()).apply {
+            inputType = InputType.TYPE_CLASS_TEXT
+            hint = "Reason for declining"
+        }
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Decline Booking")
+            .setMessage("Please provide a reason for declining this booking.")
+            .setView(input)
+            .setPositiveButton("Decline") { _, _ ->
+                val reason = input.text.toString().trim()
+                if (reason.isNotEmpty()) {
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        val result = FirebaseManager.declineDirectBooking(booking.id, reason)
+                        if (result.isSuccess) {
+                            Toast.makeText(context, "Booking Declined", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(context, "Failed to decline booking.", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                } else {
+                    Toast.makeText(context, "A reason is required to decline.", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     override fun onDestroyView() {
@@ -107,3 +176,4 @@ class WorkerBookingsFragment : Fragment() {
         _binding = null
     }
 }
+

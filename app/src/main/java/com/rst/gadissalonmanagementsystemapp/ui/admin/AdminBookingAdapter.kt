@@ -2,7 +2,6 @@ package com.rst.gadissalonmanagementsystemapp.ui.admin
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import com.rst.gadissalonmanagementsystemapp.AdminBooking
@@ -12,7 +11,8 @@ import com.rst.gadissalonmanagementsystemapp.databinding.ItemAdminBookingBinding
 
 class AdminBookingAdapter(
     private var bookings: List<AdminBooking>,
-    private val allHairstyles: List<Hairstyle> // Takes the master list
+    private val allHairstyles: List<Hairstyle>,
+    private val onItemClick: (AdminBooking) -> Unit // Add this click listener
 ) : RecyclerView.Adapter<AdminBookingAdapter.ViewHolder>() {
 
     inner class ViewHolder(private val binding: ItemAdminBookingBinding) : RecyclerView.ViewHolder(binding.root) {
@@ -30,15 +30,18 @@ class AdminBookingAdapter(
 
             val statusColor = when (booking.status.lowercase()) {
                 "completed" -> R.color.status_green
-                "cancelled", "declined" -> R.color.status_red
+                "cancelled", "declined", "missed", "expired" -> R.color.status_red
                 "confirmed" -> R.color.colorPrimary2
                 else -> R.color.status_grey // Pending
             }
-            // Use setChipBackgroundColorResource for Material Chips
             binding.bookingStatusAdmin.setChipBackgroundColorResource(statusColor)
+
+            // Set the click listener for the entire item
+            itemView.setOnClickListener {
+                onItemClick(booking)
+            }
         }
     }
-
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = ItemAdminBookingBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -53,6 +56,6 @@ class AdminBookingAdapter(
 
     fun updateData(newBookings: List<AdminBooking>) {
         this.bookings = newBookings
-        notifyDataSetChanged() // Refreshes the list
+        notifyDataSetChanged()
     }
 }

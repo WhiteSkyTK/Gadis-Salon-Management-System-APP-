@@ -86,7 +86,15 @@
         android:id="@+id/nav_admin_bookings"
         android:name="com.rst.gadissalonmanagementsystemapp.ui.admin.AdminSalesFragment"
         android:label="Sales"
-        tools:layout="@layout/fragment_admin_sales" />
+        tools:layout="@layout/fragment_admin_sales" >
+        <!-- ADD THESE ACTIONS -->
+        <action
+            android:id="@+id/action_adminSalesFragment_to_adminBookingDetailFragment"
+            app:destination="@id/adminBookingDetailFragment" />
+        <action
+            android:id="@+id/action_adminSalesFragment_to_adminOrderDetailFragment"
+            app:destination="@id/adminOrderDetailFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/adminAddProductFragment"
@@ -194,4 +202,24 @@
             android:name="ticket"
             app:argType="com.rst.gadissalonmanagementsystemapp.SupportMessage" />
     </fragment>
+
+    <!-- ADD THESE NEW FRAGMENT DEFINITIONS -->
+    <fragment
+        android:id="@+id/adminBookingDetailFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.admin.AdminBookingDetailFragment"
+        android:label="Booking Details">
+        <argument
+            android:name="booking"
+            app:argType="com.rst.gadissalonmanagementsystemapp.AdminBooking" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/adminOrderDetailFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.admin.AdminOrderDetailFragment"
+        android:label="Order Details">
+        <argument
+            android:name="order"
+            app:argType="com.rst.gadissalonmanagementsystemapp.ProductOrder" />
+    </fragment>
+
 </navigation>

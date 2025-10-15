@@ -11,7 +11,9 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.firestore.ListenerRegistration
 import com.rst.gadissalonmanagementsystemapp.FirebaseManager
+import com.rst.gadissalonmanagementsystemapp.R
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentCustomerOrdersBinding
+import com.rst.gadissalonmanagementsystemapp.util.NetworkUtils
 import kotlinx.coroutines.launch
 
 class CustomerOrdersFragment : Fragment() {
@@ -19,6 +21,7 @@ class CustomerOrdersFragment : Fragment() {
     private val binding get() = _binding!!
     private lateinit var ordersAdapter: CustomerOrdersAdapter
     private var ordersListener: ListenerRegistration? = null
+    private lateinit var offlineContainer: View
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentCustomerOrdersBinding.inflate(inflater, container, false)
@@ -27,18 +30,29 @@ class CustomerOrdersFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        offlineContainer = view.findViewById(R.id.offline_container)
         setupRecyclerView()
     }
 
     override fun onStart() {
         super.onStart()
-        listenForMyOrders()
+        if (NetworkUtils.isInternetAvailable(requireContext())) {
+            showOfflineUI(false) // Hide offline screen
+            listenForMyOrders()
+        } else {
+            showOfflineUI(true) // Show offline screen
+        }
     }
 
     override fun onStop() {
         super.onStop()
         // Stop listening when the screen is not visible
         ordersListener?.remove()
+    }
+
+    private fun showOfflineUI(isOffline: Boolean) {
+        offlineContainer.visibility = if (isOffline) View.VISIBLE else View.GONE
+        binding.contentContainer.visibility = if (isOffline) View.GONE else View.VISIBLE
     }
 
     private fun listenForMyOrders() {

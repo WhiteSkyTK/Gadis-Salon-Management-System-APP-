@@ -18,6 +18,7 @@ import androidx.navigation.fragment.findNavController
 import com.rst.gadissalonmanagementsystemapp.*
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentAdminAddProductBinding
 import com.rst.gadissalonmanagementsystemapp.ui.profile.ProfilePictureBottomSheet
+import com.rst.gadissalonmanagementsystemapp.util.NetworkUtils
 import kotlinx.coroutines.launch
 import java.io.File
 import java.util.UUID
@@ -76,6 +77,20 @@ class AdminAddProductFragment : Fragment(), ProfilePictureBottomSheet.PictureOpt
         }
 
         addVariantInputRow()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (!NetworkUtils.isInternetAvailable(requireContext())) {
+            showOfflineUI(true)
+        } else {
+            showOfflineUI(false)
+        }
+    }
+
+    private fun showOfflineUI(isOffline: Boolean) {
+        binding.offlineLayout.root.visibility = if (isOffline) View.VISIBLE else View.GONE
+        binding.contentContainer.visibility = if (isOffline) View.GONE else View.VISIBLE
     }
 
     // This function is called when an option is selected in the bottom sheet
@@ -155,7 +170,7 @@ class AdminAddProductFragment : Fragment(), ProfilePictureBottomSheet.PictureOpt
         }
 
         // Show a loading indicator
-        // binding.loadingIndicator.visibility = View.VISIBLE
+        binding.loadingIndicator.visibility = View.VISIBLE
         binding.saveProductButton.isEnabled = false
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -189,6 +204,7 @@ class AdminAddProductFragment : Fragment(), ProfilePictureBottomSheet.PictureOpt
                         Toast.LENGTH_LONG
                     ).show()
                     // FIX: Only re-enable the button if something fails.
+                    binding.loadingIndicator.visibility = View.GONE
                     binding.saveProductButton.isEnabled = true
                 }
 
@@ -199,9 +215,10 @@ class AdminAddProductFragment : Fragment(), ProfilePictureBottomSheet.PictureOpt
                     Toast.LENGTH_LONG
                 ).show()
                 // FIX: Only re-enable the button if something fails.
+                binding.loadingIndicator.visibility = View.GONE
                 binding.saveProductButton.isEnabled = true
             }
-            // binding.loadingIndicator.visibility = View.GONE
+            binding.loadingIndicator.visibility = View.GONE
         }
     }
 

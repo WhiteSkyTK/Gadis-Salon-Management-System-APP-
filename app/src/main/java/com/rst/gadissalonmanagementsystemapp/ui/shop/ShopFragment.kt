@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.tabs.TabLayoutMediator
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentShopBinding
+import com.rst.gadissalonmanagementsystemapp.util.NetworkUtils // --- IMPORT THE UTILITY ---
 
 class ShopFragment : Fragment() {
 
@@ -22,7 +23,26 @@ class ShopFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        // The setup is now called from onStart
+    }
 
+    override fun onStart() {
+        super.onStart()
+        // Check for internet every time the fragment becomes visible
+        if (NetworkUtils.isInternetAvailable(requireContext())) {
+            showOfflineUI(false) // Hide offline screen
+            setupTabs()
+        } else {
+            showOfflineUI(true) // Show offline screen
+        }
+    }
+
+    private fun showOfflineUI(isOffline: Boolean) {
+        binding.offlineLayout.root.visibility = if (isOffline) View.VISIBLE else View.GONE
+        binding.contentContainer.visibility = if (isOffline) View.GONE else View.VISIBLE
+    }
+
+    private fun setupTabs() {
         // Set up the adapter for the ViewPager
         val pagerAdapter = ShopViewPagerAdapter(this)
         binding.viewPagerShop.adapter = pagerAdapter

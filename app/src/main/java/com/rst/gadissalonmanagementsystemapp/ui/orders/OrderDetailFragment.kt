@@ -13,6 +13,7 @@ import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.rst.gadissalonmanagementsystemapp.FirebaseManager
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentOrderDetailBinding
+import com.rst.gadissalonmanagementsystemapp.util.NetworkUtils
 import kotlinx.coroutines.launch
 
 class OrderDetailFragment : Fragment() {
@@ -27,6 +28,29 @@ class OrderDetailFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        // Setup is now handled in onStart to ensure network check happens first
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (NetworkUtils.isInternetAvailable(requireContext())) {
+            showOfflineUI(false)
+            setupUI()
+        } else {
+            showOfflineUI(true)
+        }
+    }
+
+    private fun showOfflineUI(isOffline: Boolean) {
+        binding.offlineLayout.root.visibility = if (isOffline) View.VISIBLE else View.GONE
+        binding.contentContainer.visibility = if (isOffline) View.GONE else View.VISIBLE
+    }
+
+    private fun setupUI() {
+        binding.shimmerViewContainer.startShimmer()
+        binding.shimmerViewContainer.visibility = View.VISIBLE
+        binding.contentContainer.visibility = View.INVISIBLE
+
         val order = args.order
 
         binding.orderIdDetail.text = "Order #${order.id.take(8)}"
@@ -42,6 +66,11 @@ class OrderDetailFragment : Fragment() {
         binding.cancelOrderButton.setOnClickListener {
             showCancelConfirmationDialog()
         }
+
+        // Stop shimmer and show content
+        binding.shimmerViewContainer.stopShimmer()
+        binding.shimmerViewContainer.visibility = View.GONE
+        binding.contentContainer.visibility = View.VISIBLE
     }
 
     private fun showCancelConfirmationDialog() {

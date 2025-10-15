@@ -1,17 +1,22 @@
 package com.rst.gadissalonmanagementsystemapp.ui.admin
 
+import android.animation.ValueAnimator
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import com.rst.gadissalonmanagementsystemapp.FirebaseManager
 import com.rst.gadissalonmanagementsystemapp.R
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentAdminDashboardBinding
+import com.rst.gadissalonmanagementsystemapp.util.NetworkUtils
 import kotlinx.coroutines.launch
 
 class AdminDashboardFragment : Fragment() {
@@ -31,56 +36,84 @@ class AdminDashboardFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        setupDashboardStats()
         setupClickListeners()
     }
 
+    override fun onStart() {
+        super.onStart()
+        // Check for internet before fetching data
+        if (NetworkUtils.isInternetAvailable(requireContext())) {
+            showOfflineUI(false)
+            setupDashboardStats()
+        } else {
+            showOfflineUI(true)
+        }
+    }
+
+    private fun showOfflineUI(isOffline: Boolean) {
+        binding.offlineLayout.root.visibility = if (isOffline) View.VISIBLE else View.GONE
+        binding.contentContainer.visibility = if (isOffline) View.GONE else View.VISIBLE
+    }
+
     private fun setupDashboardStats() {
+        // --- START SHIMMER ---
+        binding.shimmerViewContainer.startShimmer()
+        binding.shimmerViewContainer.visibility = View.VISIBLE
+        binding.contentContainer.visibility = View.INVISIBLE // Keep layout space but hide content
+
         viewLifecycleOwner.lifecycleScope.launch {
             Log.d(TAG, "Fetching dashboard stats from Firebase...")
 
-            // --- Fetch Users ---
             val userResult = FirebaseManager.getAllUsers()
+            val bookingResult = FirebaseManager.getAllBookings()
+            val productResult = FirebaseManager.getAllProducts()
+
             if (!isAdded) return@launch
 
+            // --- STOP SHIMMER & SHOW CONTENT ---
+            binding.shimmerViewContainer.stopShimmer()
+            binding.shimmerViewContainer.visibility = View.GONE
+            binding.contentContainer.visibility = View.VISIBLE
+
+            // --- Process Users ---
             if (userResult.isSuccess) {
                 val allUsers = userResult.getOrNull() ?: emptyList()
-                // Count customers
-                val customerCount = allUsers.count { it.role.equals("CUSTOMER", ignoreCase = true) }
-                binding.customersCountText.text = customerCount.toString()
-                // Count workers/stylists
-                val stylistCount = allUsers.count { it.role.equals("WORKER", ignoreCase = true) }
-                binding.stylistsCountText.text = stylistCount.toString()
-            } else {
-                Toast.makeText(context, "Error fetching users: ${userResult.exceptionOrNull()?.message}", Toast.LENGTH_SHORT).show()
+
+                // --- THIS IS THE NEW LOGIC ---
+                // Find the current admin's name and update the welcome text
+                val currentAdminUid = Firebase.auth.currentUser?.uid
+                val currentAdmin = allUsers.find { it.id == currentAdminUid }
+                if (currentAdmin != null) {
+                    binding.welcomeText.text = "Hello, ${currentAdmin.name}"
+                }
+                // --- END OF NEW LOGIC ---
+
+                startCountUpAnimation(binding.customersCountText, allUsers.count { it.role == "CUSTOMER" })
+                startCountUpAnimation(binding.stylistsCountText, allUsers.count { it.role == "WORKER" })
             }
 
-            // --- Fetch Bookings ---
-            val bookingResult = FirebaseManager.getAllBookings()
-            if (!isAdded) return@launch
-
+            // --- Process Bookings ---
             if (bookingResult.isSuccess) {
                 val allBookings = bookingResult.getOrNull() ?: emptyList()
-                binding.bookingsCountText.text = allBookings.size.toString()
-            } else {
-                Toast.makeText(context, "Error fetching bookings: ${bookingResult.exceptionOrNull()?.message}", Toast.LENGTH_SHORT).show()
+                startCountUpAnimation(binding.bookingsCountText, allBookings.size)
             }
 
-            val productResult = FirebaseManager.getAllProducts()
-            if (!isAdded) return@launch
-
+            // --- Process Products ---
             if (productResult.isSuccess) {
                 val allProducts = productResult.getOrNull() ?: emptyList()
-                // Sum up the stock from every variant of every product
-                val totalStock = allProducts.sumOf { product ->
-                    product.variants.sumOf { variant -> variant.stock }
-                }
-                binding.totalStockCountText.text = totalStock.toString()
-            } else {
-                binding.totalStockCountText.text = "N/A"
+                val totalStock = allProducts.sumOf { p -> p.variants.sumOf { v -> v.stock } }
+                startCountUpAnimation(binding.totalStockCountText, totalStock)
             }
         }
+    }
+
+    private fun startCountUpAnimation(textView: TextView, finalValue: Int) {
+        val animator = ValueAnimator.ofInt(0, finalValue)
+        animator.duration = 1500 // Animation duration in milliseconds
+        animator.addUpdateListener { animation ->
+            textView.text = animation.animatedValue.toString()
+        }
+        animator.start()
     }
 
     private fun setupClickListeners() {

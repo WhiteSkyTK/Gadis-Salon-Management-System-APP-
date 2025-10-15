@@ -10,33 +10,40 @@ import com.rst.gadissalonmanagementsystemapp.R
 import com.rst.gadissalonmanagementsystemapp.databinding.ItemAdminOrderBinding
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.util.*
 
-class AdminOrdersAdapter(private var orders: List<ProductOrder>) : RecyclerView.Adapter<AdminOrdersAdapter.ViewHolder>() {
+class AdminOrderAdapter(
+    private var orders: List<ProductOrder>,
+    private val onItemClick: (ProductOrder) -> Unit
+) : RecyclerView.Adapter<AdminOrderAdapter.ViewHolder>() {
 
     inner class ViewHolder(private val binding: ItemAdminOrderBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(order: ProductOrder) {
             binding.customerNameValue.text = order.customerName
             val sdf = SimpleDateFormat("dd MMM, yyyy", Locale.getDefault())
-            binding.orderDateValue.text = sdf.format(Date(order.timestamp))
+            binding.orderDateValue.text = order.timestamp?.let { sdf.format(Date(it)) } ?: "No date"
+
             val format = NumberFormat.getCurrencyInstance(Locale("en", "ZA"))
             binding.totalPriceValue.text = "Total: ${format.format(order.totalPrice)}"
+
             binding.orderStatusAdmin.text = order.status
-
-            // --- Logic to display up to 3 product images ---
-            val imageViews = listOf(binding.itemImage1, binding.itemImage2, binding.itemImage3)
-            // Hide all images initially to handle orders with fewer than 3 items
-            imageViews.forEach { it.visibility = View.GONE }
-
-            // Show and load images for the first few items in the order
-            order.items.take(3).forEachIndexed { index, cartItem ->
-                imageViews[index].visibility = View.VISIBLE
-                imageViews[index].load(cartItem.imageUrl) {
-                    placeholder(R.drawable.ic_placeholder_image)
-                    error(R.drawable.ic_placeholder_image)
-                }
+            val statusColor = when (order.status.lowercase()) {
+                "completed" -> R.color.status_green
+                "cancelled", "abandoned" -> R.color.status_red
+                "ready for pickup" -> R.color.colorPrimary2
+                else -> R.color.status_grey // Pending Pickup
             }
+            binding.orderStatusAdmin.setChipBackgroundColorResource(statusColor)
+
+            // Handle stacked images
+            val images = listOf(binding.itemImage1, binding.itemImage2, binding.itemImage3)
+            images.forEach { it.visibility = View.GONE } // Hide all initially
+            order.items.take(3).forEachIndexed { index, item ->
+                images[index].visibility = View.VISIBLE
+                images[index].load(item.imageUrl)
+            }
+
+            itemView.setOnClickListener { onItemClick(order) }
         }
     }
 

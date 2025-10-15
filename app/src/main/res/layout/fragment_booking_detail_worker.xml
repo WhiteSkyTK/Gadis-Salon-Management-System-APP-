@@ -84,7 +84,9 @@
             android:id="@+id/send_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/ic_send" />
+            android:src="@drawable/ic_send"
+            android:layout_gravity="center_vertical"
+            android:background="?attr/selectableItemBackgroundBorderless"/>
     </LinearLayout>
 
     <!-- NEW: Elevated Card for Action Buttons -->
@@ -104,6 +106,7 @@
             android:orientation="horizontal"
             android:padding="8dp"
             android:visibility="gone"
+            android:background="?attr/selectableItemBackgroundBorderless"
             tools:visibility="visible">
 
             <Button

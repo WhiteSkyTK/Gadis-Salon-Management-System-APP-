@@ -123,9 +123,6 @@ exports.onNewChatMessage = onDocumentCreated("bookings/{bookingId}/messages/{mes
         }
     });
 
-
-
-
 /**
  * v2 Cloud Function to send a push notification to all admins
  * when a new support message is created.
@@ -772,5 +769,47 @@ exports.onOrderCancelled = onDocumentUpdated("product_orders/{orderId}", async (
             console.error(`Failed to return stock for item ${item.productId} in cancelled order ${event.params.orderId}:`, e);
         }
     }
+    return null;
+});
+
+/**
+ * A scheduled function that runs automatically every hour to clean up
+ * past-due bookings. It marks old 'Confirmed' bookings as 'Missed' and
+ * old 'Pending' bookings as 'Expired'.
+ */
+exports.cleanupPastDueBookings = onSchedule("every 1 hours", async (event) => {
+    console.log("Running hourly check for past-due bookings...");
+
+    const now = admin.firestore.Timestamp.now();
+    const db = admin.firestore();
+
+    // Query for all bookings with a timestamp in the past
+    // that are still marked as 'Confirmed' OR 'Pending'.
+    const query = db.collection("bookings")
+        .where("timestamp", "<", now)
+        .where("status", "in", ["Confirmed", "Pending"]);
+
+    const pastDueBookings = await query.get();
+
+    if (pastDueBookings.empty) {
+        console.log("No past-due bookings found to update.");
+        return null;
+    }
+
+    // Use a batch write to update all bookings at once for efficiency
+    const batch = db.batch();
+    pastDueBookings.forEach(doc => {
+        const booking = doc.data();
+        // Use a different status depending on the original status
+        const newStatus = booking.status === "Confirmed" ? "Missed" : "Expired";
+
+        console.log(`Marking booking ${doc.id} (status: ${booking.status}) as ${newStatus}.`);
+        batch.update(doc.ref, { status: newStatus });
+    });
+
+    // Commit all the changes
+    await batch.commit();
+    console.log(`Successfully cleaned up ${pastDueBookings.size} past-due bookings.`);
+
     return null;
 });

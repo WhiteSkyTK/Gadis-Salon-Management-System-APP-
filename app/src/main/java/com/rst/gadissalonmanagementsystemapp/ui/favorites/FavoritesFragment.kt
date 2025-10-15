@@ -10,8 +10,10 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.firebase.firestore.ListenerRegistration
 import com.rst.gadissalonmanagementsystemapp.*
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentFavoritesBinding
+import com.rst.gadissalonmanagementsystemapp.util.NetworkUtils
 import kotlinx.coroutines.launch
 
 class FavoritesFragment : Fragment() {
@@ -19,6 +21,7 @@ class FavoritesFragment : Fragment() {
     private var _binding: FragmentFavoritesBinding? = null
     private val binding get() = _binding!!
     private lateinit var favoritesAdapter: FavoritesAdapter
+    private var favoritesListener: ListenerRegistration? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentFavoritesBinding.inflate(inflater, container, false)
@@ -29,6 +32,26 @@ class FavoritesFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
         listenForFavoriteUpdates()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (NetworkUtils.isInternetAvailable(requireContext())) {
+            showOfflineUI(false)
+            listenForFavoriteUpdates()
+        } else {
+            showOfflineUI(true)
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        favoritesListener?.remove()
+    }
+
+    private fun showOfflineUI(isOffline: Boolean) {
+        binding.offlineLayout.root.visibility = if (isOffline) View.VISIBLE else View.GONE
+        binding.contentContainer.visibility = if (isOffline) View.GONE else View.VISIBLE
     }
 
     private fun setupRecyclerView() {
@@ -62,9 +85,16 @@ class FavoritesFragment : Fragment() {
     }
 
     private fun listenForFavoriteUpdates() {
-        FirebaseManager.addCurrentUserFavoritesListener { favoritesList ->
+        binding.shimmerViewContainer.startShimmer()
+        binding.shimmerViewContainer.visibility = View.VISIBLE
+        binding.favoritesRecyclerView.visibility = View.GONE
+        binding.emptyFavoritesText.visibility = View.GONE
+
+        favoritesListener = FirebaseManager.addCurrentUserFavoritesListener { favoritesList ->
             if (view != null) {
-                // --- ADDED LOGS ---
+                binding.shimmerViewContainer.stopShimmer()
+                binding.shimmerViewContainer.visibility = View.GONE
+
                 Log.d("FavoritesFragment", "Listener callback received with ${favoritesList.size} items.")
                 if (favoritesList.isEmpty()) {
                     binding.favoritesRecyclerView.visibility = View.GONE
@@ -72,7 +102,6 @@ class FavoritesFragment : Fragment() {
                 } else {
                     binding.favoritesRecyclerView.visibility = View.VISIBLE
                     binding.emptyFavoritesText.visibility = View.GONE
-                    Log.d("FavoritesFragment", "Passing ${favoritesList.size} items to the adapter.")
                     favoritesAdapter.updateData(favoritesList)
                 }
             }

@@ -15,6 +15,7 @@ import com.rst.gadissalonmanagementsystemapp.FirebaseManager
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentHairstyleDetailBinding
 import com.rst.gadissalonmanagementsystemapp.MainViewModel
 import com.rst.gadissalonmanagementsystemapp.Product
+import com.rst.gadissalonmanagementsystemapp.util.NetworkUtils
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.Locale
@@ -35,12 +36,32 @@ class HairstyleDetailFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        // Setup is now handled in onStart
+    }
 
-        // Get the hairstyle object from the arguments
-        val hairstyle = args.hairstyle // We are reusing the 'Product' data class
+    override fun onStart() {
+        super.onStart()
+        if (NetworkUtils.isInternetAvailable(requireContext())) {
+            showOfflineUI(false)
+            setupUI()
+        } else {
+            showOfflineUI(true)
+        }
+    }
+
+    private fun showOfflineUI(isOffline: Boolean) {
+        binding.offlineLayout.root.visibility = if (isOffline) View.VISIBLE else View.GONE
+        binding.contentContainer.visibility = if (isOffline) View.GONE else View.VISIBLE
+    }
+
+    private fun setupUI() {
+        binding.shimmerViewContainer.startShimmer()
+        binding.shimmerViewContainer.visibility = View.VISIBLE
+        binding.contentContainer.visibility = View.INVISIBLE
+
+        val hairstyle = args.hairstyle
         mainViewModel.setCurrentFavoritableItem(hairstyle)
 
-        // Use the new Hairstyle data to populate the views
         binding.hairstyleImage.load(hairstyle.imageUrl)
         binding.hairstyleNameDetail.text = hairstyle.name
         binding.hairstyleDescription.text = hairstyle.description
@@ -48,25 +69,22 @@ class HairstyleDetailFragment : Fragment() {
 
         val format = NumberFormat.getCurrencyInstance(Locale("en", "ZA"))
         val originalPrice = hairstyle.price
-
-        // Calculate a random "old" price that is 30% to 70% higher
         val priceIncreasePercentage = Random.nextDouble(0.30, 0.71)
         val oldPrice = originalPrice * (1 + priceIncreasePercentage)
 
-        // Set the actual price
         binding.hairstylePrice.text = format.format(originalPrice)
-
-        // Set the "old" price, apply the strikethrough, and make it visible
         binding.hairstylePriceOld.text = format.format(oldPrice)
         binding.hairstylePriceOld.paintFlags = binding.hairstylePriceOld.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
         binding.hairstylePriceOld.visibility = View.VISIBLE
 
-
         binding.bookNowButton.setOnClickListener {
-            // This correctly navigates to the confirmation screen
             val action = HairstyleDetailFragmentDirections.actionHairstyleDetailFragmentToBookingConfirmationFragment(hairstyle)
             findNavController().navigate(action)
         }
+
+        binding.shimmerViewContainer.stopShimmer()
+        binding.shimmerViewContainer.visibility = View.GONE
+        binding.contentContainer.visibility = View.VISIBLE
     }
 
     override fun onDestroyView() {

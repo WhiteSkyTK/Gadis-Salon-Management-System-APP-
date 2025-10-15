@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.rst.gadissalonmanagementsystemapp.FirebaseManager
 import com.rst.gadissalonmanagementsystemapp.R
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentAdminSupportBinding
+import com.rst.gadissalonmanagementsystemapp.util.NetworkUtils
 import kotlinx.coroutines.launch
 
 class AdminSupportFragment : Fragment() {
@@ -32,13 +33,27 @@ class AdminSupportFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
-        loadMessages()
 
         binding.fabComposeMessage.setOnClickListener {
-            // Navigate to the new compose screen
             findNavController().navigate(R.id.action_adminSupportFragment_to_adminComposeMessageFragment)
         }
     }
+
+    override fun onStart() {
+        super.onStart()
+        if (NetworkUtils.isInternetAvailable(requireContext())) {
+            showOfflineUI(false)
+            loadMessages()
+        } else {
+            showOfflineUI(true)
+        }
+    }
+
+    private fun showOfflineUI(isOffline: Boolean) {
+        binding.offlineLayout.root.visibility = if (isOffline) View.VISIBLE else View.GONE
+        binding.contentContainer.visibility = if (isOffline) View.GONE else View.VISIBLE
+    }
+
     private fun setupRecyclerView() {
         // Create the adapter ONCE with an empty list
         supportAdapter = AdminSupportAdapter(
@@ -59,15 +74,32 @@ class AdminSupportFragment : Fragment() {
     }
 
     private fun loadMessages() {
+        binding.shimmerViewContainer.startShimmer()
+        binding.shimmerViewContainer.visibility = View.VISIBLE
+        binding.supportRecyclerView.visibility = View.GONE
+        binding.emptyViewText.visibility = View.GONE
+
         viewLifecycleOwner.lifecycleScope.launch {
             val result = FirebaseManager.getAllSupportMessages()
+
+            if (!isAdded) return@launch
+            binding.shimmerViewContainer.stopShimmer()
+            binding.shimmerViewContainer.visibility = View.GONE
+
             if (result.isSuccess) {
                 val messages = result.getOrNull() ?: emptyList()
-                // Just update the adapter's data instead of creating a new one
-                supportAdapter.updateData(messages)
+                if (messages.isEmpty()) {
+                    binding.supportRecyclerView.visibility = View.GONE
+                    binding.emptyViewText.visibility = View.VISIBLE
+                } else {
+                    binding.supportRecyclerView.visibility = View.VISIBLE
+                    binding.emptyViewText.visibility = View.GONE
+                    supportAdapter.updateData(messages)
+                }
             } else {
                 val error = result.exceptionOrNull()?.message
                 Toast.makeText(context, "Error: $error", Toast.LENGTH_SHORT).show()
+                binding.emptyViewText.visibility = View.VISIBLE
             }
         }
     }
@@ -77,7 +109,6 @@ class AdminSupportFragment : Fragment() {
             val result = FirebaseManager.updateSupportMessageStatus(messageId, newStatus)
             if (result.isSuccess) {
                 Toast.makeText(context, "Status updated", Toast.LENGTH_SHORT).show()
-                Log.d(TAG, "Success updating status")
                 loadMessages() // Refresh the list
             } else {
                 // Display the specific error message from Firebase

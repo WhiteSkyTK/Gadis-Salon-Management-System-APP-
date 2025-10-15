@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.firestore.ListenerRegistration
 import com.rst.gadissalonmanagementsystemapp.FirebaseManager
 import com.rst.gadissalonmanagementsystemapp.databinding.FragmentAdminListBinding
+import com.rst.gadissalonmanagementsystemapp.util.NetworkUtils
 import kotlinx.coroutines.launch
 
 class AdminHairstylesListFragment : Fragment() {
@@ -35,13 +36,24 @@ class AdminHairstylesListFragment : Fragment() {
     override fun onStart() {
         super.onStart()
         // Start listening for live updates when the screen is visible
-        listenForHairstyleUpdates()
+        // Check for internet before fetching data
+        if (NetworkUtils.isInternetAvailable(requireContext())) {
+            showOfflineUI(false)
+            listenForHairstyleUpdates()
+        } else {
+            showOfflineUI(true)
+        }
     }
 
     override fun onStop() {
         super.onStop()
         // Stop the listener when the screen is not visible to prevent memory leaks
         hairstylesListener?.remove()
+    }
+
+    private fun showOfflineUI(isOffline: Boolean) {
+        binding.offlineLayout.root.visibility = if (isOffline) View.VISIBLE else View.GONE
+        binding.contentContainer.visibility = if (isOffline) View.GONE else View.VISIBLE
     }
 
     private fun setupRecyclerView() {
@@ -70,9 +82,24 @@ class AdminHairstylesListFragment : Fragment() {
     }
 
     private fun listenForHairstyleUpdates() {
-        // Use a real-time listener to keep the list updated
+        // --- THIS IS THE UPDATED LOGIC ---
+        binding.shimmerViewContainer.startShimmer()
+        binding.shimmerViewContainer.visibility = View.VISIBLE
+        binding.adminRecyclerView.visibility = View.GONE
+        binding.emptyViewText.visibility = View.GONE
+
         hairstylesListener = FirebaseManager.addHairstylesListener { hairstyleList ->
-            if (view != null) {
+            if (view == null) return@addHairstylesListener
+
+            binding.shimmerViewContainer.stopShimmer()
+            binding.shimmerViewContainer.visibility = View.GONE
+
+            if (hairstyleList.isEmpty()) {
+                binding.adminRecyclerView.visibility = View.GONE
+                binding.emptyViewText.visibility = View.VISIBLE
+            } else {
+                binding.adminRecyclerView.visibility = View.VISIBLE
+                binding.emptyViewText.visibility = View.GONE
                 adapter.updateData(hairstyleList)
             }
         }
