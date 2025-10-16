@@ -1,7 +1,10 @@
 package com.rst.gadissalonmanagementsystemapp
 
 import android.os.Parcelable
+import com.google.firebase.Timestamp
+import com.google.firebase.firestore.ServerTimestamp
 import kotlinx.parcelize.Parcelize
+
 
 @Parcelize
 data class AdminBooking(
@@ -16,7 +19,8 @@ data class AdminBooking(
     val time: String = "",
     var status: String = "Pending",
     var workerUnreadCount: Int = 0,
-    val timestamp: Long = System.currentTimeMillis(),
+    @ServerTimestamp
+    val timestamp: Timestamp? = null,
     val cancellationReason: String = "",
     val declinedBy: List<String> = emptyList()
 ) : Parcelable
