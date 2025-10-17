@@ -167,7 +167,7 @@ class BookingConfirmationFragment : Fragment() {
                 selectedDate = "" // Clear date to invalidate booking
                 checkIfReadyToBook()
             } else {
-                selectedDate = SimpleDateFormat("dd MMM, yyyy", Locale.getDefault()).format(selectedCalendar.time)
+                selectedDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(selectedCalendar.time)
                 selectedTime = null
                 Log.d(TAG, "Date selected: $selectedDate")
                 updateAvailableTimeSlots()

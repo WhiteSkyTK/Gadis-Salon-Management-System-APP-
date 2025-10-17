@@ -279,7 +279,6 @@ exports.autoCancelMissedBookings = onSchedule("every 24 hours", async (event) =>
 
 /**
  * v2 Callable function that securely calculates available slots.
- * UPDATED with { cors: true }
  */
 exports.getAvailableSlots = onCall({ cors: true }, async (request) => {
     if (!request.auth) {
@@ -290,39 +289,67 @@ exports.getAvailableSlots = onCall({ cors: true }, async (request) => {
   const db = admin.firestore();
 
   try {
-    // Step 1: Get all possible salon hours
+    // FIX: Removed all date normalization. The function now trusts the client (both app and web)
+    // to send the date in the standardized "YYYY-MM-DD" format.
+    console.log(`Request for date: "${date}" (Expecting YYYY-MM-DD)`);
+
+
     const hoursDoc = await db.collection("app_content").doc("salon_hours").get();
+    if (!hoursDoc.exists) throw new HttpsError("not-found", "Salon hours are not configured.");
     const allSlots = hoursDoc.data().time_slots || [];
 
-    // Step 2: Get the duration of the requested hairstyle
     const hairstyleDoc = await db.collection("hairstyles").doc(hairstyleId).get();
-    const duration = hairstyleDoc.data().durationHours || 1;
+    if (!hairstyleDoc.exists) throw new HttpsError("not-found", "The selected hairstyle does not exist.");
 
-    // Step 3: Get all existing bookings for that stylist on that day
-    const bookingsQuery = await db.collection("bookings")
+    const durationInSlots = Math.ceil(hairstyleDoc.data().durationHours) || 1;
+
+    // FIX: The query now uses the 'date' string directly, expecting it to be "YYYY-MM-DD".
+    const bookingsQuery = db.collection("bookings")
         .where("stylistName", "==", stylistName)
         .where("date", "==", date)
-        .where("status", "==", "Confirmed")
-        .get();
+        .where("status", "in", ["Confirmed", "Pending"]);
 
-    const existingBookings = [];
-    bookingsQuery.forEach((doc) => existingBookings.push(doc.data()));
-
-    // Step 4: Calculate which slots are occupied
+    const bookingsSnapshot = await bookingsQuery.get();
     const occupiedSlots = new Set();
-    for (const booking of existingBookings) {
-      const bookedHairstyleDoc = await db.collection("hairstyles").where("name", "==", booking.serviceName).limit(1).get();
-      const bookedDuration = bookedHairstyleDoc.docs[0]?.data().durationHours || 1;
-      const startTimeHour = parseInt(booking.time.split(":")[0], 10);
-      for (let i = 0; i < bookedDuration; i++) {
-        occupiedSlots.add(`${String(startTimeHour + i).padStart(2, "0")}:00`);
-      }
+
+    for (const bookingDoc of bookingsSnapshot.docs) {
+        const booking = bookingDoc.data();
+        const bookedHairstyleDoc = await db.collection("hairstyles").doc(booking.hairstyleId).get();
+        if (!bookedHairstyleDoc.exists) continue;
+
+        const bookedDuration = Math.ceil(bookedHairstyleDoc.data().durationHours) || 1;
+        const startTime = booking.time;
+        const startIndex = allSlots.indexOf(startTime);
+
+        if (startIndex !== -1) {
+            for (let i = 0; i < bookedDuration; i++) {
+                if (startIndex + i < allSlots.length) {
+                    occupiedSlots.add(allSlots[startIndex + i]);
+                }
+            }
+        }
     }
 
-    // Step 5: Return only the slots that are not occupied
-    const availableSlots = allSlots.filter((slot) => !occupiedSlots.has(slot));
+    const availableSlots = allSlots.filter(slot => !occupiedSlots.has(slot));
 
-    return { slots: availableSlots };
+    const finalSlots = [];
+    for (let i = 0; i <= availableSlots.length - durationInSlots; i++) {
+        let hasEnoughTime = true;
+        for (let j = 1; j < durationInSlots; j++) {
+            const expectedNextSlotIndex = allSlots.indexOf(availableSlots[i]) + j;
+            const actualNextSlotIndex = allSlots.indexOf(availableSlots[i+j]);
+            if (expectedNextSlotIndex !== actualNextSlotIndex) {
+                hasEnoughTime = false;
+                break;
+            }
+        }
+        if (hasEnoughTime) {
+            finalSlots.push(availableSlots[i]);
+        }
+    }
+
+    return { slots: finalSlots };
+
   } catch (error) {
     console.error("Error getting available slots:", error);
     throw new HttpsError("internal", "Failed to get available slots.");
