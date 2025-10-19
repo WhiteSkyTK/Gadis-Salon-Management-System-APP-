@@ -291,6 +291,12 @@
             app:nullable="true"
             android:defaultValue="@null" />
 
+        <argument
+            android:name="cartItems"
+            app:argType="com.rst.gadissalonmanagementsystemapp.CartItem[]"
+            app:nullable="true"
+            android:defaultValue="@null" />
+
         <action
             android:id="@+id/action_purchaseConfirmationFragment_to_purchaseSuccessFragment"
             app:destination="@id/purchaseSuccessFragment"

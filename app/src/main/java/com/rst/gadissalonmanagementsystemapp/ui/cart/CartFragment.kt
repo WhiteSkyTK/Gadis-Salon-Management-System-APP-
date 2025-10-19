@@ -24,6 +24,7 @@ class CartFragment : Fragment() {
     private val binding get() = _binding!!
     private lateinit var cartAdapter: CartAdapter
     private var cartListener: ListenerRegistration? = null
+    private var currentCartItems: List<CartItem> = listOf()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentCartBinding.inflate(inflater, container, false)
@@ -35,7 +36,13 @@ class CartFragment : Fragment() {
         setupRecyclerView()
 
         binding.buyNowButtonCart.setOnClickListener {
-            findNavController().navigate(R.id.action_cartFragment_to_purchaseConfirmationFragment)
+            // Pass the current cart items to the checkout/confirmation fragment
+            val action = CartFragmentDirections.actionCartFragmentToPurchaseConfirmationFragment(
+                product = null,
+                selectedVariant = null,
+                cartItems = currentCartItems.toTypedArray()
+            )
+            findNavController().navigate(action)
         }
     }
 
@@ -74,7 +81,7 @@ class CartFragment : Fragment() {
             onRemove = { cartItem ->
                 viewLifecycleOwner.lifecycleScope.launch {
                     val cartItemId = "${cartItem.productId}_${cartItem.size}"
-                    FirebaseManager.removeCartItem(cartItemId)
+                    FirebaseManager.removeCartItem(cartItem.productId, cartItem.size)
                 }
             }
         )
@@ -93,6 +100,8 @@ class CartFragment : Fragment() {
                 binding.shimmerViewContainer.visibility = View.GONE
                 binding.contentContainer.visibility = View.VISIBLE
 
+                currentCartItems = cartItems
+
                 if (cartItems.isEmpty()) {
                     binding.cartRecyclerView.visibility = View.GONE
                     binding.emptyCartText.visibility = View.VISIBLE
@@ -107,6 +116,7 @@ class CartFragment : Fragment() {
                 val totalPrice = cartItems.sumOf { it.price * it.quantity }
                 val format = NumberFormat.getCurrencyInstance(Locale("en", "ZA"))
                 binding.totalPrice.text = format.format(totalPrice)
+                binding.buyNowButtonCart.isEnabled = cartItems.isNotEmpty()
             }
         }
     }
@@ -116,3 +126,4 @@ class CartFragment : Fragment() {
         _binding = null
     }
 }
+

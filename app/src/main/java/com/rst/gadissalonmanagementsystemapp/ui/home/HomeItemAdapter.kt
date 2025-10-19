@@ -1,6 +1,7 @@
 package com.rst.gadissalonmanagementsystemapp.ui.home
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
@@ -29,6 +30,16 @@ class HomeItemAdapter(
             val price = product.variants.firstOrNull()?.price ?: 0.0
             val format = NumberFormat.getCurrencyInstance(Locale("en", "ZA"))
             binding.productDetail.text = format.format(price)
+
+            // --- NEW: VISUAL LOGIC FOR "SOLD OUT" ---
+            val isSoldOut = product.variants.all { it.stock <= 0 }
+            if (isSoldOut) {
+                binding.soldOutOverlay.visibility = View.VISIBLE
+                itemView.alpha = 0.7f // Make the whole item look disabled
+            } else {
+                binding.soldOutOverlay.visibility = View.GONE
+                itemView.alpha = 1.0f
+            }
 
             itemView.setOnClickListener {
                 onItemClick(product)

@@ -92,8 +92,14 @@ class HomeFragment : Fragment() {
                 val productList = productsResult.getOrNull()?.take(4) ?: emptyList()
                 Log.d(TAG, "Successfully fetched ${productList.size} products.")
                 binding.recyclerViewProducts.adapter = HomeItemAdapter(productList) { product ->
-                    val action = HomeFragmentDirections.actionHomeFragmentToProductDetailFragment(product, "CUSTOMER")
-                    findNavController().navigate(action)
+                    // Check if all variants of the product are out of stock
+                    val isSoldOut = product.variants.all { it.stock <= 0 }
+                    if (isSoldOut) {
+                        Toast.makeText(context, "This item is sold out", Toast.LENGTH_SHORT).show()
+                    } else {
+                        val action = HomeFragmentDirections.actionHomeFragmentToProductDetailFragment(product, "CUSTOMER")
+                        findNavController().navigate(action)
+                    }
                 }
             } else {
                 val error = productsResult.exceptionOrNull()?.message

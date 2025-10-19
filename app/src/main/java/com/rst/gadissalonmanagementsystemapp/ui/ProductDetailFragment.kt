@@ -13,6 +13,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import coil.load
 import com.google.android.material.chip.Chip
+import com.rst.gadissalonmanagementsystemapp.CartItem
 import com.rst.gadissalonmanagementsystemapp.FirebaseManager
 import com.rst.gadissalonmanagementsystemapp.MainViewModel
 import com.rst.gadissalonmanagementsystemapp.Product
@@ -143,10 +144,20 @@ class ProductDetailFragment : Fragment() {
                 return@setOnClickListener
             }
             viewLifecycleOwner.lifecycleScope.launch {
-                // --- THIS IS THE FIX: The addToCart function now handles the composite ID internally ---
-                val result = FirebaseManager.addToCart(product, selectedVariant!!)
+                // Create a CartItem object to be added
+                val cartItem = CartItem(
+                    productId = product.id,
+                    name = product.name,
+                    size = selectedVariant!!.size,
+                    price = selectedVariant!!.price,
+                    quantity = 1, // We add one at a time from this screen
+                    imageUrl = product.imageUrl
+                )
+
+                // Call the correct function that works with the cart array
+                val result = FirebaseManager.addOrUpdateCartItem(cartItem)
                 if (result.isSuccess) {
-                    Toast.makeText(context, "${product.name} added to cart", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "${cartItem.name} added to cart", Toast.LENGTH_SHORT).show()
                 } else {
                     Toast.makeText(context, "Error: ${result.exceptionOrNull()?.message}", Toast.LENGTH_SHORT).show()
                 }

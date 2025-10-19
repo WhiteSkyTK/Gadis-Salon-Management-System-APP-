@@ -41,6 +41,9 @@ class BookingDetailCustomerFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         val booking = args.booking
 
+        // Start the shimmer effect when the view is created
+        binding.shimmerViewContainer.startShimmer()
+
         // Populate the booking details card
         val hairstyle = mainViewModel.allHairstyles.value?.find { it.id == booking.hairstyleId }
         binding.hairstyleImageDetail.load(hairstyle?.imageUrl) {
@@ -98,6 +101,11 @@ class BookingDetailCustomerFragment : Fragment() {
     private fun listenForMessages(bookingId: String) {
         chatListener = FirebaseManager.addChatMessagesListener(bookingId) { messages ->
             if (view != null) {
+                // Stop the shimmer and hide it once messages are loaded
+                if (binding.shimmerViewContainer.isShimmerVisible) {
+                    binding.shimmerViewContainer.stopShimmer()
+                    binding.shimmerViewContainer.visibility = View.GONE
+                }
                 val uid = Firebase.auth.currentUser?.uid ?: ""
 
                 // --- NEW: AUTO-READ LOGIC ---

@@ -557,6 +557,44 @@ exports.onOrderReadyForPickup = onDocumentUpdated("product_orders/{orderId}", as
         return null;
     }
 
+    // --- FIX: ADDED CUSTOMER NOTIFICATION LOGIC ---
+    const customerId = newData.customerId;
+    if (!customerId) {
+        console.error(`Order ${event.params.orderId} is missing a customerId!`);
+    } else {
+        const notificationPayload = {
+            userId: customerId,
+            title: "Your Order is Ready!",
+            message: `Your order #${event.params.orderId.slice(0, 6)} is now ready for pickup at the salon.`,
+            timestamp: Date.now(),
+            isRead: false,
+            orderId: event.params.orderId, // Link to the order
+        };
+        // 1. Create the in-app notification
+        await db.collection("users").doc(customerId).collection("notifications").add(notificationPayload);
+
+        // 2. Send the push notification
+        const userDoc = await db.collection("users").doc(customerId).get();
+        const fcmToken = userDoc.data()?.fcmToken;
+
+        if (fcmToken) {
+            const pushPayload = {
+                notification: {
+                    title: notificationPayload.title,
+                    body: notificationPayload.message,
+                    sound: "default"
+                },
+                data: { // Add orderId to data payload for potential deep linking in the app
+                    orderId: event.params.orderId
+                }
+            };
+            await admin.messaging().sendToDevice(fcmToken, pushPayload);
+            console.log(`Sent "Ready for Pickup" push notification to user ${customerId}.`);
+        }
+    }
+    // --- END OF FIX ---
+
+
     console.log(`Processing stock for order ${event.params.orderId}`);
     const items = newData.items;
 

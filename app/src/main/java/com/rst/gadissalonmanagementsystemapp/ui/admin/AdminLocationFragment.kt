@@ -113,6 +113,16 @@ class AdminLocationFragment : Fragment(), OnMapReadyCallback {
         googleMap.clear()
         googleMap.addMarker(MarkerOptions().position(latLng).title("Gadis Salon"))
         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
+
+        googleMap.setOnCameraIdleListener {
+            // This code will run once the map has finished moving
+            if (_binding != null) {
+                binding.shimmerViewContainer.stopShimmer()
+                binding.shimmerViewContainer.visibility = View.GONE
+            }
+            // Set the listener to null so it doesn't run again on future map movements
+            googleMap.setOnCameraIdleListener(null)
+        }
     }
 
     private fun toggleEditMode() {

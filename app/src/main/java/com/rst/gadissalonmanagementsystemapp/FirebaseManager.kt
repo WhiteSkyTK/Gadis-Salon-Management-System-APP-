@@ -246,7 +246,7 @@ object FirebaseManager {
 
     // --- CART & ORDER FUNCTIONS ---
 
-    // Listens for real-time updates to the user's cart
+    // Listens for real-time updates to the user's cart array
     fun addCurrentUserCartListener(onUpdate: (List<CartItem>) -> Unit): ListenerRegistration? {
         val uid = auth.currentUser?.uid
         if (uid == null) {
@@ -254,52 +254,130 @@ object FirebaseManager {
             return null
         }
 
-        return usersCollection.document(uid).collection("cart")
-            .addSnapshotListener { snapshots, error ->
+        return usersCollection.document(uid)
+            .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     Log.w("FirebaseManager", "Cart listener failed.", error)
+                    onUpdate(emptyList())
                     return@addSnapshotListener
                 }
-                val cartList = snapshots?.toObjects(CartItem::class.java) ?: emptyList()
-                onUpdate(cartList)
+
+                if (snapshot != null && snapshot.exists()) {
+                    val cartData = snapshot.get("cart") as? List<Map<String, Any>>
+                    val cartItems = cartData?.mapNotNull {
+                        CartItem(
+                            productId = it["productId"] as? String ?: "",
+                            name = it["name"] as? String ?: "",
+                            size = it["size"] as? String ?: "",
+                            price = (it["price"] as? Number)?.toDouble() ?: 0.0,
+                            quantity = (it["quantity"] as? Number)?.toInt() ?: 0,
+                            imageUrl = it["imageUrl"] as? String ?: ""
+                        )
+                    } ?: emptyList()
+                    onUpdate(cartItems)
+                } else {
+                    onUpdate(emptyList())
+                }
             }
     }
 
-    // This new version uses a transaction to safely check stock before updating
-    suspend fun updateCartItemQuantity(productId: String, size: String, newQuantity: Int): Result<Unit> {
+    // Adds a new item to the cart or updates the quantity of an existing one.
+    suspend fun addOrUpdateCartItem(cartItem: CartItem): Result<Unit> {
         val uid = auth.currentUser?.uid ?: return Result.failure(Exception("Not logged in"))
         return try {
-            val productDocRef = firestore.collection("products").document(productId)
-            val cartItemDocRef = usersCollection.document(uid).collection("cart").document("${productId}_${size}")
+            val userDocRef = usersCollection.document(uid)
+            firestore.runTransaction { transaction ->
+                val snapshot = transaction.get(userDocRef)
+                val existingCartData = snapshot.get("cart") as? List<HashMap<String, Any>> ?: emptyList()
+                val existingCart = existingCartData.map {
+                    CartItem(
+                        productId = it["productId"] as String,
+                        name = it["name"] as String,
+                        size = it["size"] as String,
+                        price = (it["price"] as Number).toDouble(),
+                        quantity = (it["quantity"] as Number).toInt(),
+                        imageUrl = it["imageUrl"] as String
+                    )
+                }.toMutableList()
 
-            if (newQuantity <= 0) {
-                // If the new quantity is zero or less, just remove the item
-                cartItemDocRef.delete().await()
-            } else {
-                firestore.runTransaction { transaction ->
-                    val productSnapshot = transaction.get(productDocRef)
-                    val product = productSnapshot.toObject(Product::class.java)
-                    val variant = product?.variants?.find { it.size == size }
-                    val currentStock = variant?.stock ?: 0
+                val itemIndex = existingCart.indexOfFirst { it.productId == cartItem.productId && it.size == cartItem.size }
 
-                    if (newQuantity <= currentStock) {
-                        transaction.update(cartItemDocRef, "quantity", newQuantity)
-                    } else {
-                        throw Exception("Cannot add more. Stock limit of $currentStock reached.")
-                    }
-                }.await()
-            }
+                if (itemIndex != -1) {
+                    // Item exists, update quantity
+                    val existingItem = existingCart[itemIndex]
+                    existingCart[itemIndex] = existingItem.copy(quantity = existingItem.quantity + cartItem.quantity)
+                } else {
+                    // Item does not exist, add it
+                    existingCart.add(cartItem)
+                }
+                transaction.update(userDocRef, "cart", existingCart)
+            }.await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    // Removes an item from the cart
-    suspend fun removeCartItem(productId: String): Result<Unit> {
+    // Updates an item's quantity in the cart array, checking stock.
+    suspend fun updateCartItemQuantity(productId: String, size: String, newQuantity: Int): Result<Unit> {
         val uid = auth.currentUser?.uid ?: return Result.failure(Exception("Not logged in"))
         return try {
-            usersCollection.document(uid).collection("cart").document(productId).delete().await()
+            val userDocRef = usersCollection.document(uid)
+            val productDocRef = firestore.collection("products").document(productId)
+
+            firestore.runTransaction { transaction ->
+                val userSnapshot = transaction.get(userDocRef)
+                val existingCartData = userSnapshot.get("cart") as? List<HashMap<String, Any>> ?: emptyList()
+                val existingCart = existingCartData.map {
+                    CartItem(
+                        productId = it["productId"] as String,
+                        name = it["name"] as String,
+                        size = it["size"] as String,
+                        price = (it["price"] as Number).toDouble(),
+                        quantity = (it["quantity"] as Number).toInt(),
+                        imageUrl = it["imageUrl"] as String
+                    )
+                }.toMutableList()
+
+                val itemIndex = existingCart.indexOfFirst { it.productId == productId && it.size == size }
+
+                if (itemIndex != -1) {
+                    if (newQuantity <= 0) {
+                        existingCart.removeAt(itemIndex)
+                    } else {
+                        val productSnapshot = transaction.get(productDocRef)
+                        val product = productSnapshot.toObject(Product::class.java)
+                        val variant = product?.variants?.find { it.size == size }
+                        val currentStock = variant?.stock ?: 0
+
+                        if (newQuantity <= currentStock) {
+                            existingCart[itemIndex] = existingCart[itemIndex].copy(quantity = newQuantity)
+                        } else {
+                            throw Exception("Stock limit of $currentStock reached.")
+                        }
+                    }
+                    transaction.update(userDocRef, "cart", existingCart)
+                }
+            }.await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // Removes an item from the cart array
+    suspend fun removeCartItem(productId: String, size: String): Result<Unit> {
+        val uid = auth.currentUser?.uid ?: return Result.failure(Exception("Not logged in"))
+        return try {
+            val userDocRef = usersCollection.document(uid)
+            firestore.runTransaction { transaction ->
+                val snapshot = transaction.get(userDocRef)
+                val existingCartData = snapshot.get("cart") as? List<HashMap<String, Any>> ?: emptyList()
+                val updatedCart = existingCartData.filterNot {
+                    it["productId"] == productId && it["size"] == size
+                }
+                transaction.update(userDocRef, "cart", updatedCart)
+            }.await()
             Result.success(Unit)
         } catch (e: Exception) { Result.failure(e) }
     }
@@ -308,10 +386,15 @@ object FirebaseManager {
     suspend fun createProductOrder(order: ProductOrder): Result<Unit> {
         val uid = auth.currentUser?.uid ?: return Result.failure(Exception("Not logged in"))
         return try {
-            // Save the order to a master 'product_orders' collection
-            firestore.collection("product_orders").document(order.id).set(order).await()
-            // Clear the user's cart
-            clearCurrentUserCart(uid)
+            firestore.runBatch { batch ->
+                // 1. Save the order to a master 'product_orders' collection
+                val orderRef = firestore.collection("product_orders").document(order.id)
+                batch.set(orderRef, order)
+
+                // 2. Clear the user's cart array
+                val userRef = usersCollection.document(uid)
+                batch.update(userRef, "cart", emptyList<CartItem>())
+            }.await()
             Result.success(Unit)
         } catch (e: Exception) { Result.failure(e) }
     }
