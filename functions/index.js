@@ -303,6 +303,47 @@ exports.getAvailableSlots = onCall({ cors: true }, async (request) => {
 
     const durationInSlots = Math.ceil(hairstyleDoc.data().durationHours) || 1;
 
+      // --- 2. Check for Stylist Sick Days / Time Off (NEW) ---
+        // First, find the stylist's ID from their name
+        const stylistQuery = db.collection("users")
+            .where("name", "==", stylistName)
+            .where("role", "==", "WORKER")
+            .limit(1);
+        const stylistSnapshot = await stylistQuery.get();
+
+        if (stylistSnapshot.empty) {
+            console.error(`No stylist found with name: ${stylistName}`);
+            throw new HttpsError("not-found", `Stylist ${stylistName} not found.`);
+        }
+        
+        const stylistId = stylistSnapshot.docs[0].id;
+
+        // Now, check if this stylist has approved time off for the requested date
+        const timeOffQuery = db.collection("timeOffRequests")
+            .where("stylistId", "==", stylistId)
+            .where("status", "==", "approved")
+            .where("startDate", "<=", date); // Find requests that started on or before this date
+        
+        const timeOffSnapshot = await timeOffQuery.get();
+
+        let isOffToday = false;
+        if (!timeOffSnapshot.empty) {
+            for (const doc of timeOffSnapshot.docs) {
+                const timeOff = doc.data();
+                // Check if the end date is on or after the requested date
+                if (timeOff.endDate >= date) {
+                    isOffToday = true;
+                    break; // Found a valid time-off, no need to check others
+                }
+            }
+        }
+
+        if (isOffToday) {
+            console.log(`Stylist ${stylistName} (ID: ${stylistId}) is on approved time off for ${date}.`);
+            return { slots: [] }; // Return empty slots immediately
+        }
+        // --- END OF SICK DAY LOGIC ---
+
     // FIX: The query now uses the 'date' string directly, expecting it to be "YYYY-MM-DD".
     const bookingsQuery = db.collection("bookings")
         .where("stylistName", "==", stylistName)
@@ -543,103 +584,146 @@ exports.onNewChatMessageForWorker = onDocumentCreated("bookings/{bookingId}/mess
 });
 
 /**
- * Triggers when a product order's status is updated. If the new status is
- * 'Ready for Pickup', it deducts the item quantities from the main product stock.
- * It also sends a low-stock notification to admins if necessary.
+ * Triggers when a product order's status is updated.
  */
 exports.onOrderReadyForPickup = onDocumentUpdated("product_orders/{orderId}", async (event) => {
     const newData = event.data.after.data();
     const oldData = event.data.before.data();
     const db = admin.firestore();
+    const orderId = event.params.orderId;
 
-    // Only run if the status changed specifically to 'Ready for Pickup'
-    if (newData.status !== "Ready for Pickup" || oldData.status === "Ready for Pickup") {
-        return null;
-    }
-
-    // --- FIX: ADDED CUSTOMER NOTIFICATION LOGIC ---
+    // --- Customer Notification Logic ---
     const customerId = newData.customerId;
     if (!customerId) {
-        console.error(`Order ${event.params.orderId} is missing a customerId!`);
+        console.error(`Order ${orderId} is missing a customerId!`);
     } else {
-        const notificationPayload = {
-            userId: customerId,
-            title: "Your Order is Ready!",
-            message: `Your order #${event.params.orderId.slice(0, 6)} is now ready for pickup at the salon.`,
-            timestamp: Date.now(),
-            isRead: false,
-            orderId: event.params.orderId, // Link to the order
-        };
-        // 1. Create the in-app notification
-        await db.collection("users").doc(customerId).collection("notifications").add(notificationPayload);
+        let notificationTitle = "";
+        let notificationMessage = "";
+        let shouldNotify = false;
 
-        // 2. Send the push notification
-        const userDoc = await db.collection("users").doc(customerId).get();
-        const fcmToken = userDoc.data()?.fcmToken;
+         // Determine notification based on status change
+        if (newData.status === "Ready for Pickup" && oldData.status !== "Ready for Pickup") {
+            notificationTitle = "Your Order is Ready!";
+            notificationMessage = `Your order #${orderId.slice(-6)} is now ready for pickup at the salon.`;
+            shouldNotify = true;
+        } else if (newData.status === "Completed" && oldData.status !== "Completed") {
+            // Optional: Notify on completion?
+             notificationTitle = "Order Completed";
+             notificationMessage = `Your order #${orderId.slice(-6)} has been marked as completed. Thank you!`;
+             shouldNotify = true;
+        } else if (newData.status === "Abandoned" && oldData.status !== "Abandoned") {
+             notificationTitle = "Order Abandoned";
+             notificationMessage = `Your order #${orderId.slice(-6)} was not picked up and has been marked as abandoned. Please contact us if this was a mistake.`;
+             shouldNotify = true;
+        }
+         // Add more cases if needed (e.g., Shipped, Delivered)
 
-        if (fcmToken) {
-            const pushPayload = {
-                notification: {
-                    title: notificationPayload.title,
-                    body: notificationPayload.message,
-                    sound: "default"
-                },
-                data: { // Add orderId to data payload for potential deep linking in the app
-                    orderId: event.params.orderId
-                }
+        if (shouldNotify) {
+            const notificationPayload = {
+                userId: customerId,
+                title: notificationTitle,
+                message: notificationMessage,
+                timestamp: Date.now(),
+                isRead: false,
+                orderId: orderId, // Link notification to the order
             };
-            await admin.messaging().sendToDevice(fcmToken, pushPayload);
-            console.log(`Sent "Ready for Pickup" push notification to user ${customerId}.`);
-        }
-    }
-    // --- END OF FIX ---
+            // 1. Create the in-app notification
+            await db.collection("users").doc(customerId).collection("notifications").add(notificationPayload);
 
+            // 2. Send the push notification
+            try {
+                const userDoc = await db.collection("users").doc(customerId).get();
+                const fcmToken = userDoc.data()?.fcmToken;
 
-    console.log(`Processing stock for order ${event.params.orderId}`);
-    const items = newData.items;
-
-    // Use a transaction for each item to safely update stock
-    for (const item of items) {
-        const productRef = db.collection("products").doc(item.productId);
-
-        try {
-            await db.runTransaction(async (transaction) => {
-                const productDoc = await transaction.get(productRef);
-                if (!productDoc.exists) {
-                    throw `${item.productId} not found!`;
-                }
-
-                const productData = productDoc.data();
-                const variants = productData.variants;
-                let stockUpdated = false;
-
-                const updatedVariants = variants.map(variant => {
-                    if (variant.size === item.size) {
-                        const newStock = variant.stock - item.quantity;
-                        stockUpdated = true;
-
-                        // Check for low stock (threshold is 5)
-                        if (newStock <= 5 && variant.stock > 5) {
-                            console.log(`LOW STOCK ALERT for ${productData.name} (${variant.size})`);
-                            // This is where you would call a function to notify admins
-                            notifyAdminsOfLowStock(productData, variant, newStock);
+                if (fcmToken) {
+                    const pushPayload = {
+                        notification: {
+                            title: notificationPayload.title,
+                            body: notificationPayload.message,
+                            sound: "default"
+                        },
+                        data: {
+                            orderId: orderId // Send orderId in data payload too
                         }
-
-                        return { ...variant, stock: newStock };
-                    }
-                    return variant;
-                });
-
-                if (stockUpdated) {
-                    transaction.update(productRef, { variants: updatedVariants });
+                    };
+                    console.log(`Attempting to send order status (${newData.status}) push notification to token: ${fcmToken}`);
+                    await admin.messaging().sendToDevice(fcmToken, pushPayload);
+                    console.log(`Successfully sent order status push notification to user ${customerId}.`);
+                } else {
+                     console.log(`User ${customerId} does not have an FCM token. Skipping push notification.`);
                 }
-            });
-        } catch (e) {
-            console.error("Stock update transaction failed:", e);
+            } catch (error) {
+                console.error(`Failed to send order status push notification to user ${customerId}:`, error);
+                // Log specific error details if available
+                if (error.errorInfo) {
+                    console.error("FCM Error Info:", JSON.stringify(error.errorInfo));
+                }
+                if (error.codePrefix === 'messaging') {
+                    console.error("FCM Error Code:", error.errorInfo.code);
+                }
+                 // Handle common errors like unregistered tokens if needed
+                 if (error.errorInfo && (error.errorInfo.code === 'messaging/registration-token-not-registered' || error.errorInfo.code === 'messaging/invalid-registration-token')) {
+                     console.log(`Token ${fcmToken} is invalid or unregistered. Consider removing it from user ${customerId}.`);
+                     // Optionally, remove the token: await db.collection("users").doc(customerId).update({ fcmToken: admin.firestore.FieldValue.delete() });
+                 }
+            }
         }
     }
-    return null;
+    // --- END OF NOTIFICATION BLOCK ---
+
+
+    // --- Stock Update Logic (Only for 'Ready for Pickup') ---
+    if (newData.status === "Ready for Pickup" && oldData.status !== "Ready for Pickup") {
+        console.log(`Processing stock deduction for order ${orderId}`);
+        const items = newData.items;
+        if (!items || items.length === 0) {
+             console.log("No items found in order to deduct stock.");
+             return null; // Nothing more to do if no items
+        }
+
+        for (const item of items) {
+            const productRef = db.collection("products").doc(item.productId);
+            try {
+                await db.runTransaction(async (transaction) => {
+                    const productDoc = await transaction.get(productRef);
+                    if (!productDoc.exists) { throw `Product ${item.productId} not found!`; }
+                    const productData = productDoc.data();
+                    const variants = productData.variants;
+                    let stockUpdated = false;
+                    const updatedVariants = variants.map(variant => {
+                        if (variant.size === item.size) {
+                            const currentStock = variant.stock || 0;
+                            const newStock = currentStock - item.quantity;
+                            stockUpdated = true;
+                            if (newStock <= 5 && currentStock > 5) {
+                                console.log(`LOW STOCK ALERT for ${productData.name} (${variant.size})`);
+                                notifyAdminsOfLowStock(productData, variant, newStock);
+                            }
+                            // --- IMPORTANT FIX: Allow stock to go negative temporarily ---
+                            // This handles cases where stock might be slightly off or orders processed concurrently.
+                            // Rely on inventory management elsewhere to resolve negative stock.
+                            console.log(`Deducting ${item.quantity} from ${productData.name} (${variant.size}). Old stock: ${currentStock}, New stock: ${newStock}`);
+                            return { ...variant, stock: newStock };
+                             // return { ...variant, stock: Math.max(0, newStock) }; // Old way - prevents negative
+                        }
+                        return variant;
+                    });
+                    if (stockUpdated) {
+                        transaction.update(productRef, { variants: updatedVariants });
+                    }
+                });
+                console.log(`Stock updated for ${item.productId}`);
+            } catch (e) {
+                console.error(`Stock update transaction failed for order ${orderId}, item ${item.productId}:`, e);
+                 // CRITICAL: Decide how to handle this. Should the order status be reverted? Log for manual intervention?
+                 // For now, just logging the error.
+            }
+        }
+    } // End of stock deduction block
+
+    return null; // Finish the function
 });
+
 
 // --- HELPER FUNCTION FOR LOW-STOCK NOTIFICATIONS ---
 /**
@@ -670,7 +754,9 @@ async function notifyAdminsOfLowStock(productData, variant, newStock) {
     for (const adminDoc of adminQuery.docs) {
         const adminUser = adminDoc.data();
         // 1. Create the in-app notification
-        await db.collection("users").doc(adminUser.id).collection("notifications").add(notificationPayload);
+        //
+        // --- FIX: Use adminDoc.id (the document ID/UID) instead of adminUser.id (from the document data) ---
+        await db.collection("users").doc(adminDoc.id).collection("notifications").add(notificationPayload);
 
         // 2. Send the push notification if they have a token
         if (adminUser.fcmToken) {
@@ -878,3 +964,5 @@ exports.cleanupPastDueBookings = onSchedule("every 1 hours", async (event) => {
 
     return null;
 });
+
+
