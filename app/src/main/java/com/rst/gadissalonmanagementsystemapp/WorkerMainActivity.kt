@@ -86,27 +86,53 @@ class WorkerMainActivity : AppCompatActivity() {
 
         // Listen for screen changes to show/hide UI elements
         navController.addOnDestinationChangedListener { _, destination, _ ->
-            // These are the "detail" screens where we want a back button
-            if (destination.id == R.id.workerSettingsFragment ||
-                destination.id == R.id.workerEditProfileFragment ||
-                destination.id == R.id.workerAboutUsFragment ||
-                destination.id == R.id.workerLocationFragment ||
-                destination.id == R.id.workerHelpCenterFragment ||
-                destination.id == R.id.workerMySupportTicketsFragment ||
-                destination.id == R.id.workerFaqFragment ||
-                destination.id == R.id.productDetailFragment ||
-                destination.id == R.id.workerOrderDetailFragment ||
-                destination.id == R.id.bookingDetailWorkerFragment ||
-                destination.id == R.id.ticketDetailFragment ||
-                destination.id == R.id.workerContactFragment) {
 
-                binding.bottomNavCardWorker.visibility = View.GONE
-                binding.backButtonWorker.visibility = View.VISIBLE
-            } else {
-                // These are the main screens
-                binding.bottomNavCardWorker.visibility = View.VISIBLE
-                binding.backButtonWorker.visibility = View.GONE
+            // --- MODIFIED: Centralized Title and UI Logic ---
+            val (title, showBack) = when (destination.id) {
+                // Main BTM NAV Screens
+                R.id.nav_worker_bookings -> Pair("New Bookings", false)
+                R.id.nav_worker_schedule -> Pair("My Schedule", false)
+                R.id.nav_worker_inventory -> Pair("Inventory", false)
+                R.id.nav_worker_orders -> Pair("Product Orders", false)
+                R.id.nav_worker_profile -> Pair("My Profile", false)
+
+                // Profile Sub-Screens
+                R.id.workerEditProfileFragment -> Pair("Edit Profile", true)
+                R.id.workerTimeOffFragment -> Pair("My Time Off", true)
+                R.id.workerTimeOffDialog -> Pair("Request Time Off", true)
+                R.id.workerHelpCenterFragment -> Pair("Help & Support", true)
+                R.id.workerMySupportTicketsFragment -> Pair("My Support Tickets", true)
+                R.id.ticketDetailFragment -> Pair("Support Ticket", true)
+                R.id.workerContactFragment -> Pair("Contact Support", true)
+                R.id.workerSettingsFragment -> Pair("Settings", true)
+                R.id.workerLocationFragment -> Pair("Salon Location", true)
+                R.id.workerFaqFragment -> Pair("FAQ", true)
+                R.id.workerAboutUsFragment -> Pair("About Us", true)
+
+                // Other Detail Screens
+                R.id.productDetailFragment -> Pair("Product Details", true)
+                R.id.workerOrderDetailFragment -> Pair("Order Details", true)
+                R.id.bookingDetailWorkerFragment -> Pair("Booking Details", true)
+
+                // Default
+                else -> Pair("Stylist Portal", false)
             }
+
+            // Update UI based on the destination
+            updateTitle(title)
+            binding.bottomNavCardWorker.visibility = if (showBack) View.GONE else View.VISIBLE
+            binding.backButtonWorker.visibility = if (showBack) View.VISIBLE else View.GONE
+            // --- END MODIFICATION ---
         }
     }
+
+    // --- NEW: Public functions to be called by fragments ---
+    fun showBackButton(show: Boolean) {
+        binding.backButtonWorker.visibility = if (show) View.VISIBLE else View.GONE
+    }
+
+    fun updateTitle(title: String) {
+        binding.titleWorker.text = title
+    }
+    // --- END NEW -
 }

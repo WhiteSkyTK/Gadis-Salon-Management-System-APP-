@@ -141,7 +141,120 @@
                                 tools:text="152" />
                         </LinearLayout>
                     </com.google.android.material.card.MaterialCardView>
+
+                    <!-- NEW: Low Stock Card  -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_columnWeight="1"
+                        app:cardCornerRadius="16dp">
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Low Stock Items"
+                                android:textColor="@color/orange" />
+                            <TextView
+                                android:id="@+id/low_stock_count_text"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textSize="28sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/orange"
+                                tools:text="3" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <!-- NEW: Sold Out Card  -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_columnWeight="1"
+                        app:cardCornerRadius="16dp">
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Sold Out Items"
+                                android:textColor="@color/status_red" />
+                            <TextView
+                                android:id="@+id/sold_out_count_text"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textSize="28sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/status_red"
+                                tools:text="1" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
                 </GridLayout>
+
+            <!-- NEW: Inventory Status Lists Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                app:cardCornerRadius="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Inventory Status"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="8dp"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/low_stock_10_or_less"
+                        android:textStyle="bold"
+                        android:textColor="@color/orange"
+                        />
+
+                    <TextView
+                        android:id="@+id/low_stock_list_text"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:layout_marginBottom="8dp"
+                        android:textSize="14sp"
+                        tools:text="- Shampoo (5 left)\n- Conditioner (2 left)" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/sold_out"
+                        android:textStyle="bold"
+                        android:textColor="@color/status_red"
+                        />
+
+                    <TextView
+                        android:id="@+id/sold_out_list_text"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:textSize="14sp"
+                        tools:text="- Hair Gel (0 left)" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
@@ -158,9 +271,29 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Quick Actions"
+                            android:text="Management Shortcuts"
                             android:textSize="18sp"
                             android:textStyle="bold" />
+
+                        <!-- NEW: Income Report Button  -->
+                        <Button
+                            android:id="@+id/view_income_button"
+                            style="@style/Widget.Material3.Button.OutlinedButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="View Income Report"
+                            app:icon="@drawable/ic_income" />
+
+                        <!-- NEW: Time Off Button -->
+                        <Button
+                            android:id="@+id/manage_timeoff_button"
+                            style="@style/Widget.Material3.Button.OutlinedButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="Manage Time Off"
+                            app:icon="@drawable/ic_time_off" />
 
                         <Button
                             android:id="@+id/add_product_button"
@@ -168,14 +301,16 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
-                            android:text="Add New Product" />
+                            android:text="Add New Product"
+                            app:icon="@drawable/ic_product"/>
 
                         <Button
                             android:id="@+id/add_worker_button"
                             style="@style/Widget.Material3.Button.OutlinedButton"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Add New Worker" />
+                            android:text="Add New Worker"
+                            app:icon="@drawable/ic_people"/>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 

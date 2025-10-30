@@ -61,17 +61,30 @@ class FavoritesFragment : Fragment() {
                 // When an item is unfavorited, call the appropriate FirebaseManager function
                 viewLifecycleOwner.lifecycleScope.launch {
                     when (item) {
-                        is Product -> FirebaseManager.toggleFavorite(item)
+                        is FavoriteItem -> FirebaseManager.unfavoriteItem(item.id) // Use new function
                         is Hairstyle -> FirebaseManager.toggleFavorite(item)
                     }
                 }
             },
-            onAddToCartClick = { product ->
-                val variant = product.variants.firstOrNull()
-                if (variant != null) {
-                    viewLifecycleOwner.lifecycleScope.launch {
-                        FirebaseManager.addToCart(product, variant)
-                        Toast.makeText(context, "${product.name} added to cart", Toast.LENGTH_SHORT).show()
+            onAddToCartClick = { favoriteItem ->
+                // --- MODIFIED: Create CartItem from FavoriteItem ---
+                viewLifecycleOwner.lifecycleScope.launch {
+                    // Create a CartItem object to be added
+                    val cartItem = CartItem(
+                        productId = favoriteItem.originalId,
+                        name = favoriteItem.name,
+                        size = favoriteItem.favoritedVariant.size,
+                        price = favoriteItem.favoritedVariant.price,
+                        quantity = 1,
+                        imageUrl = favoriteItem.imageUrl,
+                        stock = favoriteItem.favoritedVariant.stock // Pass the stock!
+                    )
+
+                    val result = FirebaseManager.addOrUpdateCartItem(cartItem)
+                    if (result.isSuccess) {
+                        Toast.makeText(context, "${cartItem.name} added to cart", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(context, "Error: ${result.exceptionOrNull()?.message}", Toast.LENGTH_SHORT).show()
                     }
                 }
             },

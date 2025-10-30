@@ -37,7 +37,7 @@ class WorkerOrdersFragment : Fragment() {
         // Start listening for real-time updates when the screen is visible
         if (NetworkUtils.isInternetAvailable(requireContext())) {
             showOfflineUI(false)
-            listenForPendingOrders()
+            listenForWorkerOrders()
         } else {
             showOfflineUI(true)
         }
@@ -71,21 +71,23 @@ class WorkerOrdersFragment : Fragment() {
     }
 
 
-    private fun listenForPendingOrders() {
+    private fun listenForWorkerOrders() {
         // --- START SHIMMER ---
         binding.shimmerViewContainer.startShimmer()
         binding.shimmerViewContainer.visibility = View.VISIBLE
         binding.workerOrdersRecyclerView.visibility = View.GONE
         binding.emptyViewText.visibility = View.GONE
 
-        ordersListener = FirebaseManager.addPendingOrdersListener { orders ->
-            if (view == null) return@addPendingOrdersListener
+        // CHANGED: Called new FirebaseManager function
+        ordersListener = FirebaseManager.addWorkerOrdersListener { orders ->
+            if (view == null) return@addWorkerOrdersListener
 
             // --- STOP SHIMMER ---
             binding.shimmerViewContainer.stopShimmer()
             binding.shimmerViewContainer.visibility = View.GONE
 
-            Log.d("WorkerOrdersFragment", "Live update: Found ${orders.size} pending orders.")
+            // CHANGED: Updated log message
+            Log.d("WorkerOrdersFragment", "Live update: Found ${orders.size} pending or ready orders.")
 
             if (orders.isEmpty()) {
                 // Show empty message

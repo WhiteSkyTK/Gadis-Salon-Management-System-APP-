@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Gadis Salon</string>
+    <string name="low_stock_10_or_less">Low Stock (10 or less)</string>
+    <string name="sold_out">Sold Out</string>
 </resources>

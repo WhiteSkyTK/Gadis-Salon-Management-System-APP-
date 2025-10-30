@@ -30,14 +30,16 @@
                 <TextView
                     android:id="@+id/view_my_tickets_option"
                     style="@style/ProfileOption"
-                    android:text="View My Support Tickets"/>
+                    android:text="View My Support Tickets"
+                    app:drawableStartCompat="@drawable/ic_view"/>
 
                 <View style="@style/Divider"/>
 
                 <TextView
                     android:id="@+id/submit_new_ticket_option"
                     style="@style/ProfileOption"
-                    android:text="Submit New Ticket"/>
+                    android:text="Submit New Ticket"
+                    app:drawableStartCompat="@drawable/ic_send"/>
 
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>

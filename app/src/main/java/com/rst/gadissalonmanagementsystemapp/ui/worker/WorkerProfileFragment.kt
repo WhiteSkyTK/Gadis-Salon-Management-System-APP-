@@ -57,6 +57,9 @@ class WorkerProfileFragment : Fragment() {
     }
 
     private fun setupClickListeners() {
+        binding.timeOffOption.setOnClickListener {
+            findNavController().navigate(R.id.action_workerProfile_to_workerTimeOffFragment)
+        }
         binding.editProfileButtonWorker.setOnClickListener {
             findNavController().navigate(R.id.action_workerProfile_to_workerEditProfile)
         }

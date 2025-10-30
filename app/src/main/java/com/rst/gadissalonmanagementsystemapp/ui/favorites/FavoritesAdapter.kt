@@ -8,8 +8,8 @@ import androidx.navigation.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import com.rst.gadissalonmanagementsystemapp.Favoritable
+import com.rst.gadissalonmanagementsystemapp.FavoriteItem
 import com.rst.gadissalonmanagementsystemapp.Hairstyle
-import com.rst.gadissalonmanagementsystemapp.Product
 import com.rst.gadissalonmanagementsystemapp.R
 import com.rst.gadissalonmanagementsystemapp.databinding.ItemFavoriteBinding
 import java.text.NumberFormat
@@ -18,33 +18,32 @@ import java.util.Locale
 class FavoritesAdapter(
     private var items: List<Favoritable>,
     private val onUnfavoriteClick: (Favoritable) -> Unit,
-    private val onAddToCartClick: (Product) -> Unit,
+    private val onAddToCartClick: (FavoriteItem) -> Unit, // --- MODIFIED: Pass FavoriteItem ---
     private val onBookClick: (Hairstyle) -> Unit
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private val TAG = "FavoritesAdapter"
 
     companion object {
-        private const val VIEW_TYPE_PRODUCT = 1
+        private const val VIEW_TYPE_FAVORITE_ITEM = 1
         private const val VIEW_TYPE_HAIRSTYLE = 2
     }
 
     // --- ViewHolder for Products ---
-    inner class ProductViewHolder(private val binding: ItemFavoriteBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(item: Product) {
-            Log.d(TAG, "Binding Product: ${item.name}")
-            Log.d(TAG, "Product Variants: ${item.variants}")
+    inner class FavoriteItemViewHolder(private val binding: ItemFavoriteBinding) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(item: FavoriteItem) {
+            Log.d(TAG, "Binding FavoriteItem: ${item.name}")
             binding.itemImage.load(item.imageUrl) {
                 placeholder(R.drawable.ic_placeholder_image)
             }
             binding.itemName.text = item.name
-            val price = item.variants.firstOrNull()?.price ?: 0.0
-            Log.d(TAG, "Extracted price for ${item.name}: R$price") // See the exact price
-            val format = NumberFormat.getCurrencyInstance(Locale("en", "ZA"))
-            binding.itemPrice.text = format.format(price)
 
+            val format = NumberFormat.getCurrencyInstance(Locale("en", "ZA"))
+            // --- MODIFIED: Get price & size from favoritedVariant ---
+            binding.itemPrice.text = format.format(item.favoritedVariant.price)
             binding.itemSize.visibility = View.VISIBLE
-            binding.itemSize.text = item.variants.firstOrNull()?.size
+            binding.itemSize.text = item.favoritedVariant.size
+            // --- END MODIFICATION ---
 
             binding.addToCartButton.visibility = View.VISIBLE
             binding.bookNowButton.visibility = View.GONE
@@ -80,7 +79,7 @@ class FavoritesAdapter(
 
     override fun getItemViewType(position: Int): Int {
         return when (items[position]) {
-            is Product -> VIEW_TYPE_PRODUCT
+            is FavoriteItem -> VIEW_TYPE_FAVORITE_ITEM
             is Hairstyle -> VIEW_TYPE_HAIRSTYLE
             else -> throw IllegalArgumentException("Invalid type of data at position $position")
         }
@@ -89,7 +88,7 @@ class FavoritesAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val binding = ItemFavoriteBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return when (viewType) {
-            VIEW_TYPE_PRODUCT -> ProductViewHolder(binding)
+            VIEW_TYPE_FAVORITE_ITEM -> FavoriteItemViewHolder(binding)
             VIEW_TYPE_HAIRSTYLE -> HairstyleViewHolder(binding)
             else -> throw IllegalArgumentException("Invalid view type")
         }
@@ -97,7 +96,7 @@ class FavoritesAdapter(
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (holder) {
-            is ProductViewHolder -> holder.bind(items[position] as Product)
+            is FavoriteItemViewHolder -> holder.bind(items[position] as FavoriteItem)
             is HairstyleViewHolder -> holder.bind(items[position] as Hairstyle)
         }
     }

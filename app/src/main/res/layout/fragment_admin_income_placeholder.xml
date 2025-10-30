@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <View
+        android:layout_width="200dp"
+        android:layout_height="28dp"
+        android:background="@color/placeholder_bg" />
+
+    <View
+        android:layout_width="250dp"
+        android:layout_height="20dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp"
+        android:background="@color/placeholder_bg" />
+
+    <GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnCount="2"
+        android:useDefaultMargins="true">
+
+        <!-- Placeholder Card 1 -->
+        <include layout="@layout/placeholder_metric_card" />
+
+        <!-- Placeholder Card 2 -->
+        <include layout="@layout/placeholder_metric_card" />
+
+        <!-- Placeholder Card 3 -->
+        <include layout="@layout/placeholder_metric_card" />
+
+        <!-- Placeholder Card 4 -->
+        <include layout="@layout/placeholder_metric_card" />
+
+    </GridLayout>
+
+</LinearLayout>

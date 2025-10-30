@@ -95,27 +95,32 @@
                 <TextView
                     android:id="@+id/contact_support_option"
                     style="@style/ProfileOption"
-                    android:text="View Support Messages"/>
+                    android:text="View Support Messages"
+                    app:drawableStartCompat="@drawable/ic_send"/>
                 <View style="@style/Divider"/>
                 <TextView
                     android:id="@+id/settings_option"
                     style="@style/ProfileOption"
-                    android:text="Settings"/>
+                    android:text="Settings"
+                    app:drawableStartCompat="@drawable/ic_settings"/>
                 <View style="@style/Divider"/>
                 <TextView
                     android:id="@+id/location_option"
                     style="@style/ProfileOption"
-                    android:text="Manage Salon Location"/>
+                    android:text="Manage Salon Location"
+                    app:drawableStartCompat="@drawable/ic_location"/>
                 <View style="@style/Divider"/>
                 <TextView
                     android:id="@+id/manage_faq_option"
                     style="@style/ProfileOption"
-                    android:text="Manage FAQs"/>
+                    android:text="Manage FAQs"
+                    app:drawableStartCompat="@drawable/ic_faq"/>
                 <View style="@style/Divider"/>
                 <TextView
                     android:id="@+id/about_us_option"
                     style="@style/ProfileOption"
-                    android:text="Edit 'About Us' Page"/>
+                    android:text="Edit 'About Us' Page"
+                    app:drawableStartCompat="@drawable/ic_info"/>
 
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>

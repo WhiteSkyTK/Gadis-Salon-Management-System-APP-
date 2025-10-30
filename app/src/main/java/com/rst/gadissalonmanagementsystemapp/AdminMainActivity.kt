@@ -14,9 +14,9 @@ import com.google.firebase.auth.auth
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.firestore
 import com.rst.gadissalonmanagementsystemapp.databinding.ActivityAdminMainBinding
+import com.rst.gadissalonmanagementsystemapp.util.NetworkUtils
 
 class AdminMainActivity : AppCompatActivity() {
-
     private lateinit var binding: ActivityAdminMainBinding
     private lateinit var navController: NavController
     private var notificationListener: ListenerRegistration? = null
@@ -51,6 +51,7 @@ class AdminMainActivity : AppCompatActivity() {
         setupNavigationListener()
         observeSupportMessagesForBadge()
     }
+
 
     private fun logIdTokenClaims() {
         Firebase.auth.currentUser?.getIdToken(true) // Force refresh
@@ -99,7 +100,47 @@ class AdminMainActivity : AppCompatActivity() {
 
         // Listen for screen changes
         navController.addOnDestinationChangedListener { _, destination, _ ->
+
+            // --- MODIFIED: Set title based on destination ID ---
+            val title = when (destination.id) {
+                // Main BTM NAV screens
+                R.id.nav_admin_dashboard -> "Admin Panel"
+                R.id.nav_admin_products -> "Products & Services"
+                R.id.nav_admin_users -> "User Management"
+                R.id.nav_admin_bookings -> "Bookings & Orders"
+                R.id.nav_admin_profile -> "My Profile"
+
+                // Sub-screens (that hide the BTM NAV)
+                R.id.nav_admin_income -> "Income Report"
+                R.id.nav_admin_timeoff -> "Time Off Management"
+                R.id.adminTimeOffDialog -> "Time Off Request" // (Assuming you added this ID to nav graph)
+                R.id.adminEditHairstyleFragment -> "Edit Hairstyle"
+                R.id.adminEditProductFragment -> "Edit Product"
+                R.id.adminEditProfileFragment -> "Edit Profile"
+                R.id.adminAddProductFragment -> "Add Product"
+                R.id.adminAddHairstyleFragment -> "Add Hairstyle"
+                R.id.adminAddUserFragment -> "Add User"
+                R.id.adminSettingsFragment -> "Settings"
+                R.id.adminLocationFragment -> "Manage Location"
+                R.id.adminAboutUsFragment -> "Edit About Us"
+                R.id.adminTicketDetailFragment -> "Support Ticket"
+                R.id.adminComposeMessageFragment -> "Compose Message"
+                R.id.adminEditUserFragment -> "Edit User"
+                R.id.adminFaqFragment -> "Manage FAQs"
+                R.id.adminBookingDetailFragment -> "Booking Details"
+                R.id.adminOrderDetailFragment -> "Order Details"
+                R.id.adminSupportFragment -> "Support"
+
+                // Default fallback
+                else -> "Admin Panel"
+            }
+            updateTitle(title) // Call your updateTitle function
+
+
             when (destination.id) {
+                R.id.nav_admin_income,
+                R.id.nav_admin_timeoff,
+                R.id.adminTimeOffDialog, // (Assuming you added this ID)
                 R.id.adminEditHairstyleFragment,
                 R.id.adminEditProductFragment,
                 R.id.adminEditProfileFragment,
@@ -125,5 +166,14 @@ class AdminMainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    // --- NEW: Public functions to be called by fragments ---
+    fun showBackButton(show: Boolean) {
+        binding.backButtonAdmin.visibility = if (show) View.VISIBLE else View.GONE
+    }
+
+    fun updateTitle(title: String) {
+        binding.titleAdmin.text = title
     }
 }

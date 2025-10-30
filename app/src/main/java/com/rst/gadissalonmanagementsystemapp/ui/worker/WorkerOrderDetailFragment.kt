@@ -29,12 +29,18 @@ class WorkerOrderDetailFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         val order = args.order
 
-        binding.orderIdDetail.text = "Order #${order.id.take(8)}"
+        binding.orderIdDetail.text = "Order #${order.id.takeLast(6)}"
         binding.customerNameDetail.text = "For: ${order.customerName}"
         binding.orderStatusDetail.text = "Status: ${order.status}"
 
         binding.orderItemsRecyclerView.layoutManager = LinearLayoutManager(context)
         binding.orderItemsRecyclerView.adapter = OrderDetailAdapter(order.items)
+
+        if (order.status == "Ready for Pickup") {
+            binding.completeOrderButton.visibility = View.VISIBLE
+        } else {
+            binding.completeOrderButton.visibility = View.GONE
+        }
 
         binding.completeOrderButton.setOnClickListener {
             viewLifecycleOwner.lifecycleScope.launch {

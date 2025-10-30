@@ -110,7 +110,26 @@
         <action
             android:id="@+id/action_workerProfile_to_workerEditProfile"
             app:destination="@id/workerEditProfileFragment" />
+        <action
+            android:id="@+id/action_workerProfile_to_workerTimeOffFragment"
+            app:destination="@id/workerTimeOffFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/workerTimeOffFragment"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.worker.WorkerTimeOffFragment"
+        android:label="My Time Off"
+        tools:layout="@layout/fragment_worker_time_off">
+        <action
+            android:id="@+id/action_workerTimeOffFragment_to_workerTimeOffDialog"
+            app:destination="@id/workerTimeOffDialog" />
+    </fragment>
+
+    <dialog
+        android:id="@+id/workerTimeOffDialog"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.worker.WorkerTimeOffDialog"
+        android:label="Request Time Off"
+        tools:layout="@layout/dialog_worker_time_off" />
 
     <!-- Worker Profile Sub-Pages -->
     <fragment

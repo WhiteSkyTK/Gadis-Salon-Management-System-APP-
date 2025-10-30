@@ -38,6 +38,17 @@ class WorkerOrdersAdapter(
                 }
             }
 
+            if (order.status == "Pending Pickup") {
+                binding.markReadyButton.visibility = View.VISIBLE
+                binding.markReadyButton.text = "Mark as Ready"
+            } else if (order.status == "Ready for Pickup") {
+                // Show a different state or hide it. Let's show a "Ready" text.
+                // Or simply hide the button. Let's hide it as requested.
+                binding.markReadyButton.visibility = View.GONE
+            } else {
+                binding.markReadyButton.visibility = View.GONE
+            }
+
             // Set the click listener for the button
             binding.markReadyButton.setOnClickListener {
                 onMarkAsReady(order)

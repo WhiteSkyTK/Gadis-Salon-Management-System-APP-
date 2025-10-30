@@ -21,9 +21,9 @@ class CustomerOrdersAdapter(
 
     inner class ViewHolder(private val binding: ItemCustomerOrderBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(order: ProductOrder) {
-            binding.orderIdText.text = "Order #${order.id.take(8)}"
+            binding.orderIdText.text = "Order #${order.id.takeLast(6)}"
             val sdf = SimpleDateFormat("dd MMM, yyyy", Locale.getDefault())
-            binding.orderDateText.text = "Placed on: ${sdf.format(Date(order.timestamp))}"
+            binding.orderDateText.text = "Placed on: ${order.timestamp?.let { sdf.format(it) } ?: "Date not available"}"
             binding.totalPriceText.text = "Total: ${NumberFormat.getCurrencyInstance(Locale("en", "ZA")).format(order.totalPrice)}"
             binding.statusChip.text = order.status
 

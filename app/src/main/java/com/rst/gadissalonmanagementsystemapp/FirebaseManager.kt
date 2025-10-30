@@ -157,7 +157,27 @@ object FirebaseManager {
     // Creates a new booking document in the 'bookings' collection
     suspend fun createBooking(booking: AdminBooking): Result<Unit> {
         return try {
-            firestore.collection("bookings").add(booking).await()
+            // --- THIS IS THE FIX ---
+            // We convert the data class to a Map so we can add the server timestamp
+            val dataToSave = mapOf(
+                "hairstyleId" to booking.hairstyleId,
+                "customerId" to booking.customerId,
+                "stylistId" to booking.stylistId,
+                "serviceName" to booking.serviceName,
+                "customerName" to booking.customerName,
+                "stylistName" to booking.stylistName,
+                "date" to booking.date,
+                "time" to booking.time,
+                "status" to booking.status,
+                "workerUnreadCount" to 0,
+                "cancellationReason" to "",
+                "declineReason" to "",
+                "declinedBy" to emptyList<String>(),
+                "timestamp" to System.currentTimeMillis() // <-- The critical part
+            )
+            // Save the Map, not the object
+            firestore.collection("bookings").add(dataToSave).await()
+            // --- END FIX ---
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -177,6 +197,8 @@ object FirebaseManager {
     }
 
     // --- FAVORITES FUNCTIONS ---
+    // in FirebaseManager.kt
+
     fun addCurrentUserFavoritesListener(onUpdate: (List<Favoritable>) -> Unit): ListenerRegistration? {
         val uid = auth.currentUser?.uid ?: return null
 
@@ -189,26 +211,65 @@ object FirebaseManager {
                 }
 
                 val favoritesList = snapshots?.documents?.mapNotNull { doc ->
-                    when {
-                        // If the document ID starts with "hs_", it's a Hairstyle.
-                        doc.id.startsWith("hs_") -> {
-                            doc.toObject(Hairstyle::class.java)?.also { it.id = doc.id }
+
+                    // --- 1. Handles NEW format ---
+                    // (This is the one your app *tries* to write)
+                    if (doc.contains("isVariantFavorite") && doc.getBoolean("isVariantFavorite") == true) {
+                        Log.d("FavoritesListener", "Found new format favorite: ${doc.id}")
+                        doc.toObject(FavoriteItem::class.java)?.copy(id = doc.id)
+
+                        // --- 2. Handles Hairstyles ---
+                    } else if (doc.contains("durationHours")) {
+                        Log.d("FavoritesListener", "Found hairstyle favorite: ${doc.id}")
+                        doc.toObject(Hairstyle::class.java)?.copy(id = doc.id)
+
+                        // --- 3. NEW: Handles OLD format ---
+                        // (This is the one it was ignoring)
+                    } else if (doc.contains("variantFavorite") && doc.getBoolean("variantFavorite") == true) {
+                        Log.d("FavoritesListener", "Found and parsing OLD format favorite: ${doc.id}")
+                        try {
+                            // Manually build the FavoriteItem from the old format
+                            val name = doc.getString("name") ?: ""
+                            val imageUrl = doc.getString("imageUrl") ?: ""
+                            val originalId = doc.getString("originalId") ?: ""
+                            val id = doc.id // Use the document ID
+
+                            // Get the nested variant map
+                            val variantMap = doc.get("favoritedVariant") as? Map<String, Any>
+                            val variant = if (variantMap != null) {
+                                ProductVariant(
+                                    size = variantMap["size"] as? String ?: "",
+                                    price = (variantMap["price"] as? Number)?.toDouble() ?: 0.0,
+                                    priceOld = (variantMap["priceOld"] as? Number)?.toDouble(), // Can be null
+                                    stock = (variantMap["stock"] as? Number)?.toInt() ?: 0
+                                )
+                            } else {
+                                ProductVariant() // Empty placeholder
+                            }
+
+                            // Create the FavoriteItem object your adapter expects
+                            FavoriteItem(
+                                id = id,
+                                name = name,
+                                type = "PRODUCT",
+                                originalId = originalId,
+                                imageUrl = imageUrl,
+                                isVariantFavorite = true, // Set to true so the object is valid
+                                favoritedVariant = variant
+                            )
+                        } catch (e: Exception) {
+                            Log.e("FavoritesListener", "Failed to parse old favorite format ${doc.id}", e)
+                            null // If parsing fails, ignore it
                         }
-                        // If the document ID starts with "prod_", it's a Product.
-                        doc.id.startsWith("prod_") -> {
-                            doc.toObject(Product::class.java)?.also { it.id = doc.id }
-                        }
-                        // Otherwise, we ignore it.
-                        else -> null
+
+                        // --- 4. Ignores everything else ---
+                    } else {
+                        Log.w(TAG, "Ignoring unknown favorite format. Data: ${doc.data.toString()}")
+                        null
                     }
                 } ?: emptyList()
 
-                Log.d("FavoritesListener", "Listener triggered. Found ${favoritesList.size} favorite items.")
-                if (favoritesList.isNotEmpty()) {
-                    val firstItem = favoritesList[0]
-                    Log.d("FavoritesListener", "First item identified as a ${firstItem.javaClass.simpleName} with name: ${firstItem.name}")
-                }
-
+                Log.d("FavoritesListener", "Listener triggered. Found ${favoritesList.size} valid favorite items.")
                 onUpdate(favoritesList)
             }
     }
@@ -222,8 +283,6 @@ object FirebaseManager {
             onUpdate(emptyList())
             return null
         }
-
-
 
         // We now correctly return the ListenerRegistration object.
         return firestore.collection("bookings")
@@ -265,13 +324,15 @@ object FirebaseManager {
                 if (snapshot != null && snapshot.exists()) {
                     val cartData = snapshot.get("cart") as? List<Map<String, Any>>
                     val cartItems = cartData?.mapNotNull {
+                        // We use the 'stock' saved in the cart doc
                         CartItem(
                             productId = it["productId"] as? String ?: "",
                             name = it["name"] as? String ?: "",
                             size = it["size"] as? String ?: "",
                             price = (it["price"] as? Number)?.toDouble() ?: 0.0,
                             quantity = (it["quantity"] as? Number)?.toInt() ?: 0,
-                            imageUrl = it["imageUrl"] as? String ?: ""
+                            imageUrl = it["imageUrl"] as? String ?: "",
+                            stock = (it["stock"] as? Number)?.toInt() ?: 0 // --- GET STOCK ---
                         )
                     } ?: emptyList()
                     onUpdate(cartItems)
@@ -286,7 +347,20 @@ object FirebaseManager {
         val uid = auth.currentUser?.uid ?: return Result.failure(Exception("Not logged in"))
         return try {
             val userDocRef = usersCollection.document(uid)
+            val productDocRef = firestore.collection("products").document(cartItem.productId)
+
             firestore.runTransaction { transaction ->
+                // 1. Get the product to check stock (outside transaction is fine, but good here)
+                val productSnapshot = transaction.get(productDocRef)
+                val product = productSnapshot.toObject(Product::class.java)
+                val variant = product?.variants?.find { it.size == cartItem.size }
+                val currentStock = variant?.stock ?: 0
+
+                if (currentStock <= 0) {
+                    throw Exception("This item is sold out.")
+                }
+
+                // 2. Get the user's cart
                 val snapshot = transaction.get(userDocRef)
                 val existingCartData = snapshot.get("cart") as? List<HashMap<String, Any>> ?: emptyList()
                 val existingCart = existingCartData.map {
@@ -296,7 +370,8 @@ object FirebaseManager {
                         size = it["size"] as String,
                         price = (it["price"] as Number).toDouble(),
                         quantity = (it["quantity"] as Number).toInt(),
-                        imageUrl = it["imageUrl"] as String
+                        imageUrl = it["imageUrl"] as String,
+                        stock = (it["stock"] as? Number)?.toInt() ?: 0 // Get existing stock
                     )
                 }.toMutableList()
 
@@ -305,10 +380,15 @@ object FirebaseManager {
                 if (itemIndex != -1) {
                     // Item exists, update quantity
                     val existingItem = existingCart[itemIndex]
-                    existingCart[itemIndex] = existingItem.copy(quantity = existingItem.quantity + cartItem.quantity)
+                    val newQuantity = existingItem.quantity + cartItem.quantity
+                    if (newQuantity > currentStock) {
+                        throw Exception("Stock limit of $currentStock reached.")
+                    }
+                    // Update item with new quantity AND latest stock
+                    existingCart[itemIndex] = existingItem.copy(quantity = newQuantity, stock = currentStock)
                 } else {
-                    // Item does not exist, add it
-                    existingCart.add(cartItem)
+                    // Item does not exist, add it (with stock info)
+                    existingCart.add(cartItem.copy(stock = currentStock))
                 }
                 transaction.update(userDocRef, "cart", existingCart)
             }.await()
@@ -318,78 +398,40 @@ object FirebaseManager {
         }
     }
 
-    // Updates an item's quantity in the cart array, checking stock.
-    suspend fun updateCartItemQuantity(productId: String, size: String, newQuantity: Int): Result<Unit> {
+    suspend fun saveCart(cartItems: List<CartItem>): Result<Unit> {
         val uid = auth.currentUser?.uid ?: return Result.failure(Exception("Not logged in"))
         return try {
             val userDocRef = usersCollection.document(uid)
-            val productDocRef = firestore.collection("products").document(productId)
-
-            firestore.runTransaction { transaction ->
-                val userSnapshot = transaction.get(userDocRef)
-                val existingCartData = userSnapshot.get("cart") as? List<HashMap<String, Any>> ?: emptyList()
-                val existingCart = existingCartData.map {
-                    CartItem(
-                        productId = it["productId"] as String,
-                        name = it["name"] as String,
-                        size = it["size"] as String,
-                        price = (it["price"] as Number).toDouble(),
-                        quantity = (it["quantity"] as Number).toInt(),
-                        imageUrl = it["imageUrl"] as String
-                    )
-                }.toMutableList()
-
-                val itemIndex = existingCart.indexOfFirst { it.productId == productId && it.size == size }
-
-                if (itemIndex != -1) {
-                    if (newQuantity <= 0) {
-                        existingCart.removeAt(itemIndex)
-                    } else {
-                        val productSnapshot = transaction.get(productDocRef)
-                        val product = productSnapshot.toObject(Product::class.java)
-                        val variant = product?.variants?.find { it.size == size }
-                        val currentStock = variant?.stock ?: 0
-
-                        if (newQuantity <= currentStock) {
-                            existingCart[itemIndex] = existingCart[itemIndex].copy(quantity = newQuantity)
-                        } else {
-                            throw Exception("Stock limit of $currentStock reached.")
-                        }
-                    }
-                    transaction.update(userDocRef, "cart", existingCart)
-                }
-            }.await()
+            // Simply overwrite the "cart" field with the new local cart
+            userDocRef.update("cart", cartItems).await()
             Result.success(Unit)
         } catch (e: Exception) {
+            Log.e(TAG, "Error saving cart", e)
             Result.failure(e)
         }
-    }
-
-    // Removes an item from the cart array
-    suspend fun removeCartItem(productId: String, size: String): Result<Unit> {
-        val uid = auth.currentUser?.uid ?: return Result.failure(Exception("Not logged in"))
-        return try {
-            val userDocRef = usersCollection.document(uid)
-            firestore.runTransaction { transaction ->
-                val snapshot = transaction.get(userDocRef)
-                val existingCartData = snapshot.get("cart") as? List<HashMap<String, Any>> ?: emptyList()
-                val updatedCart = existingCartData.filterNot {
-                    it["productId"] == productId && it["size"] == size
-                }
-                transaction.update(userDocRef, "cart", updatedCart)
-            }.await()
-            Result.success(Unit)
-        } catch (e: Exception) { Result.failure(e) }
     }
 
     // Creates a final order and clears the cart
     suspend fun createProductOrder(order: ProductOrder): Result<Unit> {
         val uid = auth.currentUser?.uid ?: return Result.failure(Exception("Not logged in"))
         return try {
+
+            // Convert to a Map to save the correct timestamp
+            val dataToSave = mapOf(
+                "id" to order.id,
+                "customerId" to order.customerId,
+                "customerName" to order.customerName,
+                "items" to order.items,
+                "totalPrice" to order.totalPrice,
+                "status" to order.status,
+                "timestamp" to FieldValue.serverTimestamp() // <-- The critical part
+                // paymentTimestamp will be null by default
+            )
+
             firestore.runBatch { batch ->
                 // 1. Save the order to a master 'product_orders' collection
                 val orderRef = firestore.collection("product_orders").document(order.id)
-                batch.set(orderRef, order)
+                batch.set(orderRef, dataToSave) // Save the Map
 
                 // 2. Clear the user's cart array
                 val userRef = usersCollection.document(uid)
@@ -743,20 +785,6 @@ object FirebaseManager {
         }
     }
 
-    suspend fun toggleFavorite(product: Product): Result<Boolean> {
-        val userId = auth.currentUser?.uid ?: return Result.failure(Exception("User not logged in"))
-        return try {
-            val favoriteDoc = usersCollection.document(userId).collection("favorites").document(product.id)
-            val document = favoriteDoc.get().await()
-            if (document.exists()) {
-                favoriteDoc.delete().await()
-                Result.success(false)
-            } else {
-                favoriteDoc.set(product).await()
-                Result.success(true)
-            }
-        } catch (e: Exception) { Result.failure(e) }
-    }
 
     fun addFaqListener(onUpdate: (List<FaqItem>) -> Unit) {
         firestore.collection("faqs")
@@ -789,6 +817,48 @@ object FirebaseManager {
         }
     }
 
+    // --- NEW: Toggle favorite for a specific PRODUCT VARIANT ---
+    suspend fun toggleFavoriteVariant(product: Product, variant: ProductVariant): Result<Boolean> {
+        Log.d("FAVORITE_TEST", "--- EXECUTING NEW toggleFavoriteVariant ---")
+        val userId = auth.currentUser?.uid ?: return Result.failure(Exception("User not logged in"))
+        return try {
+            // Create a unique ID for the favorite based on product and size
+            val favoriteId = "${product.id}_${variant.size}"
+            val favoriteDocRef = usersCollection.document(userId).collection("favorites").document(favoriteId)
+
+            val document = favoriteDocRef.get().await()
+            if (document.exists()) {
+                // It's already a favorite, so remove it
+                favoriteDocRef.delete().await()
+                Result.success(false)
+            } else {
+                // It's not a favorite, so add it
+                // Create the new FavoriteItem object that matches the website's format
+                val newFavorite = FavoriteItem(
+                    id = favoriteId,
+                    originalId = product.id,
+                    name = product.name,
+                    imageUrl = product.imageUrl,
+                    isVariantFavorite = true,
+                    type = "PRODUCT",
+                    favoritedVariant = variant
+                )
+                favoriteDocRef.set(newFavorite).await()
+                Result.success(true)
+            }
+        } catch (e: Exception) { Result.failure(e) }
+    }
+
+    // --- NEW: Function to remove a favorite by its unique ID ---
+    suspend fun unfavoriteItem(favoriteId: String): Result<Unit> {
+        val userId = auth.currentUser?.uid ?: return Result.failure(Exception("User not logged in"))
+        return try {
+            val favoriteDocRef = usersCollection.document(userId).collection("favorites").document(favoriteId)
+            favoriteDocRef.delete().await()
+            Result.success(Unit)
+        } catch (e: Exception) { Result.failure(e) }
+    }
+
     // Checks if a product is in the user's favorites
     suspend fun isFavorite(productId: String): Result<Boolean> {
         val userId = auth.currentUser?.uid ?: return Result.failure(Exception("User not logged in"))
@@ -801,15 +871,21 @@ object FirebaseManager {
     }
 
     suspend fun toggleFavorite(hairstyle: Hairstyle): Result<Boolean> {
+        return toggleFavorite(hairstyle as Favoritable)
+    }
+
+    // Private helper for Hairstyles (and old Product logic)
+    private suspend fun toggleFavorite(item: Favoritable): Result<Boolean> {
+        Log.d("FAVORITE_TEST", "!!! EXECUTING OLD toggleFavorite(Product) !!!")
         val userId = auth.currentUser?.uid ?: return Result.failure(Exception("User not logged in"))
         return try {
-            val favoriteDoc = usersCollection.document(userId).collection("favorites").document(hairstyle.id)
+            val favoriteDoc = usersCollection.document(userId).collection("favorites").document(item.id)
             val document = favoriteDoc.get().await()
             if (document.exists()) {
                 favoriteDoc.delete().await()
                 Result.success(false)
             } else {
-                favoriteDoc.set(hairstyle).await()
+                favoriteDoc.set(item).await()
                 Result.success(true)
             }
         } catch (e: Exception) { Result.failure(e) }
@@ -1059,12 +1135,16 @@ object FirebaseManager {
 
     suspend fun acceptBooking(bookingId: String, stylist: User): Result<Unit> {
         return try {
+            // --- THIS IS THE FIX ---
+            // We convert to a Map to save the correct timestamp
             val updates = mapOf(
                 "status" to "Confirmed",
                 "stylistId" to stylist.id,
-                "stylistName" to stylist.name
+                "stylistName" to stylist.name,
+                "timestamp" to System.currentTimeMillis() // <-- Add this line
             )
             firestore.collection("bookings").document(bookingId).update(updates).await()
+            // --- END FIX ---
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -1082,25 +1162,29 @@ object FirebaseManager {
     }
 
     /**
-     * Listens for the COUNT of pending product orders.
+     * RENAMED and UPDATED
+     * Listens for orders that are "Pending Pickup" OR "Ready for Pickup"
      */
-    fun addPendingOrdersListener(onUpdate: (List<ProductOrder>) -> Unit): ListenerRegistration? {
+    fun addWorkerOrdersListener(onUpdate: (List<ProductOrder>) -> Unit): ListenerRegistration? {
         if (auth.currentUser == null) {
             onUpdate(emptyList())
             return null
         }
 
-        // --- THIS IS THE FIX ---
-        // We now correctly return the ListenerRegistration object.
         return firestore.collection("product_orders")
-            .whereEqualTo("status", "Pending Pickup")
+            // CHANGED: Use whereIn to get both statuses
+            .whereIn("status", listOf("Pending Pickup", "Ready for Pickup"))
             .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
             .addSnapshotListener { snapshots, error ->
                 if (error != null) {
-                    Log.w("FirebaseManager", "Pending orders listener failed.", error)
+                    Log.w("FirebaseManager", "Worker orders listener failed.", error)
                     return@addSnapshotListener
                 }
-                val orderList = snapshots?.toObjects(ProductOrder::class.java) ?: emptyList()
+                val orderList = snapshots?.map { doc ->
+                    val order = doc.toObject(ProductOrder::class.java)
+                    order.id = doc.id // Manually set the correct document ID
+                    order
+                } ?: emptyList()
                 onUpdate(orderList)
             }
     }
@@ -1274,7 +1358,11 @@ object FirebaseManager {
             .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
             .addSnapshotListener { snapshots, error ->
                 if (error != null) { return@addSnapshotListener }
-                val orderList = snapshots?.toObjects(ProductOrder::class.java) ?: emptyList()
+                val orderList = snapshots?.map { doc ->
+                    val order = doc.toObject(ProductOrder::class.java)
+                    order.id = doc.id // Manually set the correct document ID
+                    order
+                } ?: emptyList()
                 onUpdate(orderList)
             }
     }
@@ -1439,7 +1527,11 @@ object FirebaseManager {
 
                 // Map the Firestore documents to our ProductOrder data class.
                 // We don't need to manually set the ID here since we create it in the app.
-                val orderList = snapshots?.toObjects(ProductOrder::class.java) ?: emptyList()
+                val orderList = snapshots?.map { doc ->
+                    val order = doc.toObject(ProductOrder::class.java)
+                    order.id = doc.id // Manually set the correct document ID
+                    order
+                } ?: emptyList()
 
                 // Send the updated list back to the fragment
                 onUpdate(orderList)

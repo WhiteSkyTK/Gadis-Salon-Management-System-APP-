@@ -53,7 +53,7 @@ class OrderDetailFragment : Fragment() {
 
         val order = args.order
 
-        binding.orderIdDetail.text = "Order #${order.id.take(8)}"
+        binding.orderIdDetail.text = "Order #${order.id.takeLast(6)}"
         binding.orderStatusDetail.text = "Status: ${order.status}"
 
         binding.orderItemsRecyclerView.layoutManager = LinearLayoutManager(context)

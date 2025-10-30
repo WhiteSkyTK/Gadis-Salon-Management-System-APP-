@@ -19,7 +19,45 @@
             android:id="@+id/action_adminDashboardFragment_to_adminAddUserFragment"
             app:destination="@id/adminAddUserFragment" />
 
+        <action
+            android:id="@+id/action_adminDashboardFragment_to_nav_admin_income"
+            app:destination="@id/nav_admin_income" />
+        <action
+            android:id="@+id/action_adminDashboardFragment_to_nav_admin_timeoff"
+            app:destination="@id/nav_admin_timeoff" />
+
     </fragment>
+
+    <!--  NEW: Income Fragment -->
+    <fragment
+        android:id="@+id/nav_admin_income"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.admin.AdminIncomeFragment"
+        android:label="Income Report"
+        tools:layout="@layout/fragment_admin_income" />
+
+    <!-- NEW: Time Off Fragment-->
+    <fragment
+        android:id="@+id/nav_admin_timeoff"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.admin.AdminTimeOffFragment"
+        android:label="Time Off Management"
+        tools:layout="@layout/fragment_admin_time_off" >
+        <action
+            android:id="@+id/action_adminTimeOffFragment_to_adminTimeOffDialog"
+            app:destination="@id/adminTimeOffDialog" />
+    </fragment>
+
+    <!-- NEW: Time Off Add/Edit Dialog  -->
+    <dialog
+        android:id="@+id/adminTimeOffDialog"
+        android:name="com.rst.gadissalonmanagementsystemapp.ui.admin.AdminTimeOffDialog"
+        android:label="AdminTimeOffDialog"
+        tools:layout="@layout/dialog_admin_time_off" >
+        <argument
+            android:name="timeOffRequest"
+            app:argType="com.rst.gadissalonmanagementsystemapp.TimeOffRequest"
+            app:nullable="true"
+            android:defaultValue="@null" />
+    </dialog>
 
     <fragment
         android:id="@+id/nav_admin_products"

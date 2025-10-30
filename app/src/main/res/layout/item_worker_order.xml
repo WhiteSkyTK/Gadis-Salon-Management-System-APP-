@@ -22,6 +22,8 @@
             android:textSize="18sp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/mark_ready_button"
+            android:layout_marginEnd="8dp"
             tools:text="Order for: Sagwadi M." />
 
         <TextView

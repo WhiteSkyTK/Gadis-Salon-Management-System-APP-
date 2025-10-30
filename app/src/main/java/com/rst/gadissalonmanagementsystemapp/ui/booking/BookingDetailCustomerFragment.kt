@@ -53,15 +53,21 @@ class BookingDetailCustomerFragment : Fragment() {
         binding.stylistNameDetail.text = "With: ${booking.stylistName}"
         binding.bookingTimeDetail.text = "On: ${booking.date} at ${booking.time}"
 
+        // Combine both possible reason fields. Use declineReason if cancellationReason is blank.
+        val reason = booking.cancellationReason.ifBlank { booking.declineReason }
+
         // Check if the booking is cancelled and has a reason
         if (booking.status.equals("Cancelled", ignoreCase = true) || booking.status.equals("Declined", ignoreCase = true)) {
             // Disable the chat for cancelled bookings
             binding.inputLayout.visibility = View.GONE
 
             // Show the cancellation reason card if a reason exists
-            if (booking.cancellationReason.isNotBlank()) {
+            if (reason.isNotBlank()) {
                 binding.cancellationReasonCard.visibility = View.VISIBLE
-                binding.cancellationReasonText.text = "Reason: ${booking.cancellationReason}"
+                binding.cancellationReasonText.text = "Reason: $reason"
+            } else {
+                // Explicitly hide it if there's no reason
+                binding.cancellationReasonCard.visibility = View.GONE
             }
         } else if (!booking.status.equals("Confirmed", ignoreCase = true)) {
             // Also disable chat for any other non-confirmed status (Pending, Completed, etc.)

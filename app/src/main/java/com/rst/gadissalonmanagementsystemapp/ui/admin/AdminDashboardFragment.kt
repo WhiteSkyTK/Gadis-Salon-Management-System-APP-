@@ -24,6 +24,7 @@ class AdminDashboardFragment : Fragment() {
     private var _binding: FragmentAdminDashboardBinding? = null
     private val binding get() = _binding!!
     private val TAG = "AdminDashboard"
+    private val LOW_STOCK_THRESHOLD = 10 // Define the low stock threshold
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -98,11 +99,52 @@ class AdminDashboardFragment : Fragment() {
                 startCountUpAnimation(binding.bookingsCountText, allBookings.size)
             }
 
-            // --- Process Products ---
+            // --- MODIFIED: Process Products (Counts and Lists) ---
             if (productResult.isSuccess) {
                 val allProducts = productResult.getOrNull() ?: emptyList()
-                val totalStock = allProducts.sumOf { p -> p.variants.sumOf { v -> v.stock } }
+
+                var totalStock = 0
+                var lowStockCount = 0
+                var soldOutCount = 0
+                val lowStockList = mutableListOf<String>()
+                val soldOutList = mutableListOf<String>()
+
+                allProducts.forEach { product ->
+                    product.variants.forEach { variant ->
+                        val stock = variant.stock
+                        totalStock += stock
+                        val itemName = "${product.name} (${variant.size})"
+
+                        when {
+                            stock == 0 -> {
+                                soldOutCount++
+                                soldOutList.add("- $itemName")
+                            }
+                            stock <= LOW_STOCK_THRESHOLD -> {
+                                lowStockCount++
+                                lowStockList.add("- $itemName ($stock left)")
+                            }
+                        }
+                    }
+                }
+
+                // Update Metric Cards
                 startCountUpAnimation(binding.totalStockCountText, totalStock)
+                startCountUpAnimation(binding.lowStockCountText, lowStockCount)
+                startCountUpAnimation(binding.soldOutCountText, soldOutCount)
+
+                // Update Inventory Status Lists
+                binding.lowStockListText.text = if (lowStockList.isNotEmpty()) {
+                    lowStockList.joinToString("\n")
+                } else {
+                    "No items are low on stock."
+                }
+
+                binding.soldOutListText.text = if (soldOutList.isNotEmpty()) {
+                    soldOutList.joinToString("\n")
+                } else {
+                    "No items are sold out."
+                }
             }
         }
     }
@@ -122,6 +164,17 @@ class AdminDashboardFragment : Fragment() {
         }
         binding.addWorkerButton.setOnClickListener {
             findNavController().navigate(R.id.action_adminDashboardFragment_to_adminAddUserFragment)
+        }
+
+        // --- NEW: Shortcut Button Listeners ---
+        binding.viewIncomeButton.setOnClickListener {
+            // Navigate to the new Income fragment
+            findNavController().navigate(R.id.action_adminDashboardFragment_to_nav_admin_income)
+        }
+
+        binding.manageTimeoffButton.setOnClickListener {
+            // Navigate to the new Time Off fragment
+            findNavController().navigate(R.id.action_adminDashboardFragment_to_nav_admin_timeoff)
         }
     }
 

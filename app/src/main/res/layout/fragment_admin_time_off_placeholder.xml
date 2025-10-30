@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="8dp">
+
+    <!-- Repeat this include block for shimmer effect -->
+    <include layout="@layout/placeholder_time_off_item" />
+    <include layout="@layout/placeholder_time_off_item" />
+    <include layout="@layout/placeholder_time_off_item" />
+    <include layout="@layout/placeholder_time_off_item" />
+    <include layout="@layout/placeholder_time_off_item" />
+
+</LinearLayout>

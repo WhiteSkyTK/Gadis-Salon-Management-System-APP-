@@ -86,31 +86,42 @@
                 android:orientation="vertical"
                 android:paddingVertical="8dp">
 
-                <!-- "My Schedule" is removed as it's in the bottom nav -->
+                <TextView
+                    android:id="@+id/time_off_option"
+                    style="@style/ProfileOption"
+                    android:text="My Time Off"
+                    app:drawableStartCompat="@drawable/ic_time_off" />
+                <View style="@style/Divider"/>
+
                 <TextView
                     android:id="@+id/contact_support_option"
                     style="@style/ProfileOption"
-                    android:text="Contact Support"/>
+                    android:text="Contact Support"
+                    app:drawableStartCompat="@drawable/ic_contact_support"/>
                 <View style="@style/Divider"/>
                 <TextView
                     android:id="@+id/settings_option"
                     style="@style/ProfileOption"
-                    android:text="Settings"/>
+                    android:text="Settings"
+                    app:drawableStartCompat="@drawable/ic_settings"/>
                 <View style="@style/Divider"/>
                 <TextView
                     android:id="@+id/location_option"
                     style="@style/ProfileOption"
-                    android:text="Gadis Salon Location"/>
+                    android:text="Gadis Salon Location"
+                    app:drawableStartCompat="@drawable/ic_location"/>
                 <View style="@style/Divider"/>
                 <TextView
                     android:id="@+id/faq_option"
                     style="@style/ProfileOption"
-                    android:text="FAQ &amp; User Guide"/>
+                    android:text="FAQ &amp; User Guide"
+                    app:drawableStartCompat="@drawable/ic_faq"/>
                 <View style="@style/Divider"/>
                 <TextView
                     android:id="@+id/about_us_option"
                     style="@style/ProfileOption"
-                    android:text="About Gadis Salon"/>
+                    android:text="About Gadis Salon"
+                    app:drawableStartCompat="@drawable/ic_about"/>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 

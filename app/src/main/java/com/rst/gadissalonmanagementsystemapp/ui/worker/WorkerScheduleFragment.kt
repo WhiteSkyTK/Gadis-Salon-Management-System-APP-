@@ -1,6 +1,7 @@
 package com.rst.gadissalonmanagementsystemapp.ui.worker
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -30,6 +31,8 @@ class WorkerScheduleFragment : Fragment() {
     private lateinit var scheduleAdapter: WorkerScheduleAdapter
     private var allMyBookings = listOf<AdminBooking>()
     private var scheduleListener: ListenerRegistration? = null
+
+    private val dbDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentWorkerScheduleBinding.inflate(inflater, container, false)
@@ -65,7 +68,7 @@ class WorkerScheduleFragment : Fragment() {
         binding.toggleCalendarButton.rotation = 180f
 
         binding.calendarViewWorker.setOnDateChangedListener { widget, date, selected ->
-            val selectedDateStr = SimpleDateFormat("dd MMM, yyyy", Locale.getDefault()).format(date.date)
+            val selectedDateStr = dbDateFormat.format(date.date)
             filterScheduleForDate(selectedDateStr)
         }
     }
@@ -119,22 +122,25 @@ class WorkerScheduleFragment : Fragment() {
             highlightBookingDates(myBookings)
 
             // Re-filter for the currently selected date now that we have new data
-            val selectedDate = binding.calendarViewWorker.selectedDate?.date
-            val selectedDateStr = SimpleDateFormat("dd MMM, yyyy", Locale.getDefault()).format(selectedDate ?: Date())
+            val selectedDate = binding.calendarViewWorker.selectedDate?.date ?: Date()
+            val selectedDateStr = dbDateFormat.format(selectedDate)
             filterScheduleForDate(selectedDateStr)
         }
     }
 
     private fun highlightBookingDates(bookings: List<AdminBooking>) {
-        val dateParser = SimpleDateFormat("dd MMM, yyyy", Locale.getDefault())
+        val dateParser = dbDateFormat
         val eventDates = HashSet<CalendarDay>()
         bookings.forEach { booking ->
             try {
+                // booking.date is already in "yyyy-MM-dd" format
                 val date = dateParser.parse(booking.date)
                 if (date != null) {
                     eventDates.add(CalendarDay.from(date))
                 }
-            } catch (e: Exception) { /* Ignore parse errors */ }
+            } catch (e: Exception) {
+                Log.w("WorkerSchedule", "Failed to parse date: ${booking.date}", e)
+            }
         }
         binding.calendarViewWorker.removeDecorators()
         binding.calendarViewWorker.addDecorator(EventDayDecorator(eventDates))

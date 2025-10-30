@@ -22,4 +22,13 @@
     <color name="placeholder_bg">#DDDDDD</color>
     <color name="colorErrorContainer">#F8D7DA</color>
     <color name="colorOnErrorContainer">#721C24</color>
+    <color name="orange">#F58220</color>lightGreen
+    <color name="lightGreen">#3DE051</color>
+    <color name="darkGreen">#125E1C</color>
+    <color name="darkYellow">#B8B812</color>
+    <color name="darkRed">#721C24</color>
+    <color name="darkGrey">#2B2929</color>
+    <color name="status_red_bg">#ffbaba</color>
+    <color name="status_green_bg">#348a15</color>
+    <color name="status_green_text">#3DE051</color>
 </resources>

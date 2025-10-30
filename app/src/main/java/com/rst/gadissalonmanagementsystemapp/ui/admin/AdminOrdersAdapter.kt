@@ -21,7 +21,7 @@ class AdminOrderAdapter(
         fun bind(order: ProductOrder) {
             binding.customerNameValue.text = order.customerName
             val sdf = SimpleDateFormat("dd MMM, yyyy", Locale.getDefault())
-            binding.orderDateValue.text = order.timestamp?.let { sdf.format(Date(it)) } ?: "No date"
+            binding.orderDateValue.text = order.timestamp?.let { sdf.format(it) } ?: "No date"
 
             val format = NumberFormat.getCurrencyInstance(Locale("en", "ZA"))
             binding.totalPriceValue.text = "Total: ${format.format(order.totalPrice)}"

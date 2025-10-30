@@ -7,6 +7,7 @@ const { onSchedule } = require("firebase-functions/v2/scheduler")
 
 // Initialize Firebase Admin SDK
 admin.initializeApp();
+const db = admin.firestore(); // --- NEW: Define db globally ---
 
 // Define environment variables for email credentials.
 // You'll set these using the CLI or in the Google Cloud console.
@@ -20,6 +21,251 @@ const transporter = nodemailer.createTransport({
         user: gmailEmail.value(),
         pass: gmailPassword.value(),
     },
+});
+
+// --- Callable Function to Mark ORDER as Paid ---
+/**
+ * Marks an order as completed/paid, adds a payment timestamp,
+ * creates an income record, and increments the total income tracker.
+ */
+exports.markOrderAsPaid = onCall({ cors: true }, async (request) => {
+    console.log("markOrderAsPaid called with data:", JSON.stringify(request.data));
+    // 1. Authentication Check
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", "You must be logged in.");
+    }
+    const callingUid = request.auth.uid;
+
+    const { orderId } = request.data;
+    if (!orderId) {
+        throw new HttpsError("invalid-argument", "Missing 'orderId'.");
+    }
+
+    console.log(`Attempting to mark order ${orderId} as paid by user ${callingUid}.`);
+
+    const orderRef = db.collection("product_orders").doc(orderId);
+    const incomeRecordsRef = db.collection("income_records");
+    const totalIncomeRef = db.collection("app_content").doc("income_tracking");
+
+    let price = 0;
+    let orderDataForIncomeRecord = null;
+
+    try {
+        // --- Transaction: Update Order Status ---
+        await db.runTransaction(async (transaction) => {
+            const orderDoc = await transaction.get(orderRef);
+            if (!orderDoc.exists) { // Admin SDK uses .exists (property) - CORRECT
+                throw new HttpsError("not-found", `Order ${orderId} not found.`);
+            }
+            const orderData = orderDoc.data();
+            orderDataForIncomeRecord = orderData; // Store for later
+
+            // 2. Authorization Check (Allow Admin or Worker)
+            const userDocRef = db.collection("users").doc(callingUid);
+            const userDoc = await transaction.get(userDocRef);
+
+            // --- Access .exists as a property ---
+            const userRole = userDoc.exists ? userDoc.data().role : null; // CORRECT
+
+            if (userRole !== "ADMIN" && userRole !== "WORKER") {
+                console.error(`Authorization failed: User ${callingUid} (Role: ${userRole}) is not an ADMIN or WORKER.`);
+                throw new HttpsError("permission-denied", "Only Admins or Workers can mark orders as paid.");
+            }
+
+            // 3. Prevent re-processing
+            if (orderData.status === "Completed" && orderData.paymentTimestamp) {
+                throw new HttpsError("aborted", `Order ${orderId} was already marked as paid.`);
+            }
+
+            // 4. Get the price
+            price = orderData.totalPrice || 0;
+            console.log(`Fetched price: R${price}`);
+
+            // 5. Update Order Status & Timestamp
+            transaction.update(orderRef, {
+                status: "Completed",
+                paymentTimestamp: admin.firestore.FieldValue.serverTimestamp()
+            });
+            console.log(`Order ${orderId} status updated to Completed.`);
+        }); // --- End of Transaction ---
+
+        console.log(`Transaction successful for order ${orderId}. Price: R${price}`);
+
+        // --- Post-Transaction ---
+        // 6. Create Income Record
+        const incomeRecordData = {
+            amount: price,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            orderId: orderId,
+            serviceName: `Product Order #${orderId.slice(-6)}`, // Use a descriptive name
+            stylistId: null, // No specific stylist for a product order
+            stylistName: "Salon Sale",
+            customerId: orderDataForIncomeRecord?.customerId || null,
+            customerName: orderDataForIncomeRecord?.customerName || 'N/A',
+            type: 'order' // Indicate the source
+        };
+        await incomeRecordsRef.add(incomeRecordData);
+        console.log(`Income record created for order ${orderId}.`);
+
+        // 7. Update Total Income (Atomically)
+        const totalIncomeDoc = await totalIncomeRef.get();
+        if (!totalIncomeDoc.exists) {
+            console.log(`Total income document not found. Creating with initial value: R${price}`);
+            await totalIncomeRef.set({ totalIncome: price });
+        } else {
+            console.log(`Incrementing total income by R${price}.`);
+            await totalIncomeRef.update({
+                totalIncome: admin.firestore.FieldValue.increment(price)
+            });
+        }
+
+        console.log(`Successfully processed payment for order ${orderId}.`);
+        return { message: `Order ${orderId} marked as paid successfully.` };
+
+    } catch (error) {
+        if (error.code === 'aborted' && error.message.includes('already marked as paid')) {
+            console.log(error.message);
+            return { message: error.message };
+        }
+        console.error(`Error marking order ${orderId} as paid:`, error);
+        if (error instanceof HttpsError) throw error;
+        throw new HttpsError("internal", `An unexpected error occurred: ${error.message}`);
+    }
+});
+
+// --- Callable Function to Mark Booking as Paid ---
+/**
+ * Marks a booking as completed/paid, adds a payment timestamp,
+ * creates an income record, and increments the total income tracker.
+ */
+exports.markBookingAsPaid = onCall({ cors: true }, async (request) => {
+    console.log("markBookingAsPaid called with data:", JSON.stringify(request.data));
+    // 1. Authentication Check
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", "You must be logged in.");
+    }
+
+    const { bookingId } = request.data;
+    const callingUid = request.auth.uid;
+
+    if (!bookingId) {
+        throw new HttpsError("invalid-argument", "Missing 'bookingId'.");
+    }
+
+    console.log(`Attempting to mark booking ${bookingId} as paid by user ${callingUid}.`);
+
+    const bookingRef = db.collection("bookings").doc(bookingId);
+    const incomeRecordsRef = db.collection("income_records");
+    const totalIncomeRef = db.collection("app_content").doc("income_tracking");
+
+    let price = 0; // Variable to store price outside transaction scope
+    let bookingDataForIncomeRecord = null; // Variable to store booking data for income record
+
+    try {
+        // --- Transaction: Update Booking Status ---
+        await db.runTransaction(async (transaction) => {
+            const bookingDoc = await transaction.get(bookingRef);
+            if (!bookingDoc.exists) {
+                throw new HttpsError("not-found", `Booking ${bookingId} not found.`);
+            }
+            const bookingData = bookingDoc.data();
+            bookingDataForIncomeRecord = bookingData; // Store data for later use
+
+            // 2. Authorization Check
+            const userDocRef = db.collection("users").doc(callingUid);
+            const userDocSnap = await transaction.get(userDocRef); // Fetch caller's user document INSIDE transaction
+
+            // --- FIX: Use .exists (property) instead of .exists() (function) ---
+            const userRole = userDocSnap.exists ? userDocSnap.data().role : null;
+            const isAssignedStylist = bookingData.stylistId === callingUid;
+
+            console.log(`Auth Check: Caller UID: ${callingUid}, Role: ${userRole}, Assigned Stylist ID: ${bookingData.stylistId}, Is Assigned: ${isAssignedStylist}`);
+
+            // Check if user is an Admin or a Worker
+            if (userRole !== "ADMIN" && userRole !== "WORKER") {
+                console.error(`Authorization failed: User ${callingUid} (Role: ${userRole}) is not an ADMIN or WORKER.`);
+                throw new HttpsError("permission-denied", "Only Admins or Workers can mark bookings as paid.");
+            }
+            // Optional: Stricter check to only allow the *assigned* worker or an admin
+            // if (userRole !== "ADMIN" && !isAssignedStylist) {
+            //     console.error(`Authorization failed: User ${callingUid} (Role: ${userRole}) is not an admin or the assigned stylist (${bookingData.stylistId}).`);
+            //     throw new HttpsError("permission-denied", "You are not authorized to modify this booking.");
+            // }
+
+            // 3. Prevent re-processing
+            if (bookingData.status === "Completed" && bookingData.paymentTimestamp) {
+                console.log(`Booking ${bookingId} already marked paid. Skipping transaction.`);
+                throw new HttpsError("aborted", `Booking ${bookingId} was already marked as paid.`); // Use aborted to stop transaction gracefully
+            }
+
+            // 4. Fetch the service price
+            const hairstyleRef = db.collection("hairstyles").doc(bookingData.hairstyleId);
+            const hairstyleDoc = await transaction.get(hairstyleRef); // GET INSIDE TRANSACTION
+            if (!hairstyleDoc.exists) {
+                throw new HttpsError("not-found", `Hairstyle (${bookingData.hairstyleId}) not found for booking ${bookingId}.`);
+            }
+            price = hairstyleDoc.data().price || 0; // Assign price to outer scope variable
+            console.log(`Fetched price: R${price}`);
+
+            // 5. Update Booking Status & Timestamp
+            transaction.update(bookingRef, {
+                status: "Completed",
+                paymentTimestamp: admin.firestore.FieldValue.serverTimestamp()
+            });
+            console.log(`Booking ${bookingId} status updated to Completed.`);
+
+        }); // --- End of Transaction ---
+
+        console.log(`Transaction successful for booking ${bookingId}. Price: R${price}`);
+
+        // --- Post-Transaction: Create Income Record & Update Total ---
+        // These happen only if the transaction succeeded.
+
+        // 6. Create Income Record
+        const incomeRecordData = {
+            amount: price,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(), // Use server timestamp
+            bookingId: bookingId,
+            serviceName: bookingDataForIncomeRecord?.serviceName || 'N/A',
+            stylistId: bookingDataForIncomeRecord?.stylistId || null,
+            stylistName: bookingDataForIncomeRecord?.stylistName || 'N/A',
+            customerId: bookingDataForIncomeRecord?.customerId || null,
+            customerName: bookingDataForIncomeRecord?.customerName || 'N/A',
+            type: 'booking' // Indicate the source of income
+        };
+        await incomeRecordsRef.add(incomeRecordData);
+        console.log(`Income record created for booking ${bookingId}.`);
+
+        // 7. Update Total Income (Atomically)
+        const totalIncomeDoc = await totalIncomeRef.get();
+        if (!totalIncomeDoc.exists) {
+            console.log(`Total income document not found. Creating with initial value: R${price}`);
+            await totalIncomeRef.set({ totalIncome: price });
+        } else {
+            console.log(`Incrementing total income by R${price}.`);
+            await totalIncomeRef.update({
+                totalIncome: admin.firestore.FieldValue.increment(price)
+            });
+        }
+
+        console.log(`Successfully processed payment for booking ${bookingId}.`);
+        return { message: `Booking ${bookingId} marked as paid successfully.` };
+
+    } catch (error) {
+        // Handle the specific 'aborted' case for already paid bookings
+        if (error.code === 'aborted' && error.message.includes('already marked as paid')) {
+            console.log(error.message); // Log the specific skip message
+            return { message: error.message }; // Return the skip message as success
+        }
+
+        // Log and rethrow other errors
+        console.error(`Error marking booking ${bookingId} as paid:`, error);
+        if (error instanceof HttpsError) {
+            throw error;
+        } else {
+            throw new HttpsError("internal", `An unexpected error occurred: ${error.message}`);
+        }
+    }
 });
 
 /**
@@ -42,11 +288,17 @@ exports.onBookingStatusChange = onDocumentUpdated("bookings/{bookingId}", async 
         return;
     }
 
+    // Add decline reason to the message if applicable
+    let messageBody = `Your appointment for ${newData.serviceName} has been ${newData.status.toLowerCase()}.`;
+    if (newData.status === 'Declined' && newData.declineReason) {
+        messageBody += ` Reason: ${newData.declineReason}`;
+    }
+
     // Create the in-app notification in the user's subcollection
     const notificationPayload = {
         userId: customerId,
         title: `Booking ${newData.status}`,
-        message: `Your appointment for ${newData.serviceName} has been ${newData.status.toLowerCase()}.`,
+        message: messageBody, // Use updated message body
         timestamp: Date.now(),
         isRead: false,
         bookingId: bookingId,
@@ -60,11 +312,17 @@ exports.onBookingStatusChange = onDocumentUpdated("bookings/{bookingId}", async 
         const pushPayload = {
             notification: {
                 title: `Booking ${newData.status}`,
-                body: `Your appointment for ${newData.serviceName} has been ${newData.status.toLowerCase()}.`,
-                sound: "default" // <-- ADD THIS LINE
+                body: messageBody, // Use updated message body
+                sound: "default"
             },
         };
-        await admin.messaging().sendToDevice(fcmToken, pushPayload);
+        try {
+             console.log(`Attempting to send status change push notification to token: ${fcmToken}`);
+             await admin.messaging().sendToDevice(fcmToken, pushPayload);
+             console.log(`Successfully sent status change push notification to user ${customerId}.`);
+        } catch(error){
+             console.error(`Failed to send status change push notification to user ${customerId}:`, error);
+        }
     }
 });
 
@@ -72,6 +330,7 @@ exports.onBookingStatusChange = onDocumentUpdated("bookings/{bookingId}", async 
  * Sends a notification when a new chat message is sent.
  */
 exports.onNewChatMessage = onDocumentCreated("bookings/{bookingId}/messages/{messageId}", async (event) => {
+    // ... function unchanged ...
     const message = event.data.data();
     const bookingDoc = await admin.firestore().collection("bookings").doc(message.bookingId).get();
     const booking = bookingDoc.data();
@@ -81,14 +340,11 @@ exports.onNewChatMessage = onDocumentCreated("bookings/{bookingId}/messages/{mes
     const senderUid = message.senderUid;
     const customerUid = booking.customerId;
 
-    // Determine who the recipient is
     let recipientUid;
     if (senderUid === customerUid) {
-        // If the customer sent it, notify the stylist
         const stylistDoc = await admin.firestore().collection("users").where("name", "==", booking.stylistName).limit(1).get();
         recipientUid = stylistDoc.docs[0]?.id;
     } else {
-        // If the stylist sent it, notify the customer
         recipientUid = customerUid;
     }
 
@@ -97,49 +353,51 @@ exports.onNewChatMessage = onDocumentCreated("bookings/{bookingId}/messages/{mes
         return;
     }
 
-    // Create the in-app notification
     const notificationPayload = {
         userId: recipientUid,
         title: `New Message from ${message.senderName}`,
         message: message.messageText,
         timestamp: Date.now(),
         isRead: false,
+        // --- ADD bookingId for linking ---
+        bookingId: message.bookingId
     };
     await admin.firestore().collection("users").doc(recipientUid).collection("notifications").add(notificationPayload);
 
-    // Send the push notification
     const recipientDoc = await admin.firestore().collection("users").doc(recipientUid).get();
     const fcmToken = recipientDoc.data()?.fcmToken;
 
     if (fcmToken) {
-            const pushPayload = {
-                notification: {
-                    title: `New Message from ${message.senderName}`,
-                    body: message.messageText,
-                    sound: "default" // <-- ADD THIS LINE
-                }
-            };
-            await admin.messaging().sendToDevice(fcmToken, pushPayload);
-        }
-    });
+         const pushPayload = {
+              notification: {
+                   title: `New Message from ${message.senderName}`,
+                   body: message.messageText,
+                   sound: "default"
+              },
+             // --- ADD bookingId to data payload ---
+             data: {
+                 bookingId: message.bookingId
+             }
+         };
+         try {
+             console.log(`Attempting to send chat push notification to token: ${fcmToken}`);
+             await admin.messaging().sendToDevice(fcmToken, pushPayload);
+             console.log(`Successfully sent chat push notification to user ${recipientUid}.`);
+         } catch(error){
+             console.error(`Failed to send chat push notification to user ${recipientUid}:`, error);
+         }
+    }
+});
 
 /**
  * v2 Cloud Function to send a push notification to all admins
  * when a new support message is created.
  */
 exports.sendSupportPushNotification = onDocumentCreated("support_messages/{messageId}", async(event) => {
+    // ... function unchanged ...
     const snap = event.data;
-    if (!snap) {
-        console.log("No data associated with the event");
-        return;
-    }
+    if (!snap) { console.log("No data associated with the event"); return; }
     const message = snap.data();
-    const payload = {
-        notification: {
-            title: `New Support Message from ${message.senderName}`,
-            body: message.message,
-        },
-    };
 
     const usersRef = admin.firestore().collection("users");
     const adminQuery = await usersRef.where("role", "==", "ADMIN").get();
@@ -147,23 +405,30 @@ exports.sendSupportPushNotification = onDocumentCreated("support_messages/{messa
     const tokens = [];
     adminQuery.forEach((doc) => {
         const token = doc.data().fcmToken;
-        if (token) {
-            tokens.push(token);
-        }
+        if (token) { tokens.push(token); }
     });
 
     if (tokens.length > 0) {
-            const payload = {
-                notification: {
-                    title: `New Support Message from ${message.senderName}`,
-                    body: message.message,
-                    sound: "default" // <-- ADD THIS LINE
-                },
-            };
-            return admin.messaging().sendToDevice(tokens, payload);
-        }
-        return null;
-    });
+         const payload = {
+              notification: {
+                   title: `New Support Message from ${message.senderName}`,
+                   body: message.message,
+                   sound: "default"
+              },
+             // --- ADD ticketId to data payload ---
+             data: {
+                 ticketId: snap.id
+             }
+         };
+         try {
+             console.log(`Attempting to send support push notification to ${tokens.length} admin tokens.`);
+             await admin.messaging().sendToDevice(tokens, payload);
+             console.log(`Successfully sent support push notification.`);
+         } catch(error){
+             console.error(`Failed to send support push notification:`, error);
+         }
+    }
+});
 
 /**
  * v2 Cloud Function to send an email notification when a new support
@@ -410,8 +675,8 @@ exports.sendBookingReminders = onSchedule("every 1 hours", async (event) => {
 
     // Find all confirmed bookings with a timestamp in the next hour.
     const query = db.collection("bookings")
-        .where("timestamp", ">=", now)
-        .where("timestamp", "<=", oneHourFromNow)
+        .where("bookingTimestamp", ">=", now)
+        .where("bookingTimestamp", "<=", oneHourFromNow)
         .where("status", "==", "Confirmed");
 
     const upcomingBookings = await query.get();
@@ -424,6 +689,7 @@ exports.sendBookingReminders = onSchedule("every 1 hours", async (event) => {
     const notificationPromises = [];
     upcomingBookings.forEach(doc => {
         const booking = doc.data();
+        const bookingId = doc.id;
 
         // --- Create Notification for the Customer ---
         const customerNotification = {
@@ -432,6 +698,7 @@ exports.sendBookingReminders = onSchedule("every 1 hours", async (event) => {
             message: `Your appointment for ${booking.serviceName} with ${booking.stylistName} is in about an hour.`,
             timestamp: Date.now(),
             isRead: false,
+            bookingId: bookingId, 
         };
         const customerPromise = db.collection("users").doc(booking.customerId).collection("notifications").add(customerNotification);
         notificationPromises.push(customerPromise);
@@ -445,6 +712,7 @@ exports.sendBookingReminders = onSchedule("every 1 hours", async (event) => {
                 message: `Your appointment with ${booking.customerName} for ${booking.serviceName} is in about an hour.`,
                 timestamp: Date.now(),
                 isRead: false,
+                bookingId: bookingId,
             };
             const workerPromise = db.collection("users").doc(workerId).collection("notifications").add(workerNotification);
             notificationPromises.push(workerPromise);
@@ -473,7 +741,7 @@ exports.autoCompleteBookings = onSchedule("every 1 hours", async (event) => {
     // Find all bookings with a timestamp in the past
     // that are still marked as 'Confirmed'.
     const query = db.collection("bookings")
-        .where("timestamp", "<", now)
+        .where("bookingTimestamp", "<", now)
         .where("status", "==", "Confirmed");
 
     const pastBookings = await query.get();
@@ -499,7 +767,7 @@ exports.autoCompleteBookings = onSchedule("every 1 hours", async (event) => {
 
 /**
  * v2 Cloud Function that sends a notification when a new reply is added
- * to a support ticket. new
+ * to a support ticket.
  */
 exports.onNewSupportReply = onDocumentCreated("support_messages/{ticketId}/replies/{replyId}", async (event) => {
     const reply = event.data.data();
@@ -507,7 +775,6 @@ exports.onNewSupportReply = onDocumentCreated("support_messages/{ticketId}/repli
     const db = admin.firestore();
 
     try {
-        // Step 1: Get the original support ticket to find out who the customer is.
         const ticketDoc = await db.collection("support_messages").doc(ticketId).get();
         const ticket = ticketDoc.data();
         if (!ticket) {
@@ -518,31 +785,49 @@ exports.onNewSupportReply = onDocumentCreated("support_messages/{ticketId}/repli
         const senderUid = reply.senderUid;
         const customerUid = ticket.senderUid;
 
-        // Step 2: Determine who the recipient of the notification should be.
         let recipientUid;
         if (senderUid === customerUid) {
             // If the customer sent the reply, notify all admins.
-            // For now, we'll just log this. A future version could notify a specific admin.
-            console.log("Customer replied to a ticket. No admin notification is set up yet.");
-            return;
+            // TODO: Implement notifying specific admins or using a topic
+            console.log("Customer replied to a ticket. Admin notifications for replies are not yet fully implemented.");
+             // Send push to admins anyway
+             const usersRef = admin.firestore().collection("users");
+             const adminQuery = await usersRef.where("role", "==", "ADMIN").get();
+             const tokens = [];
+             adminQuery.forEach((doc) => {
+                 const token = doc.data().fcmToken;
+                 if (token) { tokens.push(token); }
+             });
+             if (tokens.length > 0) {
+                 const pushPayload = {
+                     notification: {
+                         title: `Reply on Ticket #${ticketId.slice(-6)} from ${reply.senderName}`,
+                         body: reply.messageText
+                     },
+                     data: { ticketId: ticketId }
+                 };
+                 await admin.messaging().sendToDevice(tokens, pushPayload);
+                 console.log(`Push notification sent to admins for ticket reply.`);
+             }
+             // Don't create in-app notification for admins here, maybe later.
+             return; // Stop here for customer replies for now
         } else {
             // If the admin sent the reply, notify the customer.
             recipientUid = customerUid;
         }
 
-        // Step 3: Create the in-app notification for the recipient.
+        // Create the in-app notification for the customer.
         const notificationPayload = {
             userId: recipientUid,
             title: `New Reply from ${reply.senderName}`,
             message: reply.messageText,
             timestamp: Date.now(),
             isRead: false,
-            // We can link this notification directly to the support ticket
             ticketId: ticketId,
         };
         await db.collection("users").doc(recipientUid).collection("notifications").add(notificationPayload);
 
-        // Step 4: Send the push notification.
+        // Send the push notification to the customer.
         const recipientDoc = await db.collection("users").doc(recipientUid).get();
         const fcmToken = recipientDoc.data()?.fcmToken;
 
@@ -550,7 +835,11 @@ exports.onNewSupportReply = onDocumentCreated("support_messages/{ticketId}/repli
             const pushPayload = {
                 notification: {
                     title: notificationPayload.title,
-                    body: notificationPayload.message
+                    body: notificationPayload.message,
+                    sound: "default"
+                },
+                 data: { // Add data for linking
+                    ticketId: ticketId
                 }
             };
             await admin.messaging().sendToDevice(fcmToken, pushPayload);
@@ -747,26 +1036,29 @@ async function notifyAdminsOfLowStock(productData, variant, newStock) {
         message: `${productData.name} (${variant.size}) is running low. Only ${newStock} left in stock.`,
         timestamp: Date.now(),
         isRead: false,
-        // In the future, you could add a productId here to link directly to the product
+        // Optional: productId: productData.id, // If productData includes the ID
     };
 
-    // Send a notification to each admin
     for (const adminDoc of adminQuery.docs) {
         const adminUser = adminDoc.data();
-        // 1. Create the in-app notification
-        //
-        // --- FIX: Use adminDoc.id (the document ID/UID) instead of adminUser.id (from the document data) ---
+        // 1. Create in-app notification
         await db.collection("users").doc(adminDoc.id).collection("notifications").add(notificationPayload);
 
-        // 2. Send the push notification if they have a token
+        // 2. Send push notification
         if (adminUser.fcmToken) {
             const pushPayload = {
                 notification: {
                     title: notificationPayload.title,
                     body: notificationPayload.message,
+                    sound: "default" // Add sound
                 },
+                // Optional: data: { productId: productData.id }
             };
-            await admin.messaging().sendToDevice(adminUser.fcmToken, pushPayload);
+            try {
+                await admin.messaging().sendToDevice(adminUser.fcmToken, pushPayload);
+            } catch (error) {
+                 console.error(`Failed to send low stock push to admin ${adminDoc.id}:`, error);
+            }
         }
     }
     console.log(`Sent low-stock alerts to ${adminQuery.size} admins.`);
@@ -787,9 +1079,9 @@ exports.createUserByAdmin = onCall({ cors: true }, async (request) => {
         const lowerCaseRole = role.toLowerCase();
         await admin.auth().setCustomUserClaims(userId, { [lowerCaseRole]: true, admin: role === 'ADMIN' });
         await admin.firestore().collection("users").doc(userId).set({
-            id: userId, name, email, phone, role: role.toUpperCase(), imageUrl: "",
+            id: userId, name, email, phone, role: role.toUpperCase(), imageUrl: "", createdAt: admin.firestore.FieldValue.serverTimestamp() // Add creation timestamp
         });
-        return { message: `Successfully created user ${name} with role ${role}.` };
+        return { message: `Successfully created user ${name} with role ${role}.`, userId: userId }; // Return userId
     } catch (error) {
         console.error("Error in createUserByAdmin:", error);
         throw new HttpsError("internal", error.message);
@@ -937,7 +1229,7 @@ exports.cleanupPastDueBookings = onSchedule("every 1 hours", async (event) => {
     // Query for all bookings with a timestamp in the past
     // that are still marked as 'Confirmed' OR 'Pending'.
     const query = db.collection("bookings")
-        .where("timestamp", "<", now)
+        .where("bookingTimestamp", "<", now)
         .where("status", "in", ["Confirmed", "Pending"]);
 
     const pastDueBookings = await query.get();
