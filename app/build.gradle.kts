@@ -92,6 +92,7 @@ dependencies {
     implementation("com.google.firebase:firebase-messaging-ktx:24.1.2")
     implementation("com.google.firebase:firebase-functions-ktx:21.2.1")
     implementation("com.google.firebase:firebase-crashlytics-ktx:19.4.4")
+    implementation(libs.firebase.appcheck.debug)
     debugImplementation(libs.firebase.appcheck.debug)
     implementation(libs.google.firebase.appcheck.playintegrity)
 
