@@ -1,12 +1,18 @@
 package com.rst.gadissalonmanagementsystemapp
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.view.animation.AnimationUtils
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.NavHostFragment
@@ -21,6 +27,16 @@ class CustomerMainActivity : AppCompatActivity() {
     private var currentNavIndex = 0
     private var notificationListener: ListenerRegistration? = null
 
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            Log.d("Permission", "Notification permission granted.")
+        } else {
+            Log.d("Permission", "Notification permission denied.")
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityCustomerMainBinding.inflate(layoutInflater)
@@ -34,6 +50,7 @@ class CustomerMainActivity : AppCompatActivity() {
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         navController = navHostFragment.navController
 
+        askNotificationPermission()
         setupBottomNavigation()
         setupUiVisibilityListener()
         setupPullToRefresh()
@@ -236,5 +253,19 @@ class CustomerMainActivity : AppCompatActivity() {
         val params = binding.salonNameCard.layoutParams as ConstraintLayout.LayoutParams
         params.horizontalBias = 0.5f
         binding.salonNameCard.layoutParams = params
+    }
+
+    private fun askNotificationPermission() {
+        // This is only necessary for API 33+ (Android 13+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
+                PackageManager.PERMISSION_GRANTED
+            ) {
+                // Permission is already granted
+            } else {
+                // Directly ask for the permission
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
     }
 }

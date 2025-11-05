@@ -1,10 +1,16 @@
 package com.rst.gadissalonmanagementsystemapp
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
@@ -19,6 +25,16 @@ class WorkerMainActivity : AppCompatActivity() {
     private var bookingsListener: ListenerRegistration? = null
     private var ordersListener: ListenerRegistration? = null
     private var messagesListener: ListenerRegistration? = null
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            Log.d("Permission", "Notification permission granted.")
+        } else {
+            Log.d("Permission", "Notification permission denied.")
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,6 +55,7 @@ class WorkerMainActivity : AppCompatActivity() {
 
         // Call our new function to set up the UI listener
         setupNavigationListener()
+        askNotificationPermission()
     }
 
     override fun onStart() {
@@ -123,6 +140,20 @@ class WorkerMainActivity : AppCompatActivity() {
             binding.bottomNavCardWorker.visibility = if (showBack) View.GONE else View.VISIBLE
             binding.backButtonWorker.visibility = if (showBack) View.VISIBLE else View.GONE
             // --- END MODIFICATION ---
+        }
+    }
+
+    private fun askNotificationPermission() {
+        // This is only necessary for API 33+ (Android 13+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
+                PackageManager.PERMISSION_GRANTED
+            ) {
+                // Permission is already granted
+            } else {
+                // Directly ask for the permission
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
         }
     }
 
