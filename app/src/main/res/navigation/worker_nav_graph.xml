@@ -5,6 +5,18 @@
     android:id="@+id/worker_nav_graph"
     app:startDestination="@id/nav_worker_bookings">
 
+    <action
+        android:id="@+id/action_global_to_bookingDetailWorkerFragment"
+        app:destination="@id/bookingDetailWorkerFragment" />
+
+    <action
+        android:id="@+id/action_global_to_ticketDetailFragment"
+        app:destination="@id/ticketDetailFragment" />
+
+    <action
+        android:id="@+id/action_global_to_workerOrderDetailFragment"
+        app:destination="@id/workerOrderDetailFragment" />
+
     <!-- Worker's Main Screens -->
     <fragment
         android:id="@+id/nav_worker_bookings"

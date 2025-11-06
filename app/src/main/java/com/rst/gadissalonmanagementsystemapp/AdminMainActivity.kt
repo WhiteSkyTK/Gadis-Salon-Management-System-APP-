@@ -1,6 +1,7 @@
 package com.rst.gadissalonmanagementsystemapp
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -67,8 +68,14 @@ class AdminMainActivity : AppCompatActivity() {
         // Setup our custom listener to manage UI changes
         setupNavigationListener()
         observeSupportMessagesForBadge()
+        handleNotificationIntent(intent)
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        Log.d("AdminMain", "onNewIntent triggered.")
+        handleNotificationIntent(intent)
+    }
 
     private fun logIdTokenClaims() {
         Firebase.auth.currentUser?.getIdToken(true) // Force refresh
@@ -195,6 +202,47 @@ class AdminMainActivity : AppCompatActivity() {
             } else {
                 // Directly ask for the permission
                 requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
+
+    private fun handleNotificationIntent(intent: Intent?) {
+        if (intent == null) return
+
+        // Admins can receive notifications for tickets, bookings, or orders
+        val ticketId = intent.getStringExtra("ticketId")
+        val bookingId = intent.getStringExtra("bookingId")
+        val orderId = intent.getStringExtra("orderId")
+
+        Log.d("AdminMain", "Handling Intent. TicketID: $ticketId, BookingID: $bookingId, OrderID: $orderId")
+
+        when {
+            ticketId != null -> {
+                mainViewModel.getSupportTicketForNavigation(ticketId) { ticket ->
+                    if (ticket != null) {
+                        val action = AdminNavGraphDirections.actionGlobalToAdminTicketDetailFragment(ticket)
+                        navController.navigate(action)
+                    }
+                }
+                intent.removeExtra("ticketId")
+            }
+            bookingId != null -> {
+                mainViewModel.getBookingForNavigation(bookingId) { booking ->
+                    if (booking != null) {
+                        val action = AdminNavGraphDirections.actionGlobalToAdminBookingDetailFragment(booking)
+                        navController.navigate(action)
+                    }
+                }
+                intent.removeExtra("bookingId")
+            }
+            orderId != null -> {
+                mainViewModel.getOrderForNavigation(orderId) { order ->
+                    if (order != null) {
+                        val action = AdminNavGraphDirections.actionGlobalToAdminOrderDetailFragment(order)
+                        navController.navigate(action)
+                    }
+                }
+                intent.removeExtra("orderId")
             }
         }
     }

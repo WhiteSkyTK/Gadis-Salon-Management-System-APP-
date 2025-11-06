@@ -115,4 +115,41 @@ class MainViewModel : ViewModel() {
             }
         }
     }
+
+    fun getBookingForNavigation(bookingId: String, onResult: (AdminBooking?) -> Unit) {
+        viewModelScope.launch {
+            val result = FirebaseManager.getBooking(bookingId)
+            if (result.isSuccess) {
+                onResult(result.getOrNull())
+            } else {
+                Log.e("MainViewModel", "Failed to get booking $bookingId", result.exceptionOrNull())
+                onResult(null)
+            }
+        }
+    }
+
+    fun getOrderForNavigation(orderId: String, onResult: (ProductOrder?) -> Unit) {
+        viewModelScope.launch {
+            val result = FirebaseManager.getProductOrder(orderId)
+            if (result.isSuccess) {
+                onResult(result.getOrNull())
+            } else {
+                Log.e("MainViewModel", "Failed to get order $orderId", result.exceptionOrNull())
+                onResult(null)
+            }
+        }
+    }
+
+    // You will need a 'getSupportTicket' function in FirebaseManager for this
+    fun getSupportTicketForNavigation(ticketId: String, onResult: (SupportMessage?) -> Unit) {
+        viewModelScope.launch {
+            val result = FirebaseManager.getSupportTicket(ticketId)
+            if (result.isSuccess) {
+                onResult(result.getOrNull())
+            } else {
+                Log.e("MainViewModel", "Failed to get ticket $ticketId", result.exceptionOrNull())
+                onResult(null)
+            }
+        }
+    }
 }

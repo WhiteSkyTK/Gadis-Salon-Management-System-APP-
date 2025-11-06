@@ -309,20 +309,39 @@ exports.onBookingStatusChange = onDocumentUpdated("bookings/{bookingId}", async 
     const fcmToken = userDoc.data()?.fcmToken;
 
     if (fcmToken) {
-        const pushPayload = {
-            notification: {
-                title: `Booking ${newData.status}`,
-                body: messageBody, // Use updated message body
-                sound: "default"
-            },
-        };
-        try {
-             console.log(`Attempting to send status change push notification to token: ${fcmToken}`);
-             await admin.messaging().sendToDevice(fcmToken, pushPayload);
-             console.log(`Successfully sent status change push notification to user ${customerId}.`);
-        } catch(error){
-             console.error(`Failed to send status change push notification to user ${customerId}:`, error);
-        }
+        const message = {
+                    token: fcmToken,
+                    notification: {
+                        title: `Booking ${newData.status}`,
+                        body: messageBody,
+                    },
+                    data: {
+                        title: `Booking ${newData.status}`,
+                        body: messageBody,
+                        bookingId: bookingId
+                    },
+                    android: {
+                        priority: "high",
+                        notification: {
+                            sound: "default"
+                        }
+                    },
+                    apns: {
+                        payload: {
+                            aps: {
+                                sound: "default"
+                            }
+                        }
+                    }
+                };
+
+                try {
+                     console.log(`Attempting to send status change push notification to token: ${fcmToken}`);
+                     await admin.messaging().send(message); // Use .send()
+                     console.log(`Successfully sent status change push notification to user ${customerId}.`);
+                } catch(error){
+                     console.error(`Failed to send status change push notification to user ${customerId}:`, error);
+                }
     }
 });
 
@@ -330,8 +349,7 @@ exports.onBookingStatusChange = onDocumentUpdated("bookings/{bookingId}", async 
  * Sends a notification when a new chat message is sent.
  */
 exports.onNewChatMessage = onDocumentCreated("bookings/{bookingId}/messages/{messageId}", async (event) => {
-    // ... function unchanged ...
-    const message = event.data.data();
+    const messageData = event.data.data();
     const bookingDoc = await admin.firestore().collection("bookings").doc(message.bookingId).get();
     const booking = bookingDoc.data();
 
@@ -368,24 +386,38 @@ exports.onNewChatMessage = onDocumentCreated("bookings/{bookingId}/messages/{mes
     const fcmToken = recipientDoc.data()?.fcmToken;
 
     if (fcmToken) {
-         const pushPayload = {
-              notification: {
-                   title: `New Message from ${message.senderName}`,
-                   body: message.messageText,
-                   sound: "default"
-              },
-             // --- ADD bookingId to data payload ---
-             data: {
-                 bookingId: message.bookingId
-             }
-         };
-         try {
-             console.log(`Attempting to send chat push notification to token: ${fcmToken}`);
-             await admin.messaging().sendToDevice(fcmToken, pushPayload);
-             console.log(`Successfully sent chat push notification to user ${recipientUid}.`);
-         } catch(error){
-             console.error(`Failed to send chat push notification to user ${recipientUid}:`, error);
-         }
+         const message = {
+                     token: fcmToken,
+                     notification: {
+                          title: `New Message from ${messageData.senderName}`,
+                          body: messageData.messageText,
+                     },
+                     data: {
+                         title: `New Message from ${messageData.senderName}`,
+                         body: messageData.messageText,
+                         bookingId: messageData.bookingId
+                     },
+                     android: {
+                         priority: "high",
+                         notification: {
+                             sound: "default"
+                         }
+                     },
+                     apns: {
+                         payload: {
+                             aps: {
+                                 sound: "default"
+                             }
+                         }
+                     }
+                  };
+                  try {
+                      console.log(`Attempting to send chat push notification to token: ${fcmToken}`);
+                      await admin.messaging().send(message); // Use .send()
+                      console.log(`Successfully sent chat push notification to user ${recipientUid}.`);
+                  } catch(error){
+                      console.error(`Failed to send chat push notification to user ${recipientUid}:`, error);
+                  }
     }
 });
 
@@ -397,7 +429,7 @@ exports.sendSupportPushNotification = onDocumentCreated("support_messages/{messa
     // ... function unchanged ...
     const snap = event.data;
     if (!snap) { console.log("No data associated with the event"); return; }
-    const message = snap.data();
+     const messageData = snap.data();
 
     const usersRef = admin.firestore().collection("users");
     const adminQuery = await usersRef.where("role", "==", "ADMIN").get();
@@ -409,24 +441,38 @@ exports.sendSupportPushNotification = onDocumentCreated("support_messages/{messa
     });
 
     if (tokens.length > 0) {
-         const payload = {
-              notification: {
-                   title: `New Support Message from ${message.senderName}`,
-                   body: message.message,
-                   sound: "default"
-              },
-             // --- ADD ticketId to data payload ---
-             data: {
-                 ticketId: snap.id
-             }
-         };
-         try {
-             console.log(`Attempting to send support push notification to ${tokens.length} admin tokens.`);
-             await admin.messaging().sendToDevice(tokens, payload);
-             console.log(`Successfully sent support push notification.`);
-         } catch(error){
-             console.error(`Failed to send support push notification:`, error);
-         }
+         const message = {
+                     tokens: tokens, // Use 'tokens' (plural)
+                     notification: {
+                          title: `New Support Message from ${messageData.senderName}`,
+                          body: messageData.message,
+                     },
+                     data: {
+                         title: `New Support Message from ${messageData.senderName}`,
+                         body: messageData.message,
+                         ticketId: snap.id
+                     },
+                     android: {
+                         priority: "high",
+                         notification: {
+                             sound: "default"
+                         }
+                     },
+                     apns: {
+                         payload: {
+                             aps: {
+                                 sound: "default"
+                             }
+                         }
+                     }
+                  };
+                  try {
+                      console.log(`Attempting to send support push notification to ${tokens.length} admin tokens.`);
+                      await admin.messaging().sendEachForMulticast(message); // Use .sendEachForMulticast()
+                      console.log(`Successfully sent support push notification.`);
+                  } catch(error){
+                      console.error(`Failed to send support push notification:`, error);
+                  }
     }
 });
 
@@ -799,18 +845,25 @@ exports.onNewSupportReply = onDocumentCreated("support_messages/{ticketId}/repli
                  if (token) { tokens.push(token); }
              });
              if (tokens.length > 0) {
-                 const pushPayload = {
-                     notification: {
-                         title: `Reply on Ticket #${ticketId.slice(-6)} from ${reply.senderName}`,
-                         body: reply.messageText
-                     },
-                     data: { ticketId: ticketId }
-                 };
-                 await admin.messaging().sendToDevice(tokens, pushPayload);
-                 console.log(`Push notification sent to admins for ticket reply.`);
-             }
-             // Don't create in-app notification for admins here, maybe later.
-             return; // Stop here for customer replies for now
+                const message = {
+                                    tokens: tokens,
+                                     notification: {
+                                         title: `Reply on Ticket #${ticketId.slice(-6)} from ${reply.senderName}`,
+                                         body: reply.messageText
+                                     },
+                                     data: {
+                                        title: `Reply on Ticket #${ticketId.slice(-6)} from ${reply.senderName}`,
+                                        body: reply.messageText,
+                                        ticketId: ticketId
+                                    },
+                                    android: { priority: "high", notification: { sound: "default" } },
+                                    apns: { payload: { aps: { sound: "default" } } }
+                                 };
+                                 await admin.messaging().sendEachForMulticast(message); // Use .sendEachForMulticast()
+                                 console.log(`Push notification sent to admins for ticket reply.`);
+                                 // --- END FIX ---
+                             }
+                             return;
         } else {
             // If the admin sent the reply, notify the customer.
             recipientUid = customerUid;
@@ -832,19 +885,24 @@ exports.onNewSupportReply = onDocumentCreated("support_messages/{ticketId}/repli
         const fcmToken = recipientDoc.data()?.fcmToken;
 
         if (fcmToken) {
-            const pushPayload = {
-                notification: {
-                    title: notificationPayload.title,
-                    body: notificationPayload.message,
-                    sound: "default"
-                },
-                 data: { // Add data for linking
-                    ticketId: ticketId
-                }
-            };
-            await admin.messaging().sendToDevice(fcmToken, pushPayload);
-            console.log(`Push notification sent for ticket reply to user: ${recipientUid}`);
-        }
+           const message = {
+                           token: fcmToken,
+                           notification: {
+                               title: notificationPayload.title,
+                               body: notificationPayload.message,
+                           },
+                            data: {
+                               title: notificationPayload.title,
+                               body: notificationPayload.message,
+                               ticketId: ticketId
+                            },
+                           android: { priority: "high", notification: { sound: "default" } },
+                           apns: { payload: { aps: { sound: "default" } } }
+                       };
+                       await admin.messaging().send(message); // Use .send()
+                       console.log(`Push notification sent for ticket reply to user: ${recipientUid}`);
+                       // --- END FIX ---
+                   }
     } catch (error) {
         console.error("Error in onNewSupportReply function:", error);
     }
@@ -925,19 +983,24 @@ exports.onOrderReadyForPickup = onDocumentUpdated("product_orders/{orderId}", as
                 const fcmToken = userDoc.data()?.fcmToken;
 
                 if (fcmToken) {
-                    const pushPayload = {
-                        notification: {
-                            title: notificationPayload.title,
-                            body: notificationPayload.message,
-                            sound: "default"
-                        },
-                        data: {
-                            orderId: orderId // Send orderId in data payload too
-                        }
-                    };
-                    console.log(`Attempting to send order status (${newData.status}) push notification to token: ${fcmToken}`);
-                    await admin.messaging().sendToDevice(fcmToken, pushPayload);
-                    console.log(`Successfully sent order status push notification to user ${customerId}.`);
+                    const message = {
+                                            token: fcmToken,
+                                            notification: {
+                                                title: notificationPayload.title,
+                                                body: notificationPayload.message,
+                                            },
+                                           data: {
+                                                title: notificationPayload.title,
+                                                body: notificationPayload.message,
+                                                orderId: orderId
+                                           },
+                                           android: { priority: "high", notification: { sound: "default" } },
+                                           apns: { payload: { aps: { sound: "default" } } }
+                                        };
+                                        console.log(`Attempting to send order status (${newData.status}) push notification to token: ${fcmToken}`);
+                                        await admin.messaging().send(message); // Use .send()
+                                        console.log(`Successfully sent order status push notification to user ${customerId}.`);
+                                        // --- END FIX ---
                 } else {
                      console.log(`User ${customerId} does not have an FCM token. Skipping push notification.`);
                 }
@@ -1039,30 +1102,43 @@ async function notifyAdminsOfLowStock(productData, variant, newStock) {
         // Optional: productId: productData.id, // If productData includes the ID
     };
 
-    for (const adminDoc of adminQuery.docs) {
-        const adminUser = adminDoc.data();
-        // 1. Create in-app notification
-        await db.collection("users").doc(adminDoc.id).collection("notifications").add(notificationPayload);
+    const tokens = [];
+        for (const adminDoc of adminQuery.docs) {
+            const adminUser = adminDoc.data();
+            // 1. Create in-app notification
+            await db.collection("users").doc(adminDoc.id).collection("notifications").add(notificationPayload);
+            // 2. Collect tokens
+            if (adminUser.fcmToken) {
+                tokens.push(adminUser.fcmToken);
+            }
+        }
 
-        // 2. Send push notification
-        if (adminUser.fcmToken) {
-            const pushPayload = {
+        // 3. Send push notification to all admins at once
+        if (tokens.length > 0) {
+            // --- FIX: Replaced sendToDevice with sendEachForMulticast() ---
+            const message = {
+                tokens: tokens,
                 notification: {
                     title: notificationPayload.title,
                     body: notificationPayload.message,
-                    sound: "default" // Add sound
                 },
-                // Optional: data: { productId: productData.id }
+                data: {
+                    title: notificationPayload.title,
+                    body: notificationPayload.message,
+                    // Optional: productId: productData.id
+                },
+                android: { priority: "high", notification: { sound: "default" } },
+                apns: { payload: { aps: { sound: "default" } } }
             };
             try {
-                await admin.messaging().sendToDevice(adminUser.fcmToken, pushPayload);
+                await admin.messaging().sendEachForMulticast(message); // Use .sendEachForMulticast()
+                console.log(`Sent low-stock alerts to ${tokens.length} admins.`);
             } catch (error) {
-                 console.error(`Failed to send low stock push to admin ${adminDoc.id}:`, error);
+                 console.error(`Failed to send low stock push to admins:`, error);
             }
+            // --- END FIX ---
         }
     }
-    console.log(`Sent low-stock alerts to ${adminQuery.size} admins.`);
-}
 
 /**
  * v2 Callable function that allows an admin to create a new user.

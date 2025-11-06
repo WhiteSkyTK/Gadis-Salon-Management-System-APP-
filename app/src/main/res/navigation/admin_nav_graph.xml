@@ -5,6 +5,16 @@
     android:id="@+id/admin_nav_graph"
     app:startDestination="@id/nav_admin_dashboard">
 
+    <action
+        android:id="@+id/action_global_to_adminTicketDetailFragment"
+        app:destination="@id/adminTicketDetailFragment" />
+    <action
+        android:id="@+id/action_global_to_adminBookingDetailFragment"
+        app:destination="@id/adminBookingDetailFragment" />
+    <action
+        android:id="@+id/action_global_to_adminOrderDetailFragment"
+        app:destination="@id/adminOrderDetailFragment" />
+
     <!-- Main Admin Destinations -->
     <fragment
         android:id="@+id/nav_admin_dashboard"

@@ -260,11 +260,16 @@ class ProductDetailFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            val action = ProductDetailFragmentDirections.actionProductDetailFragmentToPurchaseConfirmationFragment(
-                selectedVariant = selectedVariant!!,
-                product = product
-            )
-            findNavController().navigate(action)
+            // 1. Create a bundle for the arguments
+            val bundle = Bundle().apply {
+                putParcelable("selectedVariant", selectedVariant!!)
+                putParcelable("product", product)
+                // cartItems will be null by default, which is correct
+            }
+
+            // 2. Navigate using the action ID from the XML
+            findNavController().navigate(R.id.action_productDetailFragment_to_purchaseConfirmationFragment, bundle)
+            // --- END WORKAROUND ---
         }
     }
 

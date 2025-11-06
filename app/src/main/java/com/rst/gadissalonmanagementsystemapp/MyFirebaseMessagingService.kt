@@ -2,7 +2,9 @@ package com.rst.gadissalonmanagementsystemapp
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -23,10 +25,33 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         super.onMessageReceived(remoteMessage)
         Log.d(TAG, "New message from: ${remoteMessage.from}")
 
-        // Check if the message contains a notification payload and display it locally.
-        remoteMessage.notification?.let {
-            Log.d(TAG, "Notification Body: ${it.body}")
-            sendNotification(it.title ?: "New Notification", it.body ?: "")
+        val data = remoteMessage.data
+        if (data.isNotEmpty()) {
+            Log.d(TAG, "Message data payload: $data")
+
+            // Parse data from the 'data' map
+            val title = data["title"] ?: "New Notification"
+            val body = data["body"] ?: ""
+
+            // Get the IDs for the actions
+            val bookingId = data["bookingId"]
+            val orderId = data["orderId"]
+            val ticketId = data["ticketId"] // For support tickets
+
+            sendNotification(title, body, bookingId, orderId, ticketId)
+
+        } else {
+            // Fallback: Handle if it's just a 'notification' payload (no data)
+            remoteMessage.notification?.let {
+                Log.d(TAG, "Notification Body: ${it.body}")
+                sendNotification(
+                    it.title ?: "New Notification",
+                    it.body ?: "",
+                    null,
+                    null,
+                    null
+                )
+            }
         }
     }
 
@@ -49,20 +74,59 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         }
     }
 
-    private fun sendNotification(title: String, messageBody: String) {
+    private fun sendNotification(
+        title: String,
+        messageBody: String,
+        bookingId: String?,
+        orderId: String?,
+        ticketId: String? // Added ticketId
+    ) {
+
+        val intent = Intent(this, CustomerMainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+
+            // Pass the IDs as extras so the activity knows where to navigate
+            if (bookingId != null) {
+                putExtra("bookingId", bookingId)
+                Log.d(TAG, "Creating PendingIntent with bookingId: $bookingId")
+            }
+            if (orderId != null) {
+                putExtra("orderId", orderId)
+                Log.d(TAG, "Creating PendingIntent with orderId: $orderId")
+            }
+            if (ticketId != null) {
+                putExtra("ticketId", ticketId)
+                Log.d(TAG, "Creating PendingIntent with ticketId: $ticketId")
+            }
+        }
+
+        // 2. Create the PendingIntent
+        val pendingIntentFlag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
+        } else {
+            PendingIntent.FLAG_ONE_SHOT
+        }
+
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            System.currentTimeMillis().toInt() /* Unique request code */,
+            intent,
+            pendingIntentFlag
+        )
+        // --- END PENDING INTENT LOGIC ---
+
         val channelId = "gadis_salon_default_channel"
 
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.drawable.ic_stat_notification) // Your white-on-transparent icon
+            .setSmallIcon(R.drawable.ic_stat_notification)
             .setContentTitle(title)
             .setContentText(messageBody)
             .setAutoCancel(true)
-            .setPriority(NotificationCompat.PRIORITY_HIGH) // Ensures the notification pops up
+            .setPriority(NotificationCompat.PRIORITY_HIGH) // This ensures it pops up
+            .setContentIntent(pendingIntent) // <-- ADD THIS to make it clickable
 
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        // --- THIS IS THE CRUCIAL PART for Android 8.0 (Oreo) and above ---
-        // We must create a Notification Channel for sounds and pop-ups to work on modern devices.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 channelId,
@@ -72,7 +136,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             notificationManager.createNotificationChannel(channel)
         }
 
-        // Show the notification
-        notificationManager.notify(System.currentTimeMillis().toInt() /* Unique ID for each notification */, notificationBuilder.build())
+        notificationManager.notify(System.currentTimeMillis().toInt(), notificationBuilder.build())
     }
 }

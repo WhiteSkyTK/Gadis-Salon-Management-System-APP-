@@ -1151,6 +1151,22 @@ object FirebaseManager {
         }
     }
 
+    /**
+     * Fetches a single support ticket document by its unique ID.
+     */
+    suspend fun getSupportTicket(ticketId: String): Result<SupportMessage?> {
+        return try {
+            val document = firestore.collection("support_messages").document(ticketId).get().await()
+            val ticket = document.toObject(SupportMessage::class.java)
+            // Manually set the ID, as it's the document's path
+            ticket?.id = document.id
+            Result.success(ticket)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error fetching support ticket $ticketId", e)
+            Result.failure(e)
+        }
+    }
+
     // A general function to update status, useful for declining/cancelling
     suspend fun updateBookingStatus(bookingId: String, newStatus: String): Result<Unit> {
         return try {

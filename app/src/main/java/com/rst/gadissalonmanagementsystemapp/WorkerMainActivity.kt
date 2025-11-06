@@ -1,6 +1,7 @@
 package com.rst.gadissalonmanagementsystemapp
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -56,6 +57,13 @@ class WorkerMainActivity : AppCompatActivity() {
         // Call our new function to set up the UI listener
         setupNavigationListener()
         askNotificationPermission()
+        handleNotificationIntent(intent)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        Log.d("WorkerMain", "onNewIntent triggered.")
+        handleNotificationIntent(intent)
     }
 
     override fun onStart() {
@@ -153,6 +161,47 @@ class WorkerMainActivity : AppCompatActivity() {
             } else {
                 // Directly ask for the permission
                 requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
+
+    private fun handleNotificationIntent(intent: Intent?) {
+        if (intent == null) return
+
+        // Workers care about bookings, orders, and tickets
+        val bookingId = intent.getStringExtra("bookingId")
+        val orderId = intent.getStringExtra("orderId")
+        val ticketId = intent.getStringExtra("ticketId")
+
+        Log.d("WorkerMain", "Handling Intent. BookingID: $bookingId, OrderID: $orderId, TicketID: $ticketId")
+
+        when {
+            bookingId != null -> {
+                mainViewModel.getBookingForNavigation(bookingId) { booking ->
+                    if (booking != null) {
+                        val action = WorkerNavGraphDirections.actionGlobalToBookingDetailWorkerFragment(booking)
+                        navController.navigate(action)
+                    }
+                }
+                intent.removeExtra("bookingId")
+            }
+            orderId != null -> {
+                mainViewModel.getOrderForNavigation(orderId) { order ->
+                    if (order != null) {
+                        val action = WorkerNavGraphDirections.actionGlobalToWorkerOrderDetailFragment(order)
+                        navController.navigate(action)
+                    }
+                }
+                intent.removeExtra("orderId")
+            }
+            ticketId != null -> {
+                mainViewModel.getSupportTicketForNavigation(ticketId) { ticket ->
+                    if (ticket != null) {
+                        val action = WorkerNavGraphDirections.actionGlobalToTicketDetailFragment(ticket)
+                        navController.navigate(action)
+                    }
+                }
+                intent.removeExtra("ticketId")
             }
         }
     }

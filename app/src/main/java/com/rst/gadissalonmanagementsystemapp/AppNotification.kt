@@ -9,5 +9,6 @@ data class AppNotification(
     val timestamp: Long = System.currentTimeMillis(),
     var isRead: Boolean = false,
     val bookingId: String? = null,
-    val orderId: String? = null
+    val orderId: String? = null,
+    val ticketId: String? = null
 )

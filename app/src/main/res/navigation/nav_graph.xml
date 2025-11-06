@@ -4,11 +4,18 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
     app:startDestination="@id/homeFragment">
-
-
+    
     <action
         android:id="@+id/action_global_to_ticketDetailFragment"
         app:destination="@id/ticketDetailFragment" />
+
+    <action
+        android:id="@+id/action_global_to_bookingDetailCustomerFragment"
+        app:destination="@id/bookingDetailCustomerFragment" />
+
+    <action
+        android:id="@+id/action_global_to_orderDetailFragment"
+        app:destination="@id/orderDetailFragment" />
 
     <fragment
         android:id="@+id/homeFragment"

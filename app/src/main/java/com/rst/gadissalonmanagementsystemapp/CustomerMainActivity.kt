@@ -1,6 +1,7 @@
 package com.rst.gadissalonmanagementsystemapp
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -54,6 +55,13 @@ class CustomerMainActivity : AppCompatActivity() {
         setupBottomNavigation()
         setupUiVisibilityListener()
         setupPullToRefresh()
+        handleNotificationIntent(intent)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        Log.d("CustomerMain", "onNewIntent triggered.")
+        handleNotificationIntent(intent)
     }
 
     override fun onStart() {
@@ -265,6 +273,50 @@ class CustomerMainActivity : AppCompatActivity() {
             } else {
                 // Directly ask for the permission
                 requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
+
+    private fun handleNotificationIntent(intent: Intent?) {
+        if (intent == null) return
+
+        val bookingId = intent.getStringExtra("bookingId")
+        val orderId = intent.getStringExtra("orderId")
+        val ticketId = intent.getStringExtra("ticketId") // Added for support tickets
+
+        Log.d("CustomerMain", "Handling Intent. BookingID: $bookingId, OrderID: $orderId, TicketID: $ticketId")
+
+        // We use the MainViewModel to fetch the object, then navigate.
+        // This requires new functions in your ViewModel.
+        when {
+            bookingId != null -> {
+                mainViewModel.getBookingForNavigation(bookingId) { booking ->
+                    if (booking != null) {
+                        // Use a global action to navigate from anywhere
+                        val action = NavGraphDirections.actionGlobalToBookingDetailCustomerFragment(booking)
+                        navController.navigate(action)
+                    }
+                }
+                // Clear the extra so it's not handled again
+                intent.removeExtra("bookingId")
+            }
+            orderId != null -> {
+                mainViewModel.getOrderForNavigation(orderId) { order ->
+                    if (order != null) {
+                        val action = NavGraphDirections.actionGlobalToOrderDetailFragment(order)
+                        navController.navigate(action)
+                    }
+                }
+                intent.removeExtra("orderId")
+            }
+            ticketId != null -> {
+                mainViewModel.getSupportTicketForNavigation(ticketId) { ticket ->
+                    if(ticket != null) {
+                        val action = NavGraphDirections.actionGlobalToTicketDetailFragment(ticket)
+                        navController.navigate(action)
+                    }
+                }
+                intent.removeExtra("ticketId")
             }
         }
     }
